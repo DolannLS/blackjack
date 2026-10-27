@@ -508,6 +508,7 @@ button:disabled { opacity: .35; cursor: default; }
     }
     bankroll += back;
     const net = back - stake;
+    window.CasinoAccount?.record("roulette", stake, back, `${n} ${COLOR_FR[colorOf(n)]}`);
     history.unshift(n); history = history.slice(0, 30);
     stats.spins++; if (net > 0) stats.won++; stats.best = Math.max(stats.best, net);
     bets = {};
@@ -568,6 +569,7 @@ button:disabled { opacity: .35; cursor: default; }
   if (document.fonts) document.fonts.ready.then(drawFace);
 })();
 </script>
+<script src="app.js"></script>
 <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});</script>
 </body>
 </html>

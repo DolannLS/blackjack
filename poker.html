@@ -673,6 +673,7 @@ button:disabled { opacity: .35; cursor: default; }
     const me = P();
     W = me.stack;
     stats.hands++;
+    window.CasinoAccount?.record("holdem", me.contrib, me.win, me.folded ? "Couché" : me.eval ? handName(me.eval) : "Tout le monde se couche");
     if (me.win > me.contrib) { stats.handsWon++; stats.bestPot = Math.max(stats.bestPot, me.win - me.contrib); }
     save();
     render();
@@ -707,6 +708,7 @@ button:disabled { opacity: .35; cursor: default; }
     const k = vpRank(VP.hand), row = PAY.find(x => x[0] === k);
     const win = row ? VP.bet * row[2] : 0;
     W += win;
+    window.CasinoAccount?.record("videopoker", VP.bet, win, row ? row[1] : "Pas de main payante");
     stats.vpHands++; stats.vpBest = Math.max(stats.vpBest, win - VP.bet);
     if (!row) vSay("Pas de main payante", "lose");
     else if (row[2] === 1) vSay(`${row[1]} · Mise rendue`);
@@ -896,6 +898,7 @@ button:disabled { opacity: .35; cursor: default; }
   render();
 })();
 </script>
+<script src="app.js"></script>
 <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});</script>
 </body>
 </html>

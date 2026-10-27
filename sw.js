@@ -1,6 +1,6 @@
 // Offline cache: serve from cache, refresh in the background.
-const CACHE = "casino-v4";
-const CORE = ["./", "index.html", "roulette.html", "poker.html", "online.html", "manifest.webmanifest", "icon-180.png", "icon-192.png", "icon-512.png"];
+const CACHE = "casino-v5";
+const CORE = ["./", "index.html", "roulette.html", "poker.html", "online.html", "historique.html", "classement.html", "app.js", "manifest.webmanifest", "icon-180.png", "icon-192.png", "icon-512.png"];
 
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(CORE)).then(() => self.skipWaiting()));

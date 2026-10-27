@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<title>Historique des parties</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Casino">
+<meta name="theme-color" content="#072a22">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Outfit:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: status bar, title, three summary tiles, game filter chips, then a scrolling day-by-day ledger above the tab bar. */
+:root {
+  --felt: #0f4c3c;
+  --felt-deep: #062a21;
+  --felt-line: rgba(216, 178, 106, .32);
+  --brass: #d8b26a;
+  --brass-ink: #2a1f0c;
+  --ink: #f2eee3;
+  --muted: rgba(242, 238, 227, .62);
+  --glass: rgba(4, 22, 17, .55);
+  --win: #7fd99a;
+  --lose: #ff8a7a;
+  --g-blackjack: #e8e2d2;
+  --g-roulette: #c8323b;
+  --g-holdem: #d8b26a;
+  --g-videopoker: #7d9cff;
+  --g-online: #7fd99a;
+  --f-display: "DM Serif Display", Georgia, "Times New Roman", serif;
+  --f-ui: "Outfit", -apple-system, "Helvetica Neue", Arial, sans-serif;
+  color-scheme: dark;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  box-sizing: border-box;
+  height: 100%;
+}
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  background: radial-gradient(120% 80% at 50% 20%, var(--felt) 0%, #0b3d30 45%, var(--felt-deep) 100%) fixed, var(--felt-deep);
+  color: var(--ink); font-family: var(--f-ui); overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+button { font: inherit; color: inherit; cursor: pointer; border: 0; background: none; }
+button:focus-visible, a:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+.app {
+  height: 100%; display: flex; flex-direction: column; gap: 12px; box-sizing: border-box;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 8px 10px; max-width: 560px; margin: 0 auto;
+}
+.bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.bank { display: flex; flex-direction: column; }
+.label, .bank small { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.bank strong { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.1; }
+h1 { margin: 0; font-family: var(--f-display); font-weight: 400; font-size: 30px; }
+.source { margin: 2px 0 0; color: var(--muted); font-size: 14px; line-height: 1.4; }
+.source a { color: var(--brass); }
+.tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.tile { background: var(--glass); border: 1px solid var(--felt-line); border-radius: 14px; padding: 10px 12px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.tile b { font-size: 20px; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.plus { color: var(--win); }
+.minus { color: var(--lose); }
+.chips { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; margin-inline: -4px; padding-inline: 4px; flex: none; }
+.chips::-webkit-scrollbar { display: none; }
+.chips button { flex: none; height: 34px; padding: 0 14px; border-radius: 17px; border: 1px solid var(--felt-line); background: var(--glass); font-size: 14px; font-weight: 600; color: var(--muted); }
+.chips button[aria-pressed="true"] { background: var(--brass); color: var(--brass-ink); border-color: var(--brass); }
+.list { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; display: flex; flex-direction: column; gap: 14px; padding-bottom: 6px; }
+.day { display: flex; flex-direction: column; gap: 6px; }
+.day h2 { margin: 0; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); font-weight: 600; display: flex; justify-content: space-between; }
+.row { display: grid; grid-template-columns: 10px 1fr auto; gap: 12px; align-items: center; padding: 10px 12px; border-radius: 12px; background: var(--glass); }
+.dot { width: 10px; height: 10px; border-radius: 50%; }
+.what { min-width: 0; }
+.what b { display: block; font-size: 15px; font-weight: 600; }
+.what span { display: block; font-size: 13px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.amt { text-align: right; font-variant-numeric: tabular-nums; }
+.amt b { display: block; font-size: 16px; }
+.amt span { font-size: 12px; color: var(--muted); }
+.wait { color: var(--brass); }
+.empty { margin: auto; text-align: center; color: var(--muted); max-width: 32ch; line-height: 1.5; padding-block: 30px; }
+.empty b { display: block; color: var(--ink); font-family: var(--f-display); font-weight: 400; font-size: 22px; margin-bottom: 6px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="bar">
+    <div class="bank"><small>Solde</small><strong id="bank">1 000</strong></div>
+    <nav class="switch"></nav>
+  </header>
+  <div>
+    <h1>Historique</h1>
+    <p class="source" id="source">Parties jouées sur ce téléphone.</p>
+  </div>
+  <div class="tiles">
+    <div class="tile"><span class="label">Gains nets</span><b id="tNet">0</b></div>
+    <div class="tile"><span class="label">Parties</span><b id="tCount">0</b></div>
+    <div class="tile"><span class="label">Meilleur coup</span><b id="tBest">0</b></div>
+  </div>
+  <div class="chips" id="filters" role="group" aria-label="Filtrer par jeu"></div>
+  <div class="list" id="list"></div>
+</div>
+<script src="app.js"></script>
+<script>
+(() => {
+  const A = window.CasinoAccount;
+  const $ = id => document.getElementById(id);
+  const fmt = n => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 });
+  const signed = n => (n > 0 ? "+" : n < 0 ? "−" : "") + fmt(Math.abs(n));
+  const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  try { const w = JSON.parse(localStorage.getItem("bj.table.v1") || "null"); if (w && typeof w.bankroll === "number") $("bank").textContent = fmt(w.bankroll); } catch (e) {}
+
+  let rows = [], filter = "all", pendingIds = new Set();
+
+  function dayLabel(d) {
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const x = new Date(d); x.setHours(0, 0, 0, 0);
+    const diff = Math.round((today - x) / 86400000);
+    if (diff === 0) return "Aujourd'hui";
+    if (diff === 1) return "Hier";
+    return new Date(d).toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" });
+  }
+
+  function render() {
+    const shown = rows.filter(r => filter === "all" || r.game === filter);
+    const nets = shown.map(r => r.payout - r.stake);
+    const total = nets.reduce((a, b) => a + b, 0);
+    $("tNet").textContent = signed(total);
+    $("tNet").className = total > 0 ? "plus" : total < 0 ? "minus" : "";
+    $("tCount").textContent = fmt(shown.length);
+    const bestNet = nets.length ? Math.max(...nets) : 0;
+    $("tBest").textContent = bestNet > 0 ? "+" + fmt(bestNet) : "—";
+
+    const games = Object.keys(A.GAMES).filter(g => rows.some(r => r.game === g));
+    $("filters").innerHTML = [["all", "Tous"], ...games.map(g => [g, A.GAMES[g]])]
+      .map(([k, l]) => `<button data-f="${k}" aria-pressed="${filter === k}">${l}</button>`).join("");
+
+    if (!shown.length) {
+      $("list").innerHTML = `<div class="empty"><b>Aucune partie pour l'instant</b>Joue une main au blackjack, un lancer à la roulette ou une main de poker : elle apparaîtra ici avec ce que tu as gagné ou perdu.</div>`;
+      return;
+    }
+    const groups = new Map();
+    for (const r of shown) {
+      const k = new Date(r.at).toDateString();
+      if (!groups.has(k)) groups.set(k, []);
+      groups.get(k).push(r);
+    }
+    let html = "";
+    for (const [, list] of groups) {
+      const dayNet = list.reduce((a, r) => a + r.payout - r.stake, 0);
+      html += `<section class="day"><h2><span>${dayLabel(list[0].at)}</span><span class="${dayNet > 0 ? "plus" : dayNet < 0 ? "minus" : ""}">${signed(dayNet)}</span></h2>`;
+      html += list.map(r => {
+        const net = r.payout - r.stake;
+        const t = new Date(r.at).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+        return `<div class="row"><span class="dot" style="background:var(--g-${r.game})"></span>
+          <div class="what"><b>${A.GAMES[r.game]}</b><span>${esc(r.detail)}</span></div>
+          <div class="amt"><b class="${net > 0 ? "plus" : net < 0 ? "minus" : ""}">${signed(net)}</b><span>${pendingIds.has(r.cid) ? '<span class="wait">à synchroniser</span> · ' : ""}mise ${fmt(r.stake)} · ${t}</span></div></div>`;
+      }).join("");
+      html += `</section>`;
+    }
+    $("list").innerHTML = html;
+  }
+
+  async function load() {
+    const local = A.localHistory();
+    if (A.configured() && A.session) {
+      $("source").innerHTML = `Toutes les parties du compte <b>${esc(A.session.username)}</b>, sur tous tes appareils.`;
+      const pend = A.pending();
+      pendingIds = new Set(pend.map(p => p.cid));
+      rows = pend.slice().reverse();
+      render();
+      try {
+        await A.flush();
+        const remote = await A.history(300);
+        const left = A.pending();
+        pendingIds = new Set(left.map(p => p.cid));
+        const seen = new Set(remote.map(r => r.cid));
+        rows = left.filter(p => !seen.has(p.cid)).reverse().concat(remote);
+      } catch (e) {
+        $("source").textContent = "Hors connexion : parties jouées sur ce téléphone.";
+        rows = local;
+      }
+    } else {
+      rows = local;
+      $("source").innerHTML = A.configured()
+        ? `Parties jouées sur ce téléphone. <a href="classement.html">Crée un compte</a> pour les garder et apparaître au classement.`
+        : "Parties jouées sur ce téléphone.";
+    }
+    render();
+  }
+
+  $("filters").addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
+    filter = b.dataset.f; render();
+  });
+  A.onChange(load);
+  load();
+})();
+</script>
+<script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});</script>
+</body>
+</html>

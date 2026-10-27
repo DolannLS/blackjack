@@ -900,7 +900,7 @@ button:disabled { opacity: .35; cursor: default; }
         msg: this.msg, msgKind: this.msgKind, hostName: this.seats[0] ? this.seats[0].name : "",
         best: champ ? champ.eval.cards.map(c => c.id) : [],
         seats: this.seats.map((s, k) => ({
-          name: s.name, isBot: s.isBot, connected: s.connected, stack: s.stack, bet: s.bet, rebuys: s.rebuys,
+          name: s.name, isBot: s.isBot, connected: s.connected, stack: s.stack, bet: s.bet, contrib: s.contrib, rebuys: s.rebuys,
           inHand: s.inHand, folded: s.folded, allIn: s.allIn, last: s.last, win: reveal ? s.win : 0,
           hole: s.hole.map(c => (k === i || s.shown) ? c : { id: c.id, h: 1 }),
           handName: s.shown && s.eval ? handName(s.eval) : "",
@@ -925,6 +925,7 @@ button:disabled { opacity: .35; cursor: default; }
     if (!view) return;
     const v = view, me = v.seats[v.you];
     if (!me) return;
+    recordHand(v, me);
     localDeadline = v.deadlineIn ? Date.now() + v.deadlineIn : 0;
     localNext = v.nextIn ? Date.now() + v.nextIn : 0;
     $("codeOut").textContent = v.code;
@@ -975,6 +976,15 @@ button:disabled { opacity: .35; cursor: default; }
 
     renderControls();
     tick();
+  }
+
+  // each phone saves its own result once per hand
+  function recordHand(v, me) {
+    if (v.phase !== "done" || !me.inHand || !v.hand) return;
+    const key = `${v.code}-${v.hand}`, done = readJSON("online.recorded") || [];
+    if (done.includes(key)) return;
+    writeJSON("online.recorded", [key, ...done].slice(0, 50));
+    window.CasinoAccount?.record("online", me.contrib, me.win, me.handName || (me.folded ? "Couché" : "Tout le monde se couche"));
   }
 
   function renderControls() {
@@ -1093,6 +1103,7 @@ button:disabled { opacity: .35; cursor: default; }
   if (!navigator.onLine) lobbyError("Tu es hors connexion. Le jeu en ligne a besoin d'internet ; les autres modes marchent sans réseau.");
 })();
 </script>
+<script src="app.js"></script>
 <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});</script>
 </body>
 </html>

@@ -599,6 +599,9 @@ button:disabled { opacity: .35; cursor: default; }
     }
     S.stats.best = Math.max(S.stats.best, S.bankroll);
     S.phase = "done"; S.busy = false; S.active = -1;
+    const staked = S.hands.reduce((a, h) => a + h.bet, 0);
+    window.CasinoAccount?.record("blackjack", staked, staked + net,
+      S.hands.map(h => `${TAGS[h.result]} ${value(h.cards).t}`).join(" · ") + ` · croupier ${d}`);
     const one = S.hands.length === 1 ? S.hands[0] : null;
     if (anyBJ && net > 0) say(`Blackjack ! +${fmt(net)}`, "bj");
     else if (net > 0) say((d > 21 ? "Le croupier saute · " : "Gagné · ") + `+${fmt(net)}`, "win");
@@ -666,6 +669,7 @@ button:disabled { opacity: .35; cursor: default; }
   render();
 })();
 </script>
+<script src="app.js"></script>
 <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});</script>
 </body>
 </html>
