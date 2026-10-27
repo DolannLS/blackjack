@@ -80,7 +80,8 @@ button:disabled { opacity: .35; cursor: default; }
 .bank strong.bump { animation: bump .5s ease; }
 @keyframes bump { 40% { transform: scale(1.12); color: var(--brass); } }
 .switch { display: flex; padding: 3px; border-radius: 12px; background: var(--glass); border: 1px solid var(--felt-line); }
-.switch a { padding: 7px 12px; border-radius: 9px; font-size: 14px; font-weight: 600; color: var(--muted); text-decoration: none; }
+.switch a { padding: 7px 10px; border-radius: 9px; font-size: 13.5px; font-weight: 600; color: var(--muted); text-decoration: none; white-space: nowrap; }
+@media (max-width: 380px) { .switch a { padding: 6px 7px; font-size: 12.5px; } .bank strong { font-size: 19px !important; } }
 .switch a[aria-current] { background: var(--brass); color: var(--brass-ink); }
 .switch a:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
 .icon-btn { width: 40px; height: 40px; border-radius: 50%; background: var(--glass); display: grid; place-items: center; }
@@ -229,6 +230,7 @@ button:disabled { opacity: .35; cursor: default; }
     <nav class="switch" aria-label="Jeux">
       <a href="./">Blackjack</a>
       <a href="roulette.html" aria-current="page">Roulette</a>
+      <a href="poker.html">Poker</a>
     </nav>
     <button class="icon-btn" id="menuBtn" aria-label="Statistiques et règles">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
