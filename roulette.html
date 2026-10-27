@@ -1,0 +1,571 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<title>Roulette Française</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Casino">
+<meta name="theme-color" content="#072a22">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Outfit:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: one-screen roulette table — status bar, wheel, last numbers, horizontal betting layout, chip tray docked at the bottom. Same felt world as the blackjack table. */
+:root {
+  --felt: #0f4c3c;
+  --felt-deep: #062a21;
+  --felt-line: rgba(216, 178, 106, .32);
+  --brass: #d8b26a;
+  --brass-ink: #2a1f0c;
+  --ink: #f2eee3;
+  --muted: rgba(242, 238, 227, .62);
+  --glass: rgba(4, 22, 17, .55);
+  --win: #7fd99a;
+  --lose: #ff8a7a;
+  --r-red: #b3262f;
+  --r-black: #17191d;
+  --r-green: #1f7a4c;
+  --chip-5: #c43a3a;
+  --chip-25: #2f8a55;
+  --chip-100: #1d1f24;
+  --chip-500: #6b3fa0;
+  --f-display: "DM Serif Display", Georgia, "Times New Roman", serif;
+  --f-ui: "Outfit", -apple-system, "Helvetica Neue", Arial, sans-serif;
+  color-scheme: dark;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  box-sizing: border-box;
+  height: 100%;
+}
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  background: radial-gradient(120% 80% at 50% 30%, var(--felt) 0%, #0b3d30 45%, var(--felt-deep) 100%) fixed, var(--felt-deep);
+  color: var(--ink);
+  font-family: var(--f-ui);
+  overflow: hidden;
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+button { font: inherit; color: inherit; cursor: pointer; border: 0; background: none; }
+button:focus-visible { outline: 2px solid var(--brass); outline-offset: 3px; }
+button:disabled { opacity: .35; cursor: default; }
+
+.app {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding-left: max(12px, env(safe-area-inset-left, 0px));
+  padding-right: max(12px, env(safe-area-inset-right, 0px));
+  padding-block: 8px 10px;
+  box-sizing: border-box;
+  max-width: 560px;
+  margin: 0 auto;
+  gap: 8px;
+}
+
+.bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-inline: 4px; }
+.bank { display: flex; flex-direction: column; }
+.label, .bank small { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.bank strong { font-size: 24px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.bank strong.bump { animation: bump .5s ease; }
+@keyframes bump { 40% { transform: scale(1.12); color: var(--brass); } }
+.switch { display: flex; padding: 3px; border-radius: 12px; background: var(--glass); border: 1px solid var(--felt-line); }
+.switch a { padding: 7px 12px; border-radius: 9px; font-size: 14px; font-weight: 600; color: var(--muted); text-decoration: none; }
+.switch a[aria-current] { background: var(--brass); color: var(--brass-ink); }
+.switch a:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+.icon-btn { width: 40px; height: 40px; border-radius: 50%; background: var(--glass); display: grid; place-items: center; }
+.icon-btn svg { width: 20px; height: 20px; }
+
+/* wheel */
+.stage { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
+.wheel-wrap { position: relative; width: min(70vw, 34dvh, 300px); aspect-ratio: 1; max-width: 100%; }
+.wheel-wrap canvas { width: 100%; height: 100%; display: block; }
+.result {
+  position: absolute; inset: 0; margin: auto; width: 34%; height: 34%; border-radius: 50%;
+  display: grid; place-items: center; font-family: var(--f-display); font-size: calc(min(70vw, 34dvh, 300px) * .14);
+  color: #fff; box-shadow: 0 0 0 3px var(--brass), 0 8px 18px rgba(0,0,0,.5);
+  pointer-events: none;
+}
+.result.show { animation: pop .4s ease; }
+.result[data-c="red"] { background: var(--r-red); }
+.result[data-c="black"] { background: var(--r-black); }
+.result[data-c="green"] { background: var(--r-green); }
+@keyframes pop { from { transform: scale(.5); opacity: 0; } }
+
+.history { display: flex; gap: 5px; justify-content: center; min-height: 26px; align-items: center; flex-wrap: wrap; }
+.history span {
+  width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center;
+  font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; color: #fff;
+  border: 1px solid rgba(255,255,255,.15);
+}
+.history span:first-child { box-shadow: 0 0 0 2px var(--brass); }
+.history .red { background: var(--r-red); }
+.history .black { background: var(--r-black); }
+.history .green { background: var(--r-green); }
+
+.msg-wrap { display: flex; justify-content: center; min-height: 34px; align-items: center; }
+.msg {
+  padding: 6px 16px; border-radius: 18px; background: var(--glass);
+  font-weight: 600; font-size: 15px; border: 1px solid var(--felt-line); text-align: center;
+}
+.msg:empty { visibility: hidden; }
+.msg.win { color: var(--win); }
+.msg.lose { color: var(--lose); }
+.msg.big { background: var(--brass); color: var(--brass-ink); border-color: var(--brass); }
+
+/* betting layout */
+.board {
+  display: grid;
+  grid-template-columns: 1.15fr repeat(12, 1fr) 1.3fr;
+  grid-template-rows: repeat(3, minmax(30px, 4.6dvh)) repeat(2, minmax(30px, 4.4dvh));
+  gap: 2px;
+  padding: 3px;
+  border: 1.5px solid var(--brass);
+  border-radius: 10px;
+  background: rgba(216,178,106,.35);
+}
+.cell {
+  position: relative; display: grid; place-items: center;
+  font-weight: 700; font-size: clamp(11px, 3.3vw, 15px); font-variant-numeric: tabular-nums;
+  color: #fff; background: var(--felt); border-radius: 3px; padding: 0; min-width: 0;
+}
+.cell.red { background: var(--r-red); }
+.cell.black { background: var(--r-black); }
+.cell.zero { background: var(--r-green); grid-row: 1 / 4; grid-column: 1; border-radius: 8px 3px 3px 8px; }
+.cell.out { font-size: clamp(10px, 3vw, 13px); font-weight: 600; letter-spacing: .02em; }
+.cell.out .dia { width: 13px; height: 13px; transform: rotate(45deg); border-radius: 2px; }
+.cell.hit { box-shadow: inset 0 0 0 2px var(--brass), 0 0 12px var(--brass); z-index: 1; }
+.cell:active:not(:disabled) { filter: brightness(1.25); }
+.mark {
+  position: absolute; z-index: 2; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  min-width: 22px; height: 22px; padding: 0 4px; box-sizing: border-box; border-radius: 11px;
+  background: var(--brass); color: var(--brass-ink); border: 2px dashed rgba(42,31,12,.45);
+  font-size: 10px; font-weight: 700; display: grid; place-items: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,.5); pointer-events: none;
+  animation: drop .2s ease;
+}
+@keyframes drop { from { transform: translate(-50%, -90%) scale(.8); } }
+
+/* controls */
+.controls { display: flex; flex-direction: column; gap: 10px; }
+.tray { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.chips { display: flex; gap: 10px; }
+.chip {
+  --c: var(--chip-5);
+  width: 50px; height: 50px; border-radius: 50%;
+  background:
+    radial-gradient(circle at 50% 50%, var(--c) 0 52%, transparent 53%),
+    repeating-conic-gradient(var(--c) 0 22.5deg, #f2eee3 22.5deg 45deg);
+  box-shadow: 0 0 0 2px var(--c), 0 4px 0 rgba(0,0,0,.35);
+  display: grid; place-items: center; position: relative;
+  font-weight: 700; font-size: 14px; color: #fff;
+  transition: transform .15s;
+}
+.chip::after { content: ""; position: absolute; inset: 8px; border-radius: 50%; border: 1.5px dashed rgba(255,255,255,.55); }
+.chip span { position: relative; z-index: 1; text-shadow: 0 1px 1px rgba(0,0,0,.4); }
+.chip[data-v="25"] { --c: var(--chip-25); }
+.chip[data-v="100"] { --c: var(--chip-100); }
+.chip[data-v="500"] { --c: var(--chip-500); }
+.chip[aria-pressed="true"] { transform: translateY(-6px); box-shadow: 0 0 0 2px var(--c), 0 0 0 5px var(--brass), 0 8px 10px rgba(0,0,0,.4); }
+.stake { text-align: right; }
+.stake b { display: block; font-size: 20px; font-variant-numeric: tabular-nums; }
+
+.row { display: grid; grid-template-columns: 1fr 1fr 1.4fr; gap: 10px; }
+.btn {
+  height: 50px; border-radius: 14px; font-weight: 600; font-size: 16px;
+  background: var(--glass); border: 1px solid var(--felt-line);
+  display: flex; align-items: center; justify-content: center;
+}
+.btn.primary { background: var(--brass); color: var(--brass-ink); border-color: var(--brass); }
+.btn:active:not(:disabled) { transform: scale(.97); }
+.shake { animation: shake .3s; }
+@keyframes shake { 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+
+/* sheet */
+.scrim { position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 20; display: flex; align-items: flex-end; justify-content: center; }
+.sheet {
+  width: 100%; max-width: 560px; box-sizing: border-box;
+  background: #0a3328; border-top: 1px solid var(--felt-line); border-radius: 22px 22px 0 0;
+  padding-left: max(20px, env(safe-area-inset-left, 0px));
+  padding-right: max(20px, env(safe-area-inset-right, 0px));
+  padding-top: 18px; padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  display: flex; flex-direction: column; gap: 18px; animation: up .28s ease;
+}
+@keyframes up { from { transform: translateY(100%); } }
+.sheet h2 { margin: 0; font-family: var(--f-display); font-weight: 400; font-size: 26px; }
+.sheet-head { display: flex; justify-content: space-between; align-items: center; }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.stat { background: var(--glass); border-radius: 12px; padding: 10px 12px; display: flex; flex-direction: column; gap: 2px; }
+.stat b { font-size: 20px; font-variant-numeric: tabular-nums; }
+.rules { margin: 0; padding-left: 18px; color: var(--muted); font-size: 14px; line-height: 1.6; }
+
+@media (max-height: 680px) {
+  .history { display: none; }
+  .chip { width: 44px; height: 44px; font-size: 13px; }
+  .btn { height: 44px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="bar">
+    <div class="bank">
+      <small>Solde</small>
+      <strong id="bank">1 000</strong>
+    </div>
+    <nav class="switch" aria-label="Jeux">
+      <a href="./">Blackjack</a>
+      <a href="roulette.html" aria-current="page">Roulette</a>
+    </nav>
+    <button class="icon-btn" id="menuBtn" aria-label="Statistiques et règles">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+    </button>
+  </header>
+
+  <main class="stage">
+    <div class="wheel-wrap">
+      <canvas id="wheel" aria-label="Cylindre de roulette"></canvas>
+      <div class="result" id="result" hidden></div>
+    </div>
+    <div class="history" id="history" aria-label="Derniers numéros"></div>
+    <div class="msg-wrap"><div class="msg" id="msg" role="status" aria-live="polite"></div></div>
+  </main>
+
+  <div class="board" id="board" aria-label="Tapis de mise"></div>
+
+  <footer class="controls">
+    <div class="tray">
+      <div class="chips" id="chips" role="group" aria-label="Valeur du jeton">
+        <button class="chip" data-v="5" aria-pressed="true"><span>5</span></button>
+        <button class="chip" data-v="25" aria-pressed="false"><span>25</span></button>
+        <button class="chip" data-v="100" aria-pressed="false"><span>100</span></button>
+        <button class="chip" data-v="500" aria-pressed="false"><span>500</span></button>
+      </div>
+      <div class="stake"><span class="label">Mise</span><b id="total">0</b></div>
+    </div>
+    <div class="row">
+      <button class="btn" id="clearBtn">Effacer</button>
+      <button class="btn" id="againBtn">Remiser</button>
+      <button class="btn primary" id="spinBtn">Lancer</button>
+    </div>
+  </footer>
+</div>
+
+<div class="scrim" id="menu" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="menuTitle">
+    <div class="sheet-head">
+      <h2 id="menuTitle">Roulette</h2>
+      <button class="icon-btn" id="closeMenu" aria-label="Fermer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <div class="stats" id="stats"></div>
+    <ul class="rules">
+      <li>Roulette française, un seul zéro (37 cases).</li>
+      <li>Plein 35 pour 1, douzaine et colonne 2 pour 1, chances simples 1 pour 1.</li>
+      <li>La partage : si le 0 sort, les chances simples récupèrent la moitié de leur mise.</li>
+      <li>Touchez une case pour y poser le jeton choisi. Le solde est partagé avec le blackjack.</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+(() => {
+  const START = 1000, WALLET = "bj.table.v1", KEY = "roulette.v1";
+  const ORDER = [0,32,15,19,4,21,2,25,17,34,6,27,13,36,11,30,8,23,10,5,24,16,33,1,20,14,31,9,22,18,29,7,28,12,35,3,26];
+  const REDS = new Set([1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]);
+  const colorOf = n => n === 0 ? "green" : REDS.has(n) ? "red" : "black";
+  const COLOR_FR = { red: "rouge", black: "noir", green: "vert" };
+  const $ = id => document.getElementById(id);
+  const fmt = n => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 });
+
+  // shared wallet with the blackjack page; roulette keeps its own history and stats
+  function readJSON(k) { try { return JSON.parse(localStorage.getItem(k) || "null"); } catch (e) { return null; } }
+  function writeJSON(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  const wallet = readJSON(WALLET) || {};
+  let bankroll = typeof wallet.bankroll === "number" ? wallet.bankroll : START;
+  const mine = readJSON(KEY) || {};
+  let history = mine.history || [];
+  let lastBets = mine.lastBets || null;
+  const stats = Object.assign({ spins: 0, won: 0, best: 0 }, mine.stats);
+  function save() {
+    const w = readJSON(WALLET) || {};
+    w.bankroll = bankroll;
+    if (!w.stats) w.stats = { played: 0, won: 0, lost: 0, push: 0, bj: 0, best: START };
+    w.stats.best = Math.max(w.stats.best || 0, bankroll);
+    writeJSON(WALLET, w);
+    writeJSON(KEY, { history, lastBets, stats });
+  }
+
+  // bets: key -> amount
+  let bets = {}, chip = 5, spinning = false, lastHit = null;
+  const total = () => Object.values(bets).reduce((a, b) => a + b, 0);
+  const payoutMultiplier = key => key.startsWith("n:") ? 36 : key.startsWith("doz:") || key.startsWith("col:") ? 3 : 2;
+  function covers(key, n) {
+    if (key.startsWith("n:")) return +key.slice(2) === n;
+    if (n === 0) return false;
+    if (key.startsWith("doz:")) return Math.ceil(n / 12) === +key.slice(4);
+    if (key.startsWith("col:")) return ((n - 1) % 3) + 1 === +key.slice(4);
+    return { red: REDS.has(n), black: !REDS.has(n), even: n % 2 === 0, odd: n % 2 === 1, low: n <= 18, high: n >= 19 }[key];
+  }
+  const EVEN_MONEY = new Set(["red", "black", "even", "odd", "low", "high"]);
+
+  // board
+  function buildBoard() {
+    const b = $("board");
+    let h = `<button class="cell zero" data-k="n:0" aria-label="Zéro">0</button>`;
+    for (let r = 1; r <= 3; r++) {
+      for (let c = 1; c <= 12; c++) {
+        const n = 3 * c - (r - 1);
+        h += `<button class="cell ${colorOf(n)}" data-k="n:${n}" style="grid-row:${r};grid-column:${c + 1}">${n}</button>`;
+      }
+      h += `<button class="cell out" data-k="col:${4 - r}" style="grid-row:${r};grid-column:14" aria-label="Colonne ${4 - r}">2:1</button>`;
+    }
+    ["1–12", "13–24", "25–36"].forEach((t, i) => {
+      h += `<button class="cell out" data-k="doz:${i + 1}" style="grid-row:4;grid-column:${2 + i * 4} / span 4" aria-label="Douzaine ${i + 1}">${t}</button>`;
+    });
+    const outs = [["low", "1–18"], ["even", "Pair"], ["red", `<span class="dia" style="background:var(--r-red)"></span>`, "Rouge"],
+                  ["black", `<span class="dia" style="background:var(--r-black);border:1px solid rgba(255,255,255,.5)"></span>`, "Noir"],
+                  ["odd", "Impair"], ["high", "19–36"]];
+    outs.forEach(([k, t, aria], i) => {
+      h += `<button class="cell out" data-k="${k}" style="grid-row:5;grid-column:${2 + i * 2} / span 2" aria-label="${aria || t}">${t}</button>`;
+    });
+    b.innerHTML = h;
+  }
+
+  function renderBets() {
+    document.querySelectorAll(".cell").forEach(el => {
+      const k = el.dataset.k, a = bets[k];
+      let m = el.querySelector(".mark");
+      if (a) {
+        if (!m) { m = document.createElement("span"); m.className = "mark"; el.appendChild(m); }
+        m.textContent = a >= 1000 ? Math.round(a / 100) / 10 + "k" : a;
+      } else if (m) m.remove();
+      el.classList.toggle("hit", lastHit !== null && covers(k, lastHit) && !Object.keys(bets).length);
+    });
+    $("total").textContent = fmt(total());
+    const busy = spinning;
+    $("spinBtn").disabled = busy || total() === 0;
+    $("clearBtn").disabled = busy || total() === 0;
+    const again = lastBets && Object.values(lastBets).reduce((a, b) => a + b, 0);
+    $("againBtn").disabled = busy || !again || again > bankroll;
+    $("againBtn").textContent = again ? `Remiser ${fmt(again)}` : "Remiser";
+    document.querySelectorAll(".cell").forEach(el => el.disabled = busy);
+  }
+
+  let shownBank = bankroll;
+  function renderBank() {
+    const el = $("bank");
+    el.textContent = fmt(bankroll);
+    if (bankroll > shownBank) { el.classList.remove("bump"); void el.offsetWidth; el.classList.add("bump"); }
+    shownBank = bankroll;
+  }
+  function renderHistory() {
+    $("history").innerHTML = history.slice(0, 10).map(n => `<span class="${colorOf(n)}">${n}</span>`).join("");
+  }
+  function say(t, kind = "") { const m = $("msg"); m.className = "msg" + (kind ? " " + kind : ""); m.textContent = t; }
+
+  function place(k) {
+    if (spinning) return;
+    if (total() + chip > bankroll) { $("board").classList.remove("shake"); void $("board").offsetWidth; $("board").classList.add("shake"); say("Solde insuffisant pour ce jeton", "lose"); return; }
+    if (lastHit !== null) { lastHit = null; $("result").hidden = true; }
+    bets[k] = (bets[k] || 0) + chip;
+    say("");
+    renderBets();
+  }
+
+  // wheel drawing
+  const cv = $("wheel"), ctx = cv.getContext("2d");
+  const STEP = Math.PI * 2 / 37;
+  let size = 0, face = null, wheelAngle = 0, ball = null;
+  function drawFace() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 3);
+    size = cv.clientWidth * dpr;
+    cv.width = cv.height = size;
+    face = document.createElement("canvas");
+    face.width = face.height = size;
+    const g = face.getContext("2d"), R = size / 2;
+    g.translate(R, R);
+    // wooden bowl
+    const wood = g.createRadialGradient(0, 0, R * .7, 0, 0, R);
+    wood.addColorStop(0, "#5a2e17"); wood.addColorStop(.6, "#3b1d0f"); wood.addColorStop(1, "#1e0e07");
+    g.fillStyle = wood; g.beginPath(); g.arc(0, 0, R, 0, Math.PI * 2); g.fill();
+    // ball track
+    g.fillStyle = "#2a160b"; g.beginPath(); g.arc(0, 0, R * .9, 0, Math.PI * 2); g.fill();
+    g.strokeStyle = "rgba(216,178,106,.6)"; g.lineWidth = R * .012; g.stroke();
+    // pockets
+    const ro = R * .8, ri = R * .5;
+    ORDER.forEach((n, i) => {
+      const a0 = -Math.PI / 2 + (i - .5) * STEP, a1 = a0 + STEP;
+      g.beginPath(); g.arc(0, 0, ro, a0, a1); g.arc(0, 0, ri, a1, a0, true); g.closePath();
+      g.fillStyle = { red: "#b3262f", black: "#17191d", green: "#1f7a4c" }[colorOf(n)];
+      g.fill();
+      g.strokeStyle = "#d8b26a"; g.lineWidth = R * .008; g.stroke();
+      g.save();
+      g.rotate(-Math.PI / 2 + i * STEP + Math.PI / 2);
+      g.fillStyle = "#fff"; g.font = `600 ${R * .085}px Outfit, Arial, sans-serif`;
+      g.textAlign = "center"; g.textBaseline = "middle";
+      g.fillText(String(n), 0, -R * .705);
+      g.restore();
+    });
+    // inner pocket floor ring
+    g.beginPath(); g.arc(0, 0, ri, 0, Math.PI * 2);
+    g.strokeStyle = "#d8b26a"; g.lineWidth = R * .015; g.stroke();
+    // cone
+    const cone = g.createRadialGradient(-R * .1, -R * .1, R * .05, 0, 0, ri);
+    cone.addColorStop(0, "#6b3a1e"); cone.addColorStop(1, "#2c150a");
+    g.fillStyle = cone; g.beginPath(); g.arc(0, 0, ri * .97, 0, Math.PI * 2); g.fill();
+    // turret
+    g.strokeStyle = "#d8b26a"; g.lineWidth = R * .03; g.lineCap = "round";
+    for (let k = 0; k < 4; k++) {
+      g.save(); g.rotate(k * Math.PI / 2 + Math.PI / 4);
+      g.beginPath(); g.moveTo(0, 0); g.lineTo(0, -R * .3); g.stroke();
+      g.restore();
+    }
+    const brass = g.createRadialGradient(-R * .03, -R * .03, 1, 0, 0, R * .09);
+    brass.addColorStop(0, "#f6e3b4"); brass.addColorStop(1, "#a07c3c");
+    g.fillStyle = brass; g.beginPath(); g.arc(0, 0, R * .08, 0, Math.PI * 2); g.fill();
+    draw();
+  }
+  function draw() {
+    const R = size / 2;
+    ctx.clearRect(0, 0, size, size);
+    ctx.save(); ctx.translate(R, R); ctx.rotate(wheelAngle); ctx.drawImage(face, -R, -R); ctx.restore();
+    if (ball) {
+      const x = R + Math.cos(ball.a) * ball.r * R, y = R + Math.sin(ball.a) * ball.r * R;
+      const gr = ctx.createRadialGradient(x - R * .012, y - R * .012, 1, x, y, R * .04);
+      gr.addColorStop(0, "#ffffff"); gr.addColorStop(1, "#b9b9b9");
+      ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(x, y, R * .033, 0, Math.PI * 2); ctx.fill();
+    }
+  }
+
+  function rand(n) {
+    const a = new Uint32Array(1);
+    if (window.crypto && crypto.getRandomValues) crypto.getRandomValues(a); else a[0] = Math.random() * 2 ** 32;
+    return a[0] % n;
+  }
+  const easeOut = t => 1 - Math.pow(1 - t, 3.2);
+
+  function spin() {
+    if (spinning || total() === 0 || total() > bankroll) return;
+    spinning = true;
+    lastBets = { ...bets };
+    const stake = total();
+    bankroll -= stake;
+    renderBank();
+    $("result").hidden = true;
+    say("Rien ne va plus");
+    renderBets();
+
+    const idx = rand(37), n = ORDER[idx];
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const D = reduce ? 600 : 5200;
+    const w0 = wheelAngle, wTurn = Math.PI * 2 * (2 + rand(2)) + rand(360) * Math.PI / 180;
+    const wEnd = w0 + wTurn;
+    // the ball ends in the pocket's screen angle once the wheel has stopped
+    const target = wEnd + (-Math.PI / 2 + idx * STEP);
+    const b0 = ball ? ball.a : -Math.PI / 2;
+    let bTurn = b0 - target;
+    bTurn = ((bTurn % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2) + Math.PI * 2 * 7;
+    const t0 = performance.now();
+    function frame(now) {
+      const t = Math.min(1, (now - t0) / D), e = easeOut(t);
+      wheelAngle = w0 + wTurn * e;
+      const ba = b0 - bTurn * e;
+      // ball rides the outer track, then drops into the pocket ring with a small bounce
+      let r = .86;
+      if (t > .62) {
+        const k = Math.min(1, (t - .62) / .3);
+        r = .86 - (.86 - .655) * k + Math.sin(k * Math.PI * 3) * .025 * (1 - k);
+      }
+      ball = { a: ba, r };
+      draw();
+      if (t < 1) requestAnimationFrame(frame); else finish(n, stake);
+    }
+    requestAnimationFrame(frame);
+  }
+
+  function finish(n, stake) {
+    let back = 0;
+    for (const [k, a] of Object.entries(bets)) {
+      if (covers(k, n)) back += a * payoutMultiplier(k);
+      else if (n === 0 && EVEN_MONEY.has(k)) back += a / 2; // la partage
+    }
+    bankroll += back;
+    const net = back - stake;
+    history.unshift(n); history = history.slice(0, 30);
+    stats.spins++; if (net > 0) stats.won++; stats.best = Math.max(stats.best, net);
+    bets = {};
+    lastHit = n;
+    const res = $("result");
+    res.textContent = n; res.dataset.c = colorOf(n); res.hidden = false;
+    res.classList.remove("show"); void res.offsetWidth; res.classList.add("show");
+    const label = n === 0 ? "0 vert" : `${n} ${COLOR_FR[colorOf(n)]}`;
+    if (net > 0) say(`${label} · Gagné +${fmt(net)}`, net >= stake * 10 ? "big" : "win");
+    else if (net < 0) say(`${label} · Perdu −${fmt(-net)}`, "lose");
+    else say(`${label} · Mise rendue`);
+    if (bankroll < 5) setTimeout(() => say("Plus de jetons. Rechargez depuis le blackjack ou le menu."), 1600);
+    spinning = false;
+    save();
+    renderBank(); renderHistory(); renderBets();
+  }
+
+  // menu
+  function renderStats() {
+    const rate = stats.spins ? Math.round(stats.won / stats.spins * 100) : 0;
+    const items = [["Lancers", stats.spins], ["Gagnants", stats.won], ["Réussite", rate + " %"], ["Plus gros gain", fmt(stats.best)], ["Solde", fmt(bankroll)]];
+    let html = items.map(([k, v]) => `<div class="stat"><span class="label">${k}</span><b>${v}</b></div>`).join("");
+    if (bankroll < 5) html += `<button class="btn primary" id="refill" style="grid-column:span 3">Recharger 1 000</button>`;
+    $("stats").innerHTML = html;
+    const r = $("refill");
+    if (r) r.onclick = () => { bankroll = START; save(); renderBank(); renderBets(); renderStats(); say("Solde rechargé", "win"); };
+  }
+  $("menuBtn").onclick = () => { renderStats(); $("menu").hidden = false; };
+  $("closeMenu").onclick = () => { $("menu").hidden = true; };
+  $("menu").onclick = e => { if (e.target.id === "menu") $("menu").hidden = true; };
+
+  // wiring
+  $("board").addEventListener("click", e => { const c = e.target.closest(".cell"); if (c && !c.disabled) place(c.dataset.k); });
+  $("chips").addEventListener("click", e => {
+    const b = e.target.closest(".chip"); if (!b) return;
+    chip = +b.dataset.v;
+    document.querySelectorAll(".chip").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+  });
+  $("clearBtn").onclick = () => { if (!spinning) { bets = {}; renderBets(); } };
+  $("againBtn").onclick = () => {
+    if (spinning || !lastBets) return;
+    const t = Object.values(lastBets).reduce((a, b) => a + b, 0);
+    if (t > bankroll) return;
+    bets = { ...lastBets }; lastHit = null; $("result").hidden = true; renderBets(); spin();
+  };
+  $("spinBtn").onclick = spin;
+  document.addEventListener("keydown", e => {
+    if (e.key === "Escape") $("menu").hidden = true;
+    else if ((e.key === "Enter" || e.key === " ") && $("menu").hidden) { e.preventDefault(); spin(); }
+  });
+  window.addEventListener("resize", () => { drawFace(); });
+  window.addEventListener("pageshow", e => { if (e.persisted) location.reload(); });
+
+  buildBoard();
+  renderBank(); renderHistory(); renderBets();
+  say(bankroll < 5 ? "Plus de jetons. Rechargez depuis le menu." : "Faites vos jeux");
+  drawFace();
+  if (document.fonts) document.fonts.ready.then(drawFace);
+})();
+</script>
+<script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});</script>
+</body>
+</html>

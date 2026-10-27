@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Blackjack">
+<meta name="apple-mobile-web-app-title" content="Casino">
 <meta name="theme-color" content="#072a22">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -76,8 +76,10 @@ button:disabled { opacity: .35; cursor: default; }
 .bank strong { font-size: 24px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.1; }
 .bank strong.bump { animation: bump .5s ease; }
 @keyframes bump { 40% { transform: scale(1.12); color: var(--brass); } }
-.mini { display: flex; gap: 14px; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
-.mini b { color: var(--ink); font-weight: 600; }
+.switch { display: flex; padding: 3px; border-radius: 12px; background: var(--glass); border: 1px solid var(--felt-line); }
+.switch a { padding: 7px 12px; border-radius: 9px; font-size: 14px; font-weight: 600; color: var(--muted); text-decoration: none; }
+.switch a[aria-current] { background: var(--brass); color: var(--brass-ink); }
+.switch a:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
 .icon-btn { width: 40px; height: 40px; border-radius: 50%; background: var(--glass); display: grid; place-items: center; }
 .icon-btn svg { width: 20px; height: 20px; }
 
@@ -256,11 +258,10 @@ button:disabled { opacity: .35; cursor: default; }
       <small>Solde</small>
       <strong id="bank">1 000</strong>
     </div>
-    <div class="mini" aria-label="Résumé">
-      <span>G <b id="mW">0</b></span>
-      <span>P <b id="mL">0</b></span>
-      <span>É <b id="mP">0</b></span>
-    </div>
+    <nav class="switch" aria-label="Jeux">
+      <a href="./" aria-current="page">Blackjack</a>
+      <a href="roulette.html">Roulette</a>
+    </nav>
     <button class="icon-btn" id="menuBtn" aria-label="Statistiques et réglages">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
     </button>
@@ -403,7 +404,6 @@ button:disabled { opacity: .35; cursor: default; }
     bankEl.textContent = fmt(S.bankroll);
     if (S.bankroll > lastBank) { bankEl.classList.remove("bump"); void bankEl.offsetWidth; bankEl.classList.add("bump"); }
     lastBank = S.bankroll;
-    $("mW").textContent = S.stats.won; $("mL").textContent = S.stats.lost; $("mP").textContent = S.stats.push;
 
     // dealer
     $("dealer").innerHTML = S.dealer.map((c, i) => cardHTML(c, i === 1 && S.hole)).join("");
@@ -656,6 +656,9 @@ button:disabled { opacity: .35; cursor: default; }
       else if (k === "p") split();
     } else if (k === "enter" || k === " ") { e.preventDefault(); deal(); }
   });
+
+  // the wallet is shared with the roulette page: reload when coming back from it
+  window.addEventListener("pageshow", e => { if (e.persisted) location.reload(); });
 
   say(S.bankroll < 5 ? "Plus de jetons. Rechargez pour rejouer." : "Faites vos jeux");
   render();
