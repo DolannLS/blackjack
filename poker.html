@@ -87,6 +87,7 @@ button:disabled { opacity: .35; cursor: default; }
 .modes { display: flex; justify-content: center; gap: 18px; }
 .modes button { padding: 4px 2px; font-size: 14px; font-weight: 600; color: var(--muted); border-bottom: 2px solid transparent; }
 .modes button[aria-pressed="true"] { color: var(--ink); border-bottom-color: var(--brass); }
+.modes a { padding: 4px 2px; font-size: 14px; font-weight: 600; color: var(--muted); border-bottom: 2px solid transparent; text-decoration: none; }
 
 /* cards */
 .card {
@@ -284,6 +285,7 @@ button:disabled { opacity: .35; cursor: default; }
   <div class="modes" role="group" aria-label="Variante">
     <button id="modeH" aria-pressed="true">Texas Hold'em</button>
     <button id="modeV" aria-pressed="false">Vidéo poker</button>
+    <a href="online.html">En ligne</a>
   </div>
 
   <!-- Texas Hold'em -->
@@ -354,7 +356,7 @@ button:disabled { opacity: .35; cursor: default; }
   let W = typeof wallet0.bankroll === "number" ? wallet0.bankroll : START;
   const saved = readJSON(KEY) || {};
   const stats = Object.assign({ hands: 0, handsWon: 0, bestPot: 0, vpHands: 0, vpBest: 0 }, saved.stats);
-  let mode = saved.mode === "video" ? "video" : "holdem";
+  let mode = location.hash === "#video" ? "video" : location.hash === "#holdem" ? "holdem" : saved.mode === "video" ? "video" : "holdem";
   function save() {
     const w = readJSON(WALLET) || {};
     w.bankroll = W;
