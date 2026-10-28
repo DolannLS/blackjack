@@ -319,6 +319,57 @@ button:disabled { opacity: .35; cursor: default; }
 .deckinfo { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
 .deckinfo b { color: var(--ink); }
 .deckinfo i { width: 11px; height: 15px; border-radius: 2px; background: repeating-linear-gradient(45deg, transparent 0 2px, rgba(216,178,106,.45) 2px 3px), #7a1f2b; border: 1px solid var(--card); flex: none; }
+/* oval poker table: board in the middle, opponents around the rail, you below */
+.ptable { position: relative; flex: 1 1 auto; min-height: 230px; margin-top: 4px; }
+.ptable .oval { position: absolute; left: 4%; right: 4%; top: 15%; bottom: 13%; border-radius: 50% / 50%;
+  background: radial-gradient(ellipse at 50% 40%, #17785c 0%, #0f5a45 55%, #0a3f31 100%);
+  box-shadow: 0 0 0 7px #4a2412, 0 0 0 9px #8a5a2b, 0 0 0 10px rgba(216,178,106,.55), 0 14px 30px rgba(0,0,0,.45), inset 0 0 40px rgba(0,0,0,.35); }
+.ptable .oval::after { content: ""; position: absolute; inset: 9%; border-radius: 50%; border: 1.5px solid rgba(216,178,106,.28); }
+.pcenter { position: absolute; left: 50%; top: 53%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 6px; z-index: 1; }
+.pcenter .board { gap: 4px; }
+.pcenter .board .card { --cw: min(11.5vw, 7.4dvh, 64px); }
+.pseat { position: absolute; z-index: 2; transform: translate(-50%, -50%); width: 96px; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.pseat .ps-cards { display: flex; height: calc(var(--cw) * 1.4); --cw: 26px; margin-bottom: -10px; z-index: 1; }
+.pseat .ps-cards .card { --cw: 26px; }
+.pseat .ps-cards .card + .card { margin-left: -9px; transform: rotate(7deg); }
+.pseat .ps-cards .card:first-child { transform: rotate(-7deg); }
+.pseat .ps-box { width: 100%; box-sizing: border-box; padding: 9px 6px 5px; border-radius: 12px; background: rgba(4,22,17,.88); border: 1.5px solid rgba(216,178,106,.25); text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,.4); }
+.pseat .ps-box b { display: block; font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pseat .ps-box span { display: block; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.pseat .ps-act { font-size: 11.5px; font-weight: 700; color: var(--brass); min-height: 14px; max-width: 110px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pseat .ps-act.hn { color: var(--ink); }
+.pseat .ps-off { font-size: 10.5px; color: var(--lose); font-weight: 700; }
+.pseat.active .ps-box { border-color: var(--brass); box-shadow: 0 0 0 2px rgba(216,178,106,.35), 0 4px 12px rgba(0,0,0,.4); }
+.pseat.active .ps-box b::after { content: ""; display: inline-block; width: 6px; height: 6px; margin-left: 4px; border-radius: 50%; background: var(--brass); vertical-align: middle; animation: blink 1s infinite; }
+.pseat.out { opacity: .45; }
+.pseat.winner .ps-box { border-color: var(--win); box-shadow: 0 0 16px rgba(127,217,154,.45); }
+.pseat .dbtn { top: auto; bottom: 8px; right: -8px; }
+.pseat .betchip { position: absolute; left: 50%; transform: translateX(-50%); white-space: nowrap; background: rgba(3,16,12,.9); box-shadow: 0 2px 6px rgba(0,0,0,.4); }
+.pseat[data-at="top"] { transform: translate(-50%, 0); }
+.pseat[data-at="top"] .betchip { top: calc(100% + 4px); }
+.pseat[data-at="bottom"] .betchip { bottom: calc(100% + 2px); }
+.pseat[data-at="left"] .betchip { left: calc(100% + 4px); transform: none; top: 50%; }
+.pseat[data-at="right"] .betchip { left: auto; right: calc(100% + 4px); transform: none; top: 50%; }
+.pseat .betchip:empty { display: none; }
+.pwait { position: absolute; left: 50%; top: 18%; transform: translate(-50%, -50%); z-index: 2; text-align: center; padding: 8px 14px; border-radius: 12px; background: rgba(4,22,17,.85); font-size: 13.5px; color: var(--muted); white-space: nowrap; }
+.pwait b { color: var(--ink); }
+@media (max-height: 760px) { .pseat { width: 86px; } .pseat .ps-cards .card { --cw: 22px; } .pseat .ps-box { padding: 8px 5px 4px; } .pcenter .board .card { --cw: min(10.5vw, 6.6dvh, 60px); } }
+@media (max-height: 700px) {
+  .pseat { width: 80px; gap: 1px; }
+  .pseat .ps-cards .card { --cw: 17px; }
+  .pseat .ps-cards { margin-bottom: -7px; }
+  .pseat .ps-cards .card + .card { margin-left: -6px; }
+  .pseat .ps-box { padding: 7px 4px 3px; border-radius: 10px; }
+  .pseat .ps-box b { font-size: 12px; }
+  .pseat .ps-box span, .pseat .ps-act { font-size: 11px; }
+  .pcenter { gap: 4px; top: 57%; }
+  .pseat:not(.faceup) .ps-cards { display: none; }
+  .pcenter .deckinfo { display: none; }
+  .pseat:not(.faceup) .ps-box { padding-top: 5px; }
+  .pcenter .board .card { --cw: min(9.6vw, 6.2dvh, 56px); }
+  .ptable .oval { top: 12%; bottom: 10%; }
+}
+@media (min-width: 700px) and (min-height: 500px) { .pseat { width: 120px; } .pseat .ps-cards .card { --cw: 36px; } .pseat .ps-box b { font-size: 15px; } .pcenter .board .card { --cw: min(8vw, 9dvh, 92px); } }
 .board-wrap { display: flex; flex-direction: column; align-items: center; gap: 8px; }
 .host-tools { display: flex; gap: 8px; justify-content: center; }
 .rank { display: flex; flex-direction: column; gap: 6px; }
@@ -394,12 +445,14 @@ button:disabled { opacity: .35; cursor: default; }
         <button class="small-btn" id="leaveBtn">Quitter</button>
       </div>
     </div>
-    <div class="bots" id="seats"></div>
-    <div class="center">
-      <div class="board-wrap">
-        <div class="potrow"><div class="pot">Pot<b id="pot">0</b></div><div class="deckinfo" id="deckInfo"></div></div>
+    <div class="ptable" id="ptable">
+      <div class="oval" aria-hidden="true"></div>
+      <div class="pcenter">
+        <div class="pot">Pot<b id="pot">0</b></div>
         <div class="board" id="board"></div>
+        <div class="deckinfo" id="deckInfo"></div>
       </div>
+      <div id="seats"></div>
     </div>
     <div class="msg-wrap"><div class="msg" id="hMsg" role="status" aria-live="polite"></div></div>
     <div class="me" id="me"></div>
@@ -976,12 +1029,18 @@ button:disabled { opacity: .35; cursor: default; }
     $("deckInfo").innerHTML = v.deckLeft ? `<i aria-hidden="true"></i>Paquet <b>${v.deckLeft}</b> cartes` : "";
     const m = $("hMsg"); m.className = "msg" + (v.msgKind ? " " + v.msgKind : ""); m.textContent = v.msg;
 
-    // opponents in table order, starting left of me
+    // opponents around the table, clockwise from my left
     const n = v.seats.length, others = [];
     for (let k = 1; k < n; k++) others.push((v.you + k) % n);
+    const SPOTS = {
+      lb: [13, 75, "left"], lt: [13, 31, "left"], t: [50, 0, "top"], rt: [87, 31, "right"], rb: [87, 75, "right"],
+      tl: [28, 0, "top"], tr: [72, 0, "top"]
+    };
+    const LAYOUT = { 1: ["t"], 2: ["tl", "tr"], 3: ["lt", "t", "rt"], 4: ["lb", "lt", "rt", "rb"], 5: ["lb", "lt", "t", "rt", "rb"] };
+    const spots = LAYOUT[others.length] || [];
     const box = $("seats");
-    box.className = "bots" + (others.length === 1 ? " n1" : others.length === 2 ? " n2" : "");
-    box.innerHTML = others.length ? others.map(i => {
+    box.innerHTML = others.length ? others.map((i, k) => {
+      const [x, y, at] = SPOTS[spots[k]];
       const s = v.seats[i];
       const showFace = s.hole.length && !s.hole[0].h;
       const cards = s.hole.length ? s.hole.map(c => cardHTML(c, { cls: showFace && s.used && !s.used.includes(c.id) ? "dim" : "" })).join("") : `<div class="card slot"></div><div class="card slot"></div>`;
@@ -989,15 +1048,13 @@ button:disabled { opacity: .35; cursor: default; }
       if (s.handName) act = `<div class="act hn">${esc(s.handName)}</div>`;
       else if (v.active === i) act = `<div class="timer" data-timer>…</div>`;
       else act = `<div class="act">${s.win ? "+" + fmt(s.win) : esc(s.last)}</div>`;
-      const cls = ["seat", v.active === i ? "active" : "", (s.folded || !s.inHand) && v.phase !== "lobby" ? "out" : "", s.win ? "winner" : ""].join(" ");
-      return `<div class="${cls}">${v.button === i && v.phase !== "lobby" ? `<span class="dbtn">D</span>` : ""}
-        <div class="name">${esc(s.name)}</div>
-        ${s.connected ? "" : `<div class="tag-off">Hors ligne</div>`}
-        <div class="mini">${cards}</div>
-        <div class="stack">${fmt(s.stack)}</div>
-        ${act}
+      const cls = ["pseat", showFace ? "faceup" : "", v.active === i ? "active" : "", (s.folded || !s.inHand) && v.phase !== "lobby" ? "out" : "", s.win ? "winner" : ""].join(" ");
+      return `<div class="${cls}" data-at="${at}" style="left:${x}%;top:${y}%">
+        <div class="ps-cards">${cards}</div>
+        <div class="ps-box">${v.button === i && v.phase !== "lobby" ? `<span class="dbtn">D</span>` : ""}<b>${esc(s.name)}</b><span>${fmt(s.stack)}</span></div>
+        ${s.connected ? act.replace('class="act', 'class="ps-act').replace('class="timer"', 'class="ps-act timer"') : `<div class="ps-off">Hors ligne</div>`}
         <div class="betchip">${s.bet ? fmt(s.bet) : ""}</div></div>`;
-    }).join("") : `<div class="seat" style="grid-column:1/-1"><div class="name">En attente de joueurs</div><div class="stack">Partage le code ${esc(v.code)}</div></div>`;
+    }).join("") : `<div class="pwait"><b>En attente de joueurs</b><br>Partage le code ${esc(v.code)}</div>`;
 
     let b = "";
     for (let i = 0; i < 5; i++) { const c = v.board[i]; b += cardHTML(c, { cls: c && v.best.includes(c.id) ? "best" : "" }); }
