@@ -289,6 +289,76 @@
     { id: "double-ou-rien", kind: "title", name: "Double ou rien", price: 550 },
     { id: "oeil-de-lynx", kind: "title", name: "Œil de lynx", price: 450 },
     { id: "sans-peur", kind: "title", name: "Sans peur", price: 900 },
+    { id: "eclipse", kind: "banner", name: "Éclipse", price: 1300 },
+    { id: "tropiques", kind: "banner", name: "Tropiques", price: 500 },
+    { id: "minuit", kind: "banner", name: "Minuit", price: 400 },
+    { id: "orage", kind: "banner", name: "Orage", price: 750 },
+    { id: "marbre-noir", kind: "banner", name: "Marbre noir", price: 900 },
+    { id: "marbre-blanc", kind: "banner", name: "Marbre blanc", price: 900 },
+    { id: "or-massif", kind: "banner", name: "Or massif", price: 2000 },
+    { id: "bambou", kind: "banner", name: "Bambou", price: 500 },
+    { id: "corail", kind: "banner", name: "Récif de corail", price: 650 },
+    { id: "nebuleuse", kind: "banner", name: "Nébuleuse", price: 1200 },
+    { id: "code-vert", kind: "banner", name: "Code vert", price: 800 },
+    { id: "pixel", kind: "banner", name: "Pixel", price: 600 },
+    { id: "zebre", kind: "banner", name: "Zèbre", price: 550 },
+    { id: "leopard", kind: "banner", name: "Léopard", price: 650 },
+    { id: "camouflage", kind: "banner", name: "Camouflage", price: 450 },
+    { id: "arc-en-ciel", kind: "banner", name: "Arc-en-ciel", price: 700 },
+    { id: "bonbon", kind: "banner", name: "Bonbon", price: 400 },
+    { id: "cerise", kind: "banner", name: "Cerise", price: 450 },
+    { id: "agrumes", kind: "banner", name: "Agrumes", price: 450 },
+    { id: "pluie-jetons", kind: "banner", name: "Pluie de jetons", price: 1100 },
+    { id: "main-gagnante", kind: "banner", name: "Main gagnante", price: 900 },
+    { id: "porte-bonheur", kind: "banner", name: "Trèfle porte-bonheur", price: 700 },
+    { id: "gatsby", kind: "banner", name: "Gatsby", price: 1300 },
+    { id: "vitrail", kind: "banner", name: "Vitrail", price: 1000 },
+    { id: "origami", kind: "banner", name: "Origami", price: 550 },
+    { id: "circuit", kind: "banner", name: "Circuit", price: 800 },
+    { id: "lave", kind: "banner", name: "Lave", price: 950 },
+    { id: "abysses", kind: "banner", name: "Abysses", price: 850 },
+    { id: "crepuscule", kind: "banner", name: "Crépuscule", price: 500 },
+    { id: "champagne", kind: "banner", name: "Champagne", price: 1500 },
+    { id: "platine-pur", kind: "frame", name: "Platine pur", price: 900 },
+    { id: "obsidienne", kind: "frame", name: "Obsidienne", price: 650 },
+    { id: "corail-vif", kind: "frame", name: "Corail", price: 450 },
+    { id: "menthe-givree", kind: "frame", name: "Menthe givrée", price: 450 },
+    { id: "lilas", kind: "frame", name: "Lilas", price: 400 },
+    { id: "feu-glace", kind: "frame", name: "Feu et glace", price: 1300 },
+    { id: "ruban-arc-en-ciel", kind: "frame", name: "Ruban arc-en-ciel", price: 1000 },
+    { id: "aurore-polaire", kind: "frame", name: "Aurore polaire", price: 1200 },
+    { id: "chrome", kind: "frame", name: "Chrome", price: 700 },
+    { id: "coulee-lave", kind: "frame", name: "Coulée de lave", price: 1100 },
+    { id: "tournesol", kind: "frame", name: "Tournesol", price: 500 },
+    { id: "nuit-bleue", kind: "frame", name: "Nuit bleue", price: 450 },
+    { id: "diamant-noir", kind: "frame", name: "Diamant noir", price: 1600 },
+    { id: "jeton", kind: "frame", name: "Jeton de casino", price: 800 },
+    { id: "fleur-cerisier", kind: "frame", name: "Fleur de cerisier", price: 600 },
+    { id: "toxique", kind: "frame", name: "Toxique", price: 750 },
+    { id: "all-in", kind: "title", name: "All-in", price: 500 },
+    { id: "le-croupier", kind: "title", name: "Le Croupier", price: 400 },
+    { id: "vingt-et-un", kind: "title", name: "Vingt-et-un", price: 350 },
+    { id: "poker-face", kind: "title", name: "Poker face", price: 600 },
+    { id: "le-parrain", kind: "title", name: "Le Parrain", price: 1200 },
+    { id: "nerfs-d-acier", kind: "title", name: "Nerfs d'acier", price: 500 },
+    { id: "petit-joueur", kind: "title", name: "Petit joueur", price: 100 },
+    { id: "roi-de-la-river", kind: "title", name: "Roi de la river", price: 650 },
+    { id: "zero-pointe", kind: "title", name: "Zéro pointé", price: 200 },
+    { id: "quinte-royale", kind: "title", name: "Quinte flush royale", price: 1500 },
+    { id: "fortune", kind: "title", name: "Fortune", price: 700 },
+    { id: "le-stratege", kind: "title", name: "Le Stratège", price: 450 },
+    { id: "chat-noir", kind: "title", name: "Chat noir", price: 300 },
+    { id: "trefle-a-quatre", kind: "title", name: "Trèfle à quatre feuilles", price: 550 },
+    { id: "baron", kind: "title", name: "Baron du casino", price: 900 },
+    { id: "duchesse", kind: "title", name: "Duchesse", price: 900 },
+    { id: "mise-max", kind: "title", name: "Mise max", price: 400 },
+    { id: "pas-de-chance", kind: "title", name: "Pas de chance", price: 150 },
+    { id: "le-calculateur", kind: "title", name: "Le Calculateur", price: 500 },
+    { id: "grand-seigneur", kind: "title", name: "Grand seigneur", price: 750 },
+    { id: "tout-ou-rien", kind: "title", name: "Tout ou rien", price: 450 },
+    { id: "loup-du-tapis", kind: "title", name: "Loup du tapis", price: 800 },
+    { id: "maitre-zen", kind: "title", name: "Maître zen", price: 350 },
+    { id: "nuit-blanche", kind: "title", name: "Nuit blanche", price: 300 },
     { id: "champion", kind: "title", name: "Champion de la semaine", price: null, how: "1ᵉʳ de la semaine, tant que tu le restes" }
   ];
   const STATIC = Object.fromEntries(SHOP.map(x => [x.id, x]));
@@ -1146,6 +1216,53 @@ body::before { content: ""; position: fixed; inset: 0; pointer-events: none; bac
 .fr-arc-or::before { background: repeating-conic-gradient(#ffe08a 0 12deg, #8a6420 12deg 18deg); } .fr-arc-or { box-shadow: 0 0 12px rgba(233,196,106,.45); }
 .fr-pointilles::before { background: repeating-conic-gradient(#f2eee3 0 8deg, transparent 8deg 16deg); }
 .fr-electrique::before { background: conic-gradient(#fff36b, #3b7bff, #fff36b, #3b7bff, #fff36b); animation: spin 4s linear infinite; } .fr-electrique { box-shadow: 0 0 12px rgba(80,140,255,.7); }
+/* new arrivals */
+.bn-eclipse { background: radial-gradient(circle at 85% 50%, #050505 0 22px, rgba(255,214,120,.95) 23px, rgba(255,160,60,.35) 30px, transparent 46px), linear-gradient(135deg, #0a0a12, #1c1630); }
+.bn-tropiques { background: radial-gradient(circle at 80% 100%, #ffd35a 0 14%, transparent 15%), linear-gradient(180deg, #2b1055, #a43a6b 45%, #ff7e47 80%, #ffb347); }
+.bn-minuit { background: radial-gradient(circle at 85% 30%, #f5f1d6 0 9%, transparent 10%), radial-gradient(1px 1px at 20% 30%, #fff 50%, transparent), radial-gradient(1px 1px at 55% 60%, #fff 50%, transparent), linear-gradient(180deg, #050a1f, #0f1d45); }
+.bn-orage { background: linear-gradient(110deg, transparent 74%, #e9f1ff 74% 75.5%, transparent 75.5%), radial-gradient(ellipse at 30% 0%, rgba(160,170,190,.5), transparent 60%), linear-gradient(180deg, #1c2230, #3b4456); }
+.bn-marbre-noir { background: linear-gradient(125deg, transparent 30%, rgba(255,255,255,.18) 31%, transparent 33%, transparent 60%, rgba(216,178,106,.35) 61%, transparent 62.5%), linear-gradient(160deg, transparent 45%, rgba(255,255,255,.1) 46%, transparent 48%), linear-gradient(135deg, #0b0b0d, #26262b); }
+.bn-marbre-blanc { background: linear-gradient(90deg, rgba(5,10,8,.78) 0, rgba(5,10,8,.5) 45%, transparent 80%), linear-gradient(125deg, transparent 30%, rgba(90,90,100,.35) 31%, transparent 33%, transparent 60%, rgba(150,140,120,.4) 61%, transparent 62.5%), linear-gradient(135deg, #f2f0ea, #cfcac0); }
+.bn-or-massif { background: linear-gradient(120deg, transparent 35%, rgba(255,255,255,.45) 45%, transparent 55%), linear-gradient(135deg, #6b4a0e, #d8a531 35%, #ffe08a 55%, #b07b12); }
+.bn-bambou { background: repeating-linear-gradient(90deg, transparent 0 22px, rgba(20,60,10,.55) 22px 25px, transparent 25px 40px), repeating-linear-gradient(0deg, transparent 0 30px, rgba(20,60,10,.35) 30px 32px), linear-gradient(135deg, #3f7d20, #8cc152); }
+.bn-corail { background: radial-gradient(circle at 80% 110%, #ff7f6e 0 18%, transparent 19%), radial-gradient(circle at 92% 95%, #ffb38a 0 12%, transparent 13%), linear-gradient(180deg, #0c6e8f, #18a7b5); }
+.bn-nebuleuse { background: radial-gradient(1.2px 1.2px at 30% 30%, #fff 50%, transparent), radial-gradient(1.2px 1.2px at 78% 70%, #fff 50%, transparent), radial-gradient(ellipse at 75% 40%, rgba(255,90,140,.6), transparent 50%), radial-gradient(ellipse at 55% 80%, rgba(60,200,255,.45), transparent 50%), #0b0320; }
+.bn-code-vert { background: linear-gradient(90deg, rgba(5,10,8,.78) 0, rgba(5,10,8,.5) 45%, transparent 80%), repeating-linear-gradient(180deg, transparent 0 7px, #001a07 7px 10px), repeating-linear-gradient(90deg, transparent 0 11px, rgba(0,255,90,.6) 11px 13px), linear-gradient(180deg, #002b0c, #001405); }
+.bn-pixel { background: linear-gradient(90deg, rgba(5,10,8,.78) 0, rgba(5,10,8,.5) 45%, transparent 80%), conic-gradient(#ff4d6d 25%, #4dd0ff 0 50%, #ffd84d 0 75%, #7cff6b 0) 0 0 / 16px 16px, #222; }
+.bn-zebre { background: linear-gradient(90deg, rgba(5,10,8,.78) 0, rgba(5,10,8,.5) 45%, transparent 80%), repeating-linear-gradient(120deg, #111 0 10px, #f2f2f2 10px 20px, #111 20px 26px, #f2f2f2 26px 40px); }
+.bn-leopard { background: linear-gradient(90deg, rgba(5,10,8,.78) 0, rgba(5,10,8,.5) 45%, transparent 80%), radial-gradient(circle, #2b1a0a 0 3px, transparent 3.5px) 0 0 / 18px 18px, radial-gradient(circle, #2b1a0a 0 2.5px, transparent 3px) 9px 9px / 18px 18px, linear-gradient(135deg, #c98a2b, #e8b45a); }
+.bn-camouflage { background: radial-gradient(ellipse 30px 16px at 20% 30%, #3a4a24 98%, transparent), radial-gradient(ellipse 26px 18px at 60% 70%, #2a3318 98%, transparent), radial-gradient(ellipse 34px 14px at 85% 25%, #6b6b3a 98%, transparent), #4f5d2f; }
+.bn-arc-en-ciel { background: linear-gradient(90deg, rgba(5,10,8,.78) 0, rgba(5,10,8,.5) 45%, transparent 80%), linear-gradient(135deg, #ff4d4d, #ff9f40, #ffe14d, #5be36b, #4db8ff, #8e6bff); }
+.bn-bonbon { background: linear-gradient(90deg, rgba(5,10,8,.78) 0, rgba(5,10,8,.5) 45%, transparent 80%), repeating-linear-gradient(135deg, #ff8fc7 0 12px, #fff 12px 24px, #8fe3ff 24px 36px, #fff 36px 48px); }
+.bn-cerise { background: radial-gradient(circle at 85% 60%, #d10f3a 0 9%, transparent 10%), radial-gradient(circle at 92% 50%, #e3224d 0 8%, transparent 9%), linear-gradient(135deg, #5e0a1c, #b0243f); }
+.bn-agrumes { background: radial-gradient(circle at 88% 50%, #fff3b0 0 8%, #ffb300 9% 20%, transparent 21%), linear-gradient(135deg, #d35400, #f39c12 60%, #f7dc6f); }
+.bn-pluie-jetons { background: radial-gradient(circle at 70% 30%, #d8b26a 0 7px, #b3262f 7px 11px, transparent 12px), radial-gradient(circle at 85% 70%, #fff 0 6px, #1e7a4a 6px 10px, transparent 11px), radial-gradient(circle at 95% 20%, #fff 0 5px, #17191d 5px 9px, transparent 10px), linear-gradient(135deg, #0b3d30, #145c47); }
+.bn-main-gagnante { background: radial-gradient(circle, #c0392b 0 4px, transparent 5px) 86% 52% / 30px 42px no-repeat, linear-gradient(#fff, #f3eee0) 86% 52% / 30px 42px no-repeat, radial-gradient(circle, #17191d 0 4px, transparent 5px) 76% 46% / 30px 42px no-repeat, linear-gradient(#fff, #e9e2cf) 76% 46% / 30px 42px no-repeat, linear-gradient(135deg, #0d4a36, #10664a); }
+.bn-porte-bonheur { background: radial-gradient(circle at 86% 40%, #2ecc71 0 9%, transparent 10%), radial-gradient(circle at 93% 55%, #27ae60 0 9%, transparent 10%), radial-gradient(circle at 79% 55%, #27ae60 0 9%, transparent 10%), radial-gradient(circle at 86% 70%, #2ecc71 0 9%, transparent 10%), linear-gradient(135deg, #0d3d1f, #1c6b39); }
+.bn-gatsby { background: linear-gradient(90deg, rgba(5,10,8,.78) 0, rgba(5,10,8,.5) 45%, transparent 80%), repeating-conic-gradient(from 180deg at 50% 100%, rgba(216,178,106,.55) 0 4deg, transparent 4deg 14deg), linear-gradient(180deg, #0c0c0c, #1f1a12); }
+.bn-vitrail { background: linear-gradient(90deg, rgba(5,10,8,.78) 0, rgba(5,10,8,.5) 45%, transparent 80%), conic-gradient(from 30deg, #c0392b, #2980b9, #f1c40f, #27ae60, #8e44ad, #c0392b) 0 0 / 34px 34px, #111; }
+.bn-origami { background: linear-gradient(45deg, rgba(255,255,255,.18) 25%, transparent 25% 50%, rgba(0,0,0,.12) 50% 75%, transparent 75%) 0 0 / 40px 40px, linear-gradient(135deg, #e0607e, #f2a07b); }
+.bn-circuit { background: linear-gradient(90deg, rgba(5,10,8,.78) 0, rgba(5,10,8,.5) 45%, transparent 80%), linear-gradient(90deg, transparent 0 18px, rgba(80,255,200,.5) 18px 20px, transparent 20px) 0 0 / 40px 40px, linear-gradient(0deg, transparent 0 28px, rgba(80,255,200,.5) 28px 30px, transparent 30px) 0 0 / 40px 40px, #04261f; }
+.bn-lave { background: radial-gradient(ellipse at 80% 80%, #ffcc33, #ff5a00 25%, transparent 50%), linear-gradient(115deg, transparent 50%, rgba(255,90,0,.6) 51%, transparent 53%), linear-gradient(135deg, #1a0503, #4a0d05); }
+.bn-abysses { background: radial-gradient(circle at 85% 30%, rgba(80,255,240,.5) 0 3px, transparent 4px), radial-gradient(circle at 70% 70%, rgba(80,255,240,.4) 0 2px, transparent 3px), linear-gradient(180deg, #021a2e, #000814); }
+.bn-crepuscule { background: linear-gradient(180deg, #2c3e74, #6a4c93 50%, #d17b88); }
+.bn-champagne { background: radial-gradient(circle at 80% 70%, rgba(255,255,255,.8) 0 2px, transparent 3px), radial-gradient(circle at 88% 40%, rgba(255,255,255,.7) 0 3px, transparent 4px), radial-gradient(circle at 74% 30%, rgba(255,255,255,.6) 0 2px, transparent 3px), linear-gradient(135deg, #6b5320, #d9b860 55%, #f6e7b0); }
+.fr-platine-pur::before { background: linear-gradient(135deg, #ffffff, #b9e4df 50%, #7fbfb8); } .fr-platine-pur { box-shadow: 0 0 12px rgba(185,228,223,.6); }
+.fr-obsidienne::before { background: linear-gradient(135deg, #4a4a5a, #050507 50%, #2c2c38); } .fr-obsidienne { box-shadow: 0 0 10px rgba(120,120,160,.4); }
+.fr-corail-vif::before { background: linear-gradient(135deg, #ffc2b3, #ff6f61); }
+.fr-menthe-givree::before { background: linear-gradient(135deg, #e6fff6, #4fd1a5); }
+.fr-lilas::before { background: linear-gradient(135deg, #f1e4ff, #a77bd8); }
+.fr-feu-glace::before { background: conic-gradient(#ff4d00, #ffb000, #ff4d00 25%, #3cc8ff 50%, #b8f0ff, #3cc8ff 75%, #ff4d00); animation: spin 4s linear infinite; } .fr-feu-glace { box-shadow: 0 0 12px rgba(255,120,60,.5); }
+.fr-ruban-arc-en-ciel::before { background: conic-gradient(#ff4d4d, #ffb84d, #ffe94d, #5be36b, #4db8ff, #8e6bff, #ff4d4d); }
+.fr-aurore-polaire::before { background: conic-gradient(#50ffaa, #3cc8ff, #8c5aff, #50ffaa); animation: spin 4s linear infinite; } .fr-aurore-polaire { box-shadow: 0 0 12px rgba(80,255,170,.55); }
+.fr-chrome::before { background: linear-gradient(180deg, #ffffff, #8a9099 45%, #3a3f46 55%, #d9dde2); }
+.fr-coulee-lave::before { background: conic-gradient(#3a0a04, #ff5a00, #ffcc33, #ff5a00, #3a0a04); animation: spin 4s linear infinite; } .fr-coulee-lave { box-shadow: 0 0 12px rgba(255,90,0,.6); }
+.fr-tournesol::before { background: repeating-conic-gradient(#ffd23f 0 15deg, #e09400 15deg 30deg); }
+.fr-nuit-bleue::before { background: linear-gradient(135deg, #6c8cff, #101a4a); }
+.fr-diamant-noir::before { background: conic-gradient(#000, #555, #fff, #555, #000, #888, #000); animation: spin 4s linear infinite; } .fr-diamant-noir { box-shadow: 0 0 14px rgba(255,255,255,.45); }
+.fr-jeton::before { background: repeating-conic-gradient(#b3262f 0 20deg, #f2eee3 20deg 30deg); }
+.fr-fleur-cerisier::before { background: conic-gradient(#ffd1e0, #ff8fb4, #ffe8f0, #ff8fb4, #ffd1e0); } .fr-fleur-cerisier { box-shadow: 0 0 10px rgba(255,143,180,.5); }
+.fr-toxique::before { background: linear-gradient(135deg, #e4ff4d, #3cff2e); } .fr-toxique { box-shadow: 0 0 12px rgba(120,255,46,.75); }
 /* season number sits above the banner art but under the player info */
 [class*="bn-s"] > * { position: relative; z-index: 1; }
 .sw[class*="bn-s"]::before { font-size: 2.4em; }
@@ -1500,7 +1617,7 @@ body::before { content: ""; position: fixed; inset: 0; pointer-events: none; bac
           <li>Chaque fin de mois, selon ton rang de saison.</li>
           <li>Chaque jour : 3 défis (bonus de 50 si tu fais les 3) et la connexion quotidienne (5, 5, 5, 20, 20, 20 puis 50 couronnes le 7ᵉ jour d'affilée).</li></ul>`],
         ["La boutique", `<ul>
-          <li>Une sélection différente chaque lundi : 6 bannières, 4 cadres et 5 titres.</li>
+          <li>Une sélection différente chaque lundi : 8 bannières, 5 cadres et 7 titres.</li>
           <li>Touche un objet pour l'essayer en aperçu, puis Acheter. Il rejoint ton casier.</li>
           <li>La rareté indique combien de joueurs l'ont : Commun, Rare, Épique, Légendaire.</li></ul>`],
         ["Le casier", `<ul>
