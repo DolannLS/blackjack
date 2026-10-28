@@ -249,7 +249,7 @@ p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.5; max-width
       const meAll = (cache.all || []).find(r => r.is_me);
       if (meAll) {
         const total = cache.all.length;
-        $("meRank").textContent = +meAll.games ? `${meAll.rank}ᵉ sur ${total}${total >= 50 ? "+" : ""} joueurs · ${fmt(meAll.games)} parties` : "Joue une partie pour entrer au classement";
+        $("meRank").textContent = +meAll.games ? `${+meAll.rank === 1 ? "1ᵉʳ" : meAll.rank + "ᵉ"} sur ${total}${total >= 50 ? "+" : ""} joueur${total > 1 ? "s" : ""} · ${fmt(meAll.games)} partie${+meAll.games > 1 ? "s" : ""}` : "Joue une partie pour entrer au classement";
         $("meNet").textContent = signed(+meAll.net);
         $("meNet").className = +meAll.net > 0 ? "plus" : +meAll.net < 0 ? "minus" : "";
       }

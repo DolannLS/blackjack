@@ -4,8 +4,8 @@
 (() => {
   // Supabase project (the anon key is public by design; access is limited by row level security)
   const CFG = {
-    url: "",
-    key: ""
+    url: "https://mwzcdwiceofeaqjtfcpt.supabase.co",
+    key: "sb_publishable_jvE8n4KNwK60G6ZWcq9I5g_qkgB2Oii"
   };
   const EMAIL_DOMAIN = "joueurs.casino-app.fr";
   const SESSION = "casino.session", QUEUE = "casino.queue", HISTORY = "casino.history";
