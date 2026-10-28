@@ -355,6 +355,16 @@ button:disabled { opacity: .35; cursor: default; }
 .pwait b { color: var(--ink); }
 .reconn { position: absolute; inset: 0; z-index: 8; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 20px; text-align: center; border-radius: 28px; background: rgba(3,18,14,.82); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); font-size: 13.5px; color: var(--muted); }
 .reconn[hidden] { display: none; }
+.ask { position: fixed; inset: 0; z-index: 60; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgba(0,0,0,.6); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); animation: ask-fade .18s ease both; }
+.ask[hidden] { display: none; }
+.ask-box { width: min(360px, 100%); padding: 22px 20px 18px; border-radius: 22px; text-align: center; background: linear-gradient(180deg, #0f3a2c, #0a2a20); border: 1px solid rgba(216,178,106,.35); box-shadow: 0 24px 60px rgba(0,0,0,.55); animation: ask-pop .28s cubic-bezier(.3,1.4,.5,1) both; }
+.ask-box h2 { margin: 0 0 8px; font-family: var(--f-display); font-weight: 400; font-size: 24px; color: var(--ink); }
+.ask-box p { margin: 0 0 18px; color: var(--muted); font-size: 14.5px; line-height: 1.45; }
+.ask-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.ask-btns .btn { min-height: 48px; }
+.ask-btns .btn.danger { background: linear-gradient(180deg, #c8463c, #9e2f27); border-color: transparent; color: #fff; }
+@keyframes ask-fade { from { opacity: 0; } }
+@keyframes ask-pop { from { opacity: 0; transform: scale(.9) translateY(8px); } }
 .reconn b { color: var(--ink); font-size: 16px; }
 .reconn .small-btn { margin-top: 6px; }
 .reconn .spin { width: 28px; height: 28px; border-radius: 50%; border: 3px solid rgba(216,178,106,.25); border-top-color: var(--brass); animation: spin 0.9s linear infinite; }
@@ -469,6 +479,17 @@ button:disabled { opacity: .35; cursor: default; }
     <div class="me" id="me"></div>
     <div id="hControls"></div>
   </section>
+</div>
+
+<div class="ask" id="quitAsk" hidden>
+  <div class="ask-box" role="alertdialog" aria-modal="true" aria-labelledby="qTitle" aria-describedby="qText">
+    <h2 id="qTitle">Quitter la partie ?</h2>
+    <p id="qText"></p>
+    <div class="ask-btns">
+      <button class="btn" id="qStay">Rester</button>
+      <button class="btn danger" id="qGo">Quitter</button>
+    </div>
+  </div>
 </div>
 
 <div class="scrim" id="menu" hidden>
@@ -783,10 +804,22 @@ button:disabled { opacity: .35; cursor: default; }
     if (NET.role === "host" && NET.peer && NET.peer.disconnected && !NET.peer.destroyed) try { NET.peer.reconnect(); } catch (e) {}
   });
 
-  // « Quitter » is the only way to give the seat up
+  // « Quitter » is the only way to give the seat up, so it is confirmed first
+  function askQuit() {
+    const others = NET.role === "host" && Host.ready && Host.seats.some((s, i) => i > 0 && !s.isBot && !s.quit);
+    const inHand = view && view.phase === "play" && view.seats[view.you] && view.seats[view.you].inHand && !view.seats[view.you].folded;
+    const [title, text, go] = NET.role === "host"
+      ? others ? ["Fermer la table ?", "La partie s'arrête pour tout le monde : les autres joueurs seront renvoyés à l'accueil.", "Fermer la table"]
+               : ["Quitter la table ?", "La table sera fermée et les jetons de table remis à zéro.", "Quitter"]
+      : ["Quitter la partie ?", inHand ? "Tu te couches sur la main en cours et tu perds ta place à la table."
+                                       : "Tu perds ta place à la table. Pour revenir, il faudra la rejoindre à nouveau avec le code.", "Quitter"];
+    $("qTitle").textContent = title; $("qText").textContent = text; $("qGo").textContent = go;
+    $("quitAsk").hidden = false;
+    $("qStay").focus();
+  }
+  function closeAsk() { $("quitAsk").hidden = true; }
   function quitTable() {
-    if (NET.role === "host" && Host.ready && Host.seats.some((s, i) => i > 0 && !s.isBot) &&
-        !confirm("Fermer la table ? La partie s'arrête pour tout le monde.")) return;
+    closeAsk();
     if (NET.role === "guest" && NET.conn && NET.conn.open) try { NET.conn.send({ t: "quit" }); } catch (e) {}
     forgetTable();
     const go = () => { leave(false); history.replaceState(null, "", location.pathname); };
@@ -1333,8 +1366,12 @@ button:disabled { opacity: .35; cursor: default; }
   $("createBtn").onclick = () => createTable();
   $("joinBtn").onclick = () => joinTable();
   $("codeIn").addEventListener("keydown", e => { if (e.key === "Enter") joinTable(); });
-  $("leaveBtn").onclick = quitTable;
-  $("reconnQuit").onclick = quitTable;
+  $("leaveBtn").onclick = askQuit;
+  $("reconnQuit").onclick = askQuit;
+  $("qGo").onclick = quitTable;
+  $("qStay").onclick = closeAsk;
+  $("quitAsk").onclick = e => { if (e.target.id === "quitAsk") closeAsk(); };
+  document.addEventListener("keydown", e => { if (e.key === "Escape") closeAsk(); });
   $("inviteBtn").onclick = async () => {
     const url = location.origin + location.pathname + "#" + NET.code;
     const text = `Rejoins ma table de poker : code ${NET.code}`;

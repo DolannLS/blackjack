@@ -1,5 +1,5 @@
 // Offline cache: serve from cache, refresh in the background.
-const CACHE = "casino-v15";
+const CACHE = "casino-v16";
 const CORE = ["./", "index.html", "roulette.html", "poker.html", "online.html", "historique.html", "boutique.html", "casier.html", "defis.html", "rangs.html", "classement.html", "app.js", "boot.js", "manifest.webmanifest", "icon-180.png", "icon-192.png", "icon-512.png"];
 
 self.addEventListener("install", e => {
