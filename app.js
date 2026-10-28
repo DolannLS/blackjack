@@ -501,13 +501,16 @@
     poker: '<path d="M12 3c-2.6 3.6-7 6-7 10a3.5 3.5 0 0 0 6.1 2.3L10 20.5h4l-1.1-5.2A3.5 3.5 0 0 0 19 13c0-4-4.4-6.4-7-10z"/>',
     shop: '<path d="M5 8h14l-1.2 11.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 8z"/><path d="M9 10V7a3 3 0 0 1 6 0v3"/>',
     history: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.2 2"/>',
+    games: '<rect x="2.5" y="6" width="10" height="14" rx="1.6"/><path d="M8.5 5l7.4-1.5a1.6 1.6 0 0 1 1.9 1.3l2.6 12.4a1.6 1.6 0 0 1-1.3 1.9L14 20"/><path d="M7.5 10.5c-1.2 1.4-2.3 2.2-2.3 3.4a1.3 1.3 0 0 0 2.3.8 1.3 1.3 0 0 0 2.3-.8c0-1.2-1.1-2-2.3-3.4z"/>',
+    challenge: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.4"/><path d="M15.5 8.5L21 3M17.5 3H21v3.5"/>',
+    ranks: '<path d="M7 3l5 6 5-6M8.5 3h7"/><circle cx="12" cy="15" r="6"/><path d="M12 12l.9 1.9 2.1.3-1.5 1.4.4 2.1-1.9-1-1.9 1 .4-2.1-1.5-1.4 2.1-.3z"/>',
     locker: '<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M12 3v18M9 10v2M15 10v2"/>',
     rank: '<path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4zM7 6H4a3 3 0 0 0 3 4.2M17 6h3a3 3 0 0 1-3 4.2"/>'
   };
   const TABS = [
-    ["./", "blackjack", "Blackjack", /(^$|index\.html$)/],
-    ["roulette.html", "roulette", "Roulette", /roulette\.html$/],
-    ["poker.html", "poker", "Poker", /(poker|online)\.html$/],
+    ["#jeux", "games", "Jeux", /(^$|index\.html$|roulette\.html$|poker\.html$|online\.html$)/],
+    ["defis.html", "challenge", "Défis", /defis\.html$/],
+    ["rangs.html", "ranks", "Rangs", /rangs\.html$/],
     ["boutique.html", "shop", "Boutique", /boutique\.html$/],
     ["casier.html", "locker", "Casier", /casier\.html$/],
     ["historique.html", "history", "Historique", /historique\.html$/],
@@ -627,6 +630,29 @@ body::before { content: ""; position: fixed; inset: 0; pointer-events: none; bac
   const CROWN = '<svg class="crown-ico" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 8l4.5 4L12 5l4.5 7L21 8l-1.8 10.5a1 1 0 0 1-1 .8H5.8a1 1 0 0 1-1-.8L3 8z"/></svg>';
   window.CasinoUI.CROWN = CROWN;
 
+  // games: one tab opens a picker; it remembers the last game played
+  const GAME_PAGES = [
+    { href: "./", page: "blackjack", name: "Blackjack", text: "Bats le croupier sans dépasser 21.", icon: "blackjack" },
+    { href: "roulette.html", page: "roulette", name: "Roulette", text: "Mise sur un numéro, une couleur ou une douzaine.", icon: "roulette" },
+    { href: "poker.html", page: "poker", name: "Poker", text: "Texas Hold'em contre 3 adversaires, et vidéo poker.", icon: "poker" },
+    { href: "online.html", page: "online", name: "Poker en ligne", text: "Une table entre amis, de 2 à 6 joueurs.", icon: "games" }
+  ];
+  function lastGame() {
+    const p = (location.pathname.split("/").pop() || "index.html").replace(".html", "");
+    const here = GAME_PAGES.find(g => g.page === (p === "index" || p === "" ? "blackjack" : p));
+    if (here) { try { localStorage.setItem("casino.lastgame", here.href); } catch (e) {} return here.href; }
+    try { return localStorage.getItem("casino.lastgame") || "./"; } catch (e) { return "./"; }
+  }
+  function openGames() {
+    const cur = document.body.dataset.page;
+    openSheet((sheet) => {
+      sheet.innerHTML = `<div class="grab" aria-hidden="true"></div>
+        <div class="ph"><h2>Jeux</h2><button class="x" data-close aria-label="Fermer">×</button></div>
+        <div class="gpick">${GAME_PAGES.map((g, i) => `<a class="gtile rise${g.page === cur ? " here" : ""}" style="--i:${i}" href="${g.href}">
+          <span class="gico"><svg viewBox="0 0 24 24" aria-hidden="true">${ICONS[g.icon]}</svg></span>
+          <span class="gtxt"><b>${g.name}</b><span>${g.text}</span></span>${g.page === cur ? `<span class="gnow">En cours</span>` : `<span class="go" aria-hidden="true">›</span>`}</a>`).join("")}</div>`;
+    });
+  }
   function chipHTML() {
     const n = session && session.username;
     if (!n) return `<span class="av"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></span><span>Se connecter</span>`;
@@ -651,7 +677,8 @@ body::before { content: ""; position: fixed; inset: 0; pointer-events: none; bac
     nav.className = "tabbar";
     nav.setAttribute("aria-label", "Onglets");
     nav.innerHTML = TABS.map(([href, icon, label, re]) =>
-      `<a href="${href}"${re.test(page) ? ' aria-current="page"' : ""}><svg viewBox="0 0 24 24" aria-hidden="true">${ICONS[icon]}</svg>${label}</a>`).join("");
+      `<a href="${href === "#jeux" ? lastGame() : href}"${href === "#jeux" ? ' data-games="1"' : ""}${re.test(page) ? ' aria-current="page"' : ""}><svg viewBox="0 0 24 24" aria-hidden="true">${ICONS[icon]}</svg>${label}</a>`).join("");
+    nav.querySelector("[data-games]").addEventListener("click", e => { e.preventDefault(); openGames(); });
     app.appendChild(nav);
     animateBank();
   }
@@ -1104,6 +1131,17 @@ body::before { content: ""; position: fixed; inset: 0; pointer-events: none; bac
   .tabbar a svg { width: 21px; height: 21px; }
 }
 
+/* game picker */
+.gpick { display: flex; flex-direction: column; gap: 10px; }
+.gtile { display: grid; grid-template-columns: auto 1fr auto; gap: 14px; align-items: center; padding: 14px; border-radius: 16px; background: var(--glass); border: 1px solid var(--felt-line); color: var(--ink); text-decoration: none; }
+.gtile.here { border-color: var(--brass); background: rgba(216,178,106,.12); }
+.gico { width: 48px; height: 48px; border-radius: 14px; display: grid; place-items: center; background: radial-gradient(circle at 30% 25%, #1c7259, #0b3d30); box-shadow: inset 0 0 0 1px var(--felt-line); color: var(--brass); }
+.gico svg { width: 28px; height: 28px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.gtxt b { display: block; font-size: 17px; }
+.gtxt span { font-size: 13.5px; color: var(--muted); }
+.gnow { font-size: 12px; font-weight: 700; color: var(--brass); }
+.gtile .go { font-size: 22px; color: var(--muted); }
+
 /* profile photos */
 .av.has-photo { background: #0b3d30; }
 .av img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block; }
@@ -1147,6 +1185,7 @@ body::before { content: ""; position: fixed; inset: 0; pointer-events: none; bac
   body[data-page="poker"] .paytable { font-size: 15px; }
   body[data-page="poker"] .seat .name, body[data-page="online"] .seat .name { font-size: 16px; }
   body[data-page="historique"] .app, body[data-page="classement"] .app { max-width: 980px; }
+  body[data-page="defis"] .app, body[data-page="rangs"] .app { max-width: 820px; }
 }
 /* roulette: wheel beside the betting layout on wide screens */
 @media (min-width: 900px) and (min-height: 500px) {
@@ -1296,6 +1335,14 @@ body::before { content: ""; position: fixed; inset: 0; pointer-events: none; bac
           <tr><td>Main gagnante</td><td>1 pour 1</td><td>mise 20 → +20</td></tr>
           <tr><td>Égalité</td><td>mise rendue</td><td>0</td></tr>
           <tr><td>Tu sautes ou tu perds</td><td>mise perdue</td><td>−20</td></tr></table>`],
+        ["Le sabot et le comptage des cartes", `<p>Les cartes viennent d'un sabot de 6 jeux (312 cartes). La barre en haut de la table montre les cartes restantes et combien avant le mélange : le sabot est remélangé quand il n'en reste qu'un quart (repère rouge).</p>
+          <p>Les cartes déjà sorties ne reviennent pas avant le mélange : compter les cartes permet de savoir ce qu'il reste. Avec la méthode <b>Hi-Lo</b> :</p>
+          <table class="hpay"><tr><td>${cards("2♠ 3♥ 4♦ 5♣ 6♠")}</td><td>+1</td></tr><tr><td>${cards("7♥ 8♣ 9♦")}</td><td>0</td></tr><tr><td>${cards("10♠ V♥ D♦ R♣ A♠")}</td><td>−1</td></tr></table>
+          <ul><li>Additionne les valeurs de toutes les cartes vues : c'est le <b>compte</b>.</li>
+          <li>Divise par le nombre de jeux restants : c'est le <b>compte réel</b>.</li>
+          <li>Compte réel de +2 ou plus : il reste beaucoup de 10 et d'As, les blackjacks sont plus fréquents. Mise plus gros.</li>
+          <li>Compte réel négatif : mise le minimum.</li></ul>
+          <p>Pour t'entraîner, active <b>Aide au comptage</b> dans le menu ☰ : le compte s'affiche en direct.</p>`],
         ["Astuces de base", `<ul>
           <li>Reste toujours à 17 ou plus.</li>
           <li>Tire toujours à 11 ou moins : tu ne peux pas sauter.</li>
@@ -1440,6 +1487,20 @@ body::before { content: ""; position: fixed; inset: 0; pointer-events: none; bac
     }
   };
   HELP.casier = HELP.boutique;
+  HELP.rangs = HELP.classement;
+  HELP.defis = {
+    title: "Défis et connexion",
+    intro: "Deux façons de gagner des couronnes chaque jour, même sans être en tête du classement.",
+    sections: [
+      ["Défis du jour", `<ul>
+        <li>3 défis tirés chaque jour à minuit (heure de Paris), les mêmes pour tout le monde.</li>
+        <li>Joue normalement : le serveur suit ta progression et verse les couronnes dès qu'un défi est réussi.</li>
+        <li>Réussis les 3 pour un bonus de 50 couronnes.</li></ul>`],
+      ["Connexion quotidienne", `<p>Ouvre l'app chaque jour pour faire grandir ta série.</p>
+        <table class="hpay"><tr><td>Jours 1, 2 et 3</td><td>5 couronnes</td></tr><tr><td>Jours 4, 5 et 6</td><td>20 couronnes</td></tr><tr><td>Jour 7</td><td>50 couronnes</td></tr></table>
+        <p>Après le 7ᵉ jour, ou si tu manques un jour, la série repart au jour 1.</p>`]
+    ]
+  };
   const css4 = document.createElement("style");
   css4.textContent = `
 .help-btn { font: 700 18px var(--f-display, Georgia, serif); color: var(--brass); }

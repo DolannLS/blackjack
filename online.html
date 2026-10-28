@@ -315,6 +315,10 @@ button:disabled { opacity: .35; cursor: default; }
 .bots.n2 { grid-template-columns: repeat(2, minmax(0, 160px)); justify-content: center; }
 .seat .tag-off { font-size: 11px; color: var(--lose); font-weight: 600; }
 .seat .timer, .me .timer { font-size: 12px; color: var(--brass); font-weight: 700; font-variant-numeric: tabular-nums; }
+.potrow { display: flex; align-items: center; justify-content: center; gap: 14px; flex-wrap: wrap; }
+.deckinfo { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.deckinfo b { color: var(--ink); }
+.deckinfo i { width: 11px; height: 15px; border-radius: 2px; background: repeating-linear-gradient(45deg, transparent 0 2px, rgba(216,178,106,.45) 2px 3px), #7a1f2b; border: 1px solid var(--card); flex: none; }
 .board-wrap { display: flex; flex-direction: column; align-items: center; gap: 8px; }
 .host-tools { display: flex; gap: 8px; justify-content: center; }
 .rank { display: flex; flex-direction: column; gap: 6px; }
@@ -393,7 +397,7 @@ button:disabled { opacity: .35; cursor: default; }
     <div class="bots" id="seats"></div>
     <div class="center">
       <div class="board-wrap">
-        <div class="pot">Pot<b id="pot">0</b></div>
+        <div class="potrow"><div class="pot">Pot<b id="pot">0</b></div><div class="deckinfo" id="deckInfo"></div></div>
         <div class="board" id="board"></div>
       </div>
     </div>
@@ -931,7 +935,7 @@ button:disabled { opacity: .35; cursor: default; }
       const champ = reveal ? this.seats.filter(s => s.win > 0 && s.eval).sort((a, b) => b.win - a.win)[0] : null;
       return {
         phase: this.phase, hand: this.hand, code: NET.code, you: i, button: this.button, active: this.active,
-        currentBet: this.currentBet, minRaise: this.minRaise, pot: this.pot(), board: this.board,
+        currentBet: this.currentBet, minRaise: this.minRaise, pot: this.pot(), board: this.board, deckLeft: this.phase === "lobby" ? 0 : this.deck.length,
         deadlineIn: this.deadline ? Math.max(0, this.deadline - Date.now()) : 0,
         nextIn: this.nextAt && this.phase === "done" ? Math.max(0, this.nextAt - Date.now()) : 0,
         waitingYou: !!(this.waiting && this.waiting.seat === i),
@@ -969,6 +973,7 @@ button:disabled { opacity: .35; cursor: default; }
     $("codeOut").textContent = v.code;
     $("bank").textContent = fmt(me.stack);
     $("pot").textContent = fmt(v.pot);
+    $("deckInfo").innerHTML = v.deckLeft ? `<i aria-hidden="true"></i>Paquet <b>${v.deckLeft}</b> cartes` : "";
     const m = $("hMsg"); m.className = "msg" + (v.msgKind ? " " + v.msgKind : ""); m.textContent = v.msg;
 
     // opponents in table order, starting left of me

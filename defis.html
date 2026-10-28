@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<title>Défis du jour</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Casino">
+<meta name="theme-color" content="#072a22">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Outfit:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: status bar with crowns, then the three daily challenges with progress bars, the bonus, the 7-day login streak and a short how-it-works. */
+:root {
+  --felt: #0f4c3c;
+  --felt-deep: #062a21;
+  --felt-line: rgba(216, 178, 106, .32);
+  --brass: #d8b26a;
+  --brass-ink: #2a1f0c;
+  --ink: #f2eee3;
+  --muted: rgba(242, 238, 227, .62);
+  --glass: rgba(4, 22, 17, .55);
+  --win: #7fd99a;
+  --lose: #ff8a7a;
+  --gold: #e9c46a;
+  --f-display: "DM Serif Display", Georgia, "Times New Roman", serif;
+  --f-ui: "Outfit", -apple-system, "Helvetica Neue", Arial, sans-serif;
+  color-scheme: dark;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  box-sizing: border-box;
+  height: 100%;
+}
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  background: radial-gradient(120% 80% at 50% 10%, var(--felt) 0%, #0b3d30 45%, var(--felt-deep) 100%) fixed, var(--felt-deep);
+  color: var(--ink); font-family: var(--f-ui); overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+button { font: inherit; color: inherit; cursor: pointer; border: 0; background: none; }
+button:focus-visible, a:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+button:disabled { opacity: .5; cursor: default; }
+.app {
+  height: 100%; display: flex; flex-direction: column; gap: 12px; box-sizing: border-box;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 8px 10px; max-width: 560px; margin: 0 auto;
+}
+.bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.bank { display: flex; flex-direction: column; }
+.label, .bank small { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.bank strong { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.1; color: var(--gold); display: inline-flex; align-items: center; gap: 4px; }
+.bank strong .crown-ico { width: 18px; height: 18px; }
+
+.preview { display: flex; flex-direction: column; gap: 10px; flex: none; }
+.preview .pcard { min-height: 84px; transition: transform .25s; }
+.preview .pcard.swap { animation: swap .35s cubic-bezier(.2,.8,.25,1); }
+@keyframes swap { from { transform: scale(.97); opacity: .6; } }
+.action { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; }
+.action .what { min-width: 0; }
+.action .what b { display: block; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.action .what span { font-size: 13px; color: var(--muted); }
+.btn { height: 46px; border-radius: 14px; font-weight: 600; font-size: 15.5px; background: var(--glass); border: 1px solid var(--felt-line); display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 0 16px; color: var(--ink); text-decoration: none; white-space: nowrap; }
+.btn.primary { color: var(--brass-ink); border-color: var(--brass); }
+.msg { min-height: 18px; font-size: 14px; color: var(--lose); }
+.msg.ok { color: var(--win); }
+
+.seg { display: grid; grid-template-columns: repeat(3, 1fr); padding: 3px; border-radius: 12px; background: rgba(0,0,0,.25); border: 1px solid var(--felt-line); flex: none; }
+.seg button { height: 34px; border-radius: 9px; font-weight: 600; font-size: 14.5px; color: var(--muted); }
+.seg button[aria-pressed="true"] { background: var(--brass); color: var(--brass-ink); }
+
+.scroll { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; display: flex; flex-direction: column; gap: 14px; padding-bottom: 8px; margin-inline: -4px; padding-inline: 4px; }
+
+.week { display: flex; flex-direction: column; gap: 10px; padding: 14px; border-radius: 18px; background: linear-gradient(150deg, rgba(216,178,106,.2), rgba(4,22,17,.6) 60%); border: 1px solid var(--felt-line); }
+.week-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.week h2 { margin: 0; font-family: var(--f-display); font-weight: 400; font-size: 22px; }
+.countdown { font-size: 13px; color: var(--brass); font-weight: 600; font-variant-numeric: tabular-nums; }
+.myweek { font-size: 14px; color: var(--muted); line-height: 1.4; }
+.myweek b { color: var(--ink); }
+.ladder { display: flex; flex-direction: column; gap: 4px; }
+.step { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; padding: 7px 10px; border-radius: 10px; background: rgba(0,0,0,.2); font-size: 14px; }
+.step.me { background: rgba(216,178,106,.2); box-shadow: inset 0 0 0 1px var(--brass); }
+.step .r { font-weight: 600; }
+.step .r small { display: block; font-weight: 500; color: var(--muted); font-size: 12px; }
+.step .c { color: var(--gold); font-weight: 700; font-variant-numeric: tabular-nums; display: inline-flex; gap: 3px; align-items: center; }
+.week .note { font-size: 12.5px; color: var(--muted); margin: 0; }
+.week a { color: var(--brass); font-size: 14px; font-weight: 600; }
+
+.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.item { position: relative; display: flex; flex-direction: column; gap: 8px; padding: 8px; border-radius: 16px; background: var(--glass); border: 1.5px solid transparent; text-align: left; min-width: 0; }
+.item[aria-pressed="true"] { border-color: var(--brass); background: rgba(216,178,106,.1); }
+.item .sw { position: relative; height: 62px; border-radius: 11px; overflow: hidden; display: grid; place-items: center; }
+.item .sw.frame-sw, .item .sw.title-sw { background: radial-gradient(circle at 50% 40%, #13604b, #062a21); }
+.item .sw .av { width: 34px; height: 34px; font-size: 15px; }
+.item .sw .ttl { font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #f1dfb0; padding: 0 8px; text-align: center; }
+.item .sw .ttl.gold { color: var(--gold); }
+.item .nm { font-weight: 600; font-size: 14.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-inline: 2px; }
+.item .st { font-size: 12.5px; font-weight: 600; padding-inline: 2px; display: inline-flex; align-items: center; gap: 3px; color: var(--gold); }
+.item .st.owned { color: var(--muted); }
+.item .st.on { color: var(--win); }
+.item .st.excl { color: #f3c9a4; }
+.badge { position: absolute; top: 12px; right: 12px; z-index: 2; font-size: 10.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; padding: 3px 7px; border-radius: 8px; background: rgba(0,0,0,.55); color: var(--gold); }
+.empty { text-align: center; color: var(--muted); padding: 10px; font-size: 14px; }
+.daily .ch { display: grid; grid-template-columns: 1fr auto; gap: 6px 10px; align-items: center; padding: 10px 12px; border-radius: 12px; background: rgba(0,0,0,.22); }
+.daily .ch + .ch { margin-top: 6px; }
+.daily .ch .lb { font-size: 14px; font-weight: 600; line-height: 1.3; }
+.daily .ch .cr { color: var(--gold); font-weight: 700; font-variant-numeric: tabular-nums; display: inline-flex; align-items: center; gap: 3px; white-space: nowrap; }
+.daily .ch .bar2 { grid-column: 1 / -1; height: 7px; border-radius: 4px; background: rgba(255,255,255,.1); overflow: hidden; }
+.daily .ch .bar2 i { display: block; height: 100%; background: linear-gradient(90deg, #e6c483, var(--brass)); border-radius: 4px; transition: width .6s cubic-bezier(.2,.8,.25,1); }
+.daily .ch .pg { grid-column: 1 / -1; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; margin-top: -2px; }
+.daily .ch.ok { background: rgba(127,217,154,.12); box-shadow: inset 0 0 0 1px rgba(127,217,154,.4); }
+.daily .ch.ok .cr { color: var(--win); }
+.daily .ch.bonus { background: linear-gradient(90deg, rgba(233,196,106,.22), rgba(0,0,0,.2)); }
+.dl-login { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+.dl-login b { font-size: 15px; }
+.shophead { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.shophead b { font-family: var(--f-display); font-weight: 400; font-size: 20px; }
+.shophead span { font-size: 13px; color: var(--brass); font-weight: 600; }
+.item .rar { padding-inline: 2px; }
+.tierprev { display: grid; grid-template-columns: 1fr; gap: 6px; }
+.tierprev .pcard { min-height: 56px; padding: 10px 12px; }
+.tierprev .pcard .av.lg { width: 40px; height: 40px; font-size: 17px; }
+.tierprev .pcard b { font-size: 15px; }
+.step .tier { height: 22px; font-size: 11.5px; }
+.step.champ { background: linear-gradient(90deg, rgba(233,196,106,.25), rgba(0,0,0,.2)); }
+#seasonMe .ps-box { background: rgba(0,0,0,.22); }
+</style>
+<link rel="apple-touch-startup-image" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="splash/splash-750x1334.jpg">
+<link rel="apple-touch-startup-image" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="splash/splash-828x1792.jpg">
+<link rel="apple-touch-startup-image" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="splash/splash-1125x2436.jpg">
+<link rel="apple-touch-startup-image" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="splash/splash-1242x2688.jpg">
+<link rel="apple-touch-startup-image" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="splash/splash-1170x2532.jpg">
+<link rel="apple-touch-startup-image" media="(device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="splash/splash-1284x2778.jpg">
+<link rel="apple-touch-startup-image" media="(device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="splash/splash-1179x2556.jpg">
+<link rel="apple-touch-startup-image" media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="splash/splash-1290x2796.jpg">
+<link rel="apple-touch-startup-image" media="(device-width: 402px) and (device-height: 874px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="splash/splash-1206x2622.jpg">
+<link rel="apple-touch-startup-image" media="(device-width: 440px) and (device-height: 956px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="splash/splash-1320x2868.jpg">
+<script src="boot.js"></script>
+</head>
+<body>
+<div class="app">
+  <header class="bar">
+    <div class="bank"><small>Couronnes</small><strong><span id="bank">—</span></strong></div>
+    <nav class="switch"></nav>
+  </header>
+  <div class="scroll">
+    <section class="week daily" id="daily" aria-labelledby="dailyTitle">
+      <div class="week-head"><h2 id="dailyTitle">Défis du jour</h2><span class="countdown" id="dailyEnd"></span></div>
+      <div id="dailyList"><div class="myweek">Chargement des défis du jour…</div></div>
+      <div class="dl-login">
+        <div class="week-head"><b>Connexion quotidienne</b><span class="countdown" id="streakTxt"></span></div>
+        <div id="streakBox"></div>
+      </div>
+    </section>
+    <section class="week" aria-labelledby="howTitle">
+      <h2 id="howTitle">Comment ça marche</h2>
+      <ul class="note" style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;font-size:14px">
+        <li>3 nouveaux défis chaque jour à minuit (heure de Paris), les mêmes pour tout le monde.</li>
+        <li>Joue normalement : la progression se met à jour toute seule et les couronnes sont versées dès qu'un défi est réussi.</li>
+        <li>Réussis les 3 pour un bonus de 50 couronnes.</li>
+        <li>Connexion : ouvre l'app chaque jour. Jours 1 à 3 : 5 couronnes, jours 4 à 6 : 20, jour 7 : 50. Un jour manqué, ou la fin du 7ᵉ jour, et la série repart au jour 1.</li>
+        <li>Les couronnes se dépensent dans l'onglet Boutique.</li>
+      </ul>
+    </section>
+  </div>
+</div>
+<script src="app.js"></script>
+<script>
+(() => {
+  const A = window.CasinoAccount, UI = window.CasinoUI;
+  const $ = id => document.getElementById(id);
+  const fmt = n => Number(n).toLocaleString("fr-FR", { maximumFractionDigits: 0 });
+  document.querySelector(".bank strong").insertAdjacentHTML("afterbegin", UI.CROWN);
+  const showCrowns = () => { $("bank").textContent = A.profile ? fmt(A.profile.crowns) : "—"; };
+  function paintDaily(st) {
+    if (!st) return;
+    const fmtP = (c, v) => c.id === "stake1000" || c.id === "net300" ? fmt(v) : v;
+    $("dailyList").innerHTML = st.challenges.map(c => {
+      const pct = Math.min(100, Math.round(+c.progress / +c.target * 100));
+      return `<div class="ch${c.claimed ? " ok" : ""}"><span class="lb">${UI.esc(c.label)}</span>
+        <span class="cr">${c.claimed ? "✓ " : "+"}${c.crowns} ${UI.CROWN}</span>
+        <span class="bar2"><i style="width:${pct}%"></i></span>
+        <span class="pg">${c.claimed ? "Réussi" : `${fmtP(c, +c.progress)} / ${fmtP(c, +c.target)}`}</span></div>`;
+    }).join("") + `<div class="ch bonus${st.bonus.claimed ? " ok" : ""}"><span class="lb">Bonus : les 3 défis</span><span class="cr">${st.bonus.claimed ? "✓ " : "+"}${st.bonus.crowns} ${UI.CROWN}</span></div>`;
+    $("streakBox").innerHTML = UI.streakHTML(st.streak);
+    $("streakTxt").textContent = st.streak >= 7 ? "7ᵉ jour : la série repart demain" : `Jour ${st.streak} · demain +${st.login_next}`;
+    const ms = new Date(st.resets_at) - Date.now(), h = Math.max(0, Math.floor(ms / 3600000)), m = Math.max(0, Math.floor(ms / 60000) % 60);
+    $("dailyEnd").textContent = `Nouveaux défis dans ${h} h ${String(m).padStart(2, "0")}`;
+  }
+  paintDaily(A.daily());
+  A.onDaily(st => { paintDaily(st); showCrowns(); });
+  A.onChange(showCrowns);
+  showCrowns();
+  if (!A.configured() || !A.session) $("dailyList").innerHTML = `<div class="myweek">Connecte-toi dans l'onglet Classement pour relever les défis du jour.</div>`;
+  else A.runDaily(true).then(st => { if (!st) $("dailyList").innerHTML = `<div class="myweek">Les défis arrivent avec la mise à jour du serveur.</div>`; });
+  setInterval(() => paintDaily(A.daily()), 60000);
+  if (A.configured() && A.session) A.loadProfile().then(showCrowns).catch(() => {});
+})();
+</script>
+<script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});</script>
+</body>
+</html>

@@ -168,32 +168,10 @@ button:disabled { opacity: .5; cursor: default; }
   </div>
 
   <div class="scroll">
-    <section class="week daily" id="daily" aria-labelledby="dailyTitle">
-      <div class="week-head"><h2 id="dailyTitle">Défis du jour</h2><span class="countdown" id="dailyEnd"></span></div>
-      <div id="dailyList"><div class="myweek">Connecte-toi dans l'onglet Classement pour relever les défis du jour.</div></div>
-      <div class="dl-login">
-        <div class="week-head"><b>Connexion quotidienne</b><span class="countdown" id="streakTxt"></span></div>
-        <div id="streakBox"></div>
-      </div>
-    </section>
     <div class="shophead"><b>Sélection de la semaine</b><span id="shopEnd"></span></div>
     <div class="grid" id="grid"></div>
 
-    <section class="week" id="saison" aria-labelledby="seasonTitle">
-      <div class="week-head"><h2 id="seasonTitle">Saison du mois</h2><span class="countdown" id="seasonEnd"></span></div>
-      <div id="seasonMe"><div class="myweek">Crée un compte dans l'onglet Classement pour participer à la saison.</div></div>
-      <div class="ladder" id="tiers"></div>
-      <p class="note">Une saison dure un mois. 1 point par partie, plus 1 point par tranche de 50 jetons gagnés ; perdre ne retire rien. À la fin du mois, tu reçois la bannière, le cadre, le titre et les couronnes de ton rang, plus ceux de tous les rangs en dessous. Ils sont numérotés et propres à cette saison : ils ne reviendront jamais. Top 100 : les 100 meilleurs, dès 2 000 points.</p>
-      <a href="classement.html#saison">Voir le classement de la saison</a>
-    </section>
 
-    <section class="week" aria-labelledby="weekTitle">
-      <div class="week-head"><h2 id="weekTitle">Récompenses de la semaine</h2><span class="countdown" id="countdown"></span></div>
-      <div class="myweek" id="myweek">Joue au moins 10 parties dans la semaine pour être classé.</div>
-      <div class="ladder" id="ladder"></div>
-      <p class="note">Classement général de la semaine, par gains nets. Clôture le lundi à 0 h. Le n°1 reçoit le cadre Couronne et le titre Champion de la semaine, qu'il garde tant qu'il reste premier : ils passent au nouveau n°1 la semaine suivante.</p>
-      <a href="classement.html#semaine">Voir le classement de la semaine</a>
-    </section>
   </div>
 </div>
 <script src="app.js"></script>
@@ -283,6 +261,11 @@ button:disabled { opacity: .5; cursor: default; }
       if (!week) $("grid").innerHTML = `<div class="empty" style="grid-column:1/-1">${UI.esc(/shop_week/.test(e.raw || "") ? "La boutique tournante arrive avec la mise à jour du serveur." : e.code === "network" ? "Il faut internet pour voir la boutique." : e.message)}</div>`;
     }
   }
+  function nextMonday() {
+    const d = new Date(); d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() + ((8 - d.getDay()) % 7 || 7));
+    return d;
+  }
   function tickShop() {
     const el = $("shopEnd"); if (!el) return;
     const end = week && week.week_end ? new Date(week.week_end) : nextMonday();
@@ -322,101 +305,11 @@ button:disabled { opacity: .5; cursor: default; }
   };
 
   // weekly prizes
-  function ladder(myRank) {
-    const bracket = !myRank ? -1 : myRank === 1 ? 0 : myRank === 2 ? 1 : myRank === 3 ? 2 : myRank <= 10 ? 3 : 4;
-    $("ladder").innerHTML = A.PRIZES.map((p, i) => `<div class="step${i === bracket ? " me" : ""}">
-      <span class="r">${p.ranks}${p.items.length ? `<small>${p.items.map(id => A.ITEM[id].name).join(" · ")}</small>` : ""}</span>
-      <span class="c">+${fmt(p.crowns)} ${UI.CROWN}</span></div>`).join("");
-  }
-  function nextMonday() {
-    const p = A.profile;
-    if (p && p.week_end) return new Date(p.week_end);
-    const d = new Date(); d.setHours(0, 0, 0, 0);
-    d.setDate(d.getDate() + ((8 - d.getDay()) % 7 || 7));
-    return d;
-  }
-  function tickCountdown() {
-    const ms = nextMonday() - Date.now();
-    if (ms <= 0) { $("countdown").textContent = "Clôture en cours"; return; }
-    const d = Math.floor(ms / 86400000), h = Math.floor(ms / 3600000) % 24, m = Math.floor(ms / 60000) % 60;
-    $("countdown").textContent = `Clôture dans ${d ? d + " j " : ""}${h} h ${String(m).padStart(2, "0")}`;
-  }
-  async function loadWeek() {
-    ladder(null);
-    if (!A.configured() || !A.session) { $("myweek").textContent = "Crée un compte dans l'onglet Classement pour participer."; return; }
-    try {
-      const rows = await A.leaderboard("all", 10, "week");
-      const me = rows.find(r => r.is_me);
-      if (me && me.rank) {
-        $("myweek").innerHTML = `Tu es <b>${+me.rank === 1 ? "1ᵉʳ" : me.rank + "ᵉ"}</b> cette semaine avec <b>${+me.net >= 0 ? "+" : "−"}${fmt(Math.abs(me.net))}</b> sur ${fmt(me.games)} parties.`;
-        ladder(+me.rank);
-      } else if (me) {
-        const left = Math.max(0, 10 - +me.games);
-        $("myweek").innerHTML = `Encore <b>${left} partie${left > 1 ? "s" : ""}</b> cette semaine pour être classé.`;
-      }
-    } catch (e) { /* offline: keep the ladder */ }
-  }
-
-  function seasonUI() {
-    const se = A.profile && A.profile.season;
-    const end = se && se.season_end ? new Date(se.season_end) : (() => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth() + 1, 1); })();
-    const days = Math.max(0, Math.ceil((end - Date.now()) / 86400000));
-    $("seasonEnd").textContent = `Fin dans ${days} jour${days > 1 ? "s" : ""}`;
-    $("seasonTitle").textContent = "Saison de " + end.toLocaleDateString("fr-FR", { month: "long" }).replace(/^./, c => c) ;
-    if (se) {
-      const d = new Date(se.season + "T12:00:00");
-      $("seasonTitle").textContent = "Saison de " + d.toLocaleDateString("fr-FR", { month: "long" });
-      $("seasonMe").innerHTML = UI.seasonBlock(se, "Ta progression");
-    }
-    const mine = se && se.tier;
-    const n = (A.profile && A.profile.season_number) || A.seasonNumber();
-    $("seasonTitle").textContent = `Saison ${n}`;
-    const name = A.session ? A.session.username : "Toi", photo = A.profile && A.profile.avatar_url;
-    const row = (t, isChamp) => {
-      const [b, f, ti] = A.seasonSet(n, t.id);
-      const idx = A.TIERS.indexOf(t);
-      const below = isChamp ? 0 : idx;
-      const total = isChamp ? t.crowns : A.TIERS.slice(0, idx + 1).reduce((x, y) => x + y.crowns, 0);
-      const extra = isChamp ? "en plus de tout ce que rapporte son rang"
-        : below ? `+ les ${below} rang${below > 1 ? "s" : ""} en dessous (${below * 3} objets de plus)` : "";
-      return `<div class="step${!isChamp && t.id === mine ? " me" : ""}${isChamp ? " champ" : ""}" style="grid-template-columns:1fr">
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">${isChamp ? "<b>Champion de la saison</b>" : UI.tierBadge(t.id)}<span class="c">+${fmt(total)} ${UI.CROWN}</span></div>
-        <div class="tierprev">${UI.cardHTML({ name, banner: b, frame: f, title: ti, avatar: photo, sub: isChamp ? t.note : (t.note || `dès ${fmt(t.min)} points`) })}</div>
-        ${extra ? `<small style="color:var(--muted);font-size:12.5px">${extra}</small>` : ""}</div>`;
-    };
-    $("tiers").innerHTML = row(A.CHAMPION, true) + A.TIERS.slice().reverse().map(t => row(t, false)).join("");
-  }
-
-  A.onChange(() => { render(false); seasonUI(); });
-  seasonUI();
+  A.onChange(() => render(false));
   render(false);
-  tickCountdown(); setInterval(tickCountdown, 30000);
-  loadWeek();
   loadShop(); setInterval(tickShop, 60000);
 
-  // daily challenges and login streak
-  function paintDaily(st) {
-    if (!st) return;
-    const fmtP = (c, v) => c.id === "stake1000" || c.id === "net300" ? fmt(v) : v;
-    $("dailyList").innerHTML = st.challenges.map(c => {
-      const pct = Math.min(100, Math.round(+c.progress / +c.target * 100));
-      return `<div class="ch${c.claimed ? " ok" : ""}"><span class="lb">${UI.esc(c.label)}</span>
-        <span class="cr">${c.claimed ? "✓ " : "+"}${c.crowns} ${UI.CROWN}</span>
-        <span class="bar2"><i style="width:${pct}%"></i></span>
-        <span class="pg">${c.claimed ? "Réussi" : `${fmtP(c, +c.progress)} / ${fmtP(c, +c.target)}`}</span></div>`;
-    }).join("") + `<div class="ch bonus${st.bonus.claimed ? " ok" : ""}"><span class="lb">Bonus : les 3 défis</span><span class="cr">${st.bonus.claimed ? "✓ " : "+"}${st.bonus.crowns} ${UI.CROWN}</span></div>`;
-    $("streakBox").innerHTML = UI.streakHTML(st.streak);
-    $("streakTxt").textContent = st.streak >= 7 ? "7ᵉ jour : la série repart demain" : `Jour ${st.streak} · demain +${st.login_next}`;
-    const ms = new Date(st.resets_at) - Date.now(), h = Math.max(0, Math.floor(ms / 3600000)), m = Math.max(0, Math.floor(ms / 60000) % 60);
-    $("dailyEnd").textContent = `Nouveaux défis dans ${h} h ${String(m).padStart(2, "0")}`;
-    if (A.profile) $("bank").textContent = fmt(A.profile.crowns);
-  }
-  paintDaily(A.daily());
-  A.onDaily(paintDaily);
-  if (A.configured() && A.session) A.runDaily(true).then(st => { if (!st) $("dailyList").innerHTML = `<div class="myweek">Les défis arrivent avec la mise à jour du serveur.</div>`; });
-  setInterval(() => paintDaily(A.daily()), 60000);
-  if (location.hash === "#saison") setTimeout(() => $("saison").scrollIntoView({ behavior: "smooth", block: "start" }), 400);
-  if (A.configured() && A.session) A.loadProfile().then(() => { render(false); tickCountdown(); seasonUI(); }).catch(err => say(err.raw && /my_profile/.test(err.raw) ? "Le serveur n'a pas encore la mise à jour de la boutique." : ""));
+  if (A.configured() && A.session) A.loadProfile().then(() => { render(false); }).catch(err => say(err.raw && /my_profile/.test(err.raw) ? "Le serveur n'a pas encore la mise à jour de la boutique." : ""));
 })();
 </script>
 <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});</script>

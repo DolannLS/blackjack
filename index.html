@@ -87,6 +87,23 @@ button:disabled { opacity: .35; cursor: default; }
 /* table */
 .table { flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: space-between; padding-block: 6px; }
 .zone { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+/* card shoe: cards left before the reshuffle, optional Hi-Lo count */
+.shoebar { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 30px; flex: none; }
+.shoe { display: flex; align-items: center; gap: 8px; min-width: 0; font-size: 12.5px; color: var(--muted); }
+.shoe-ico { position: relative; width: 26px; height: 20px; flex: none; }
+.shoe-ico i { position: absolute; top: 0; width: 15px; height: 20px; border-radius: 3px; background: repeating-linear-gradient(45deg, transparent 0 3px, rgba(216,178,106,.45) 3px 4px), #7a1f2b; border: 1.5px solid var(--card); box-sizing: border-box; }
+.shoe-ico i:nth-child(1) { left: 0; } .shoe-ico i:nth-child(2) { left: 5px; } .shoe-ico i:nth-child(3) { left: 10px; }
+.shoe b { color: var(--ink); font-variant-numeric: tabular-nums; }
+.shoe-meter { position: relative; width: 74px; height: 6px; border-radius: 3px; background: rgba(255,255,255,.12); flex: none; }
+.shoe-meter i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 3px; background: linear-gradient(90deg, var(--brass), #e6c483); transition: width .4s ease; }
+.shoe-meter u { position: absolute; top: -3px; bottom: -3px; width: 2px; background: #e8414f; border-radius: 1px; }
+.count { display: flex; gap: 6px; flex: none; }
+.count span { padding: 3px 8px; border-radius: 10px; background: var(--glass); border: 1px solid var(--felt-line); font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.count .hot { border-color: var(--win); color: var(--win); }
+.count .cold { color: var(--lose); }
+.toggle { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px; border-radius: 12px; background: var(--glass); font-size: 14.5px; }
+.toggle small { display: block; color: var(--muted); font-size: 12.5px; margin-top: 2px; }
+.toggle input { width: 46px; height: 28px; accent-color: var(--brass); flex: none; }
 .zone-head { display: flex; align-items: center; gap: 8px; min-height: 26px; }
 .total {
   min-width: 34px; height: 26px; padding: 0 9px; box-sizing: border-box;
@@ -240,7 +257,7 @@ button:disabled { opacity: .35; cursor: default; }
 .btn.danger { color: var(--lose); }
 .btn.danger.armed { background: var(--lose); color: #2a0b07; border-color: var(--lose); }
 
-@media (max-height: 640px) {
+@media (max-height: 700px) {
   .print { display: none; }
   .chip { width: 50px; height: 50px; font-size: 14px; }
   .btn { height: 46px; }
@@ -281,6 +298,7 @@ button:disabled { opacity: .35; cursor: default; }
   </header>
 
   <main class="table">
+    <div class="shoebar" id="shoebar" aria-live="polite"></div>
     <section class="zone">
       <div class="zone-head"><span class="label">Croupier</span><span class="total" id="dTotal"></span></div>
       <div class="hand" id="dealer"></div>
@@ -332,8 +350,9 @@ button:disabled { opacity: .35; cursor: default; }
       </button>
     </div>
     <div class="stats" id="stats"></div>
+    <label class="toggle"><span>Aide au comptage (Hi-Lo)<small>Affiche le compte des cartes sorties pour savoir quand miser plus.</small></span><input type="checkbox" id="countToggle"></label>
     <ul class="rules">
-      <li>Sabot de 6 jeux, remélangé aux trois quarts.</li>
+      <li>Sabot de 6 jeux (312 cartes), remélangé quand il reste un quart des cartes : le repère rouge sur la jauge.</li>
       <li>Blackjack payé 3 pour 2, le croupier reste sur 17.</li>
       <li>Doubler sur deux cartes, séparer jusqu'à 4 mains. As séparés : une carte chacun.</li>
     </ul>
@@ -364,12 +383,19 @@ button:disabled { opacity: .35; cursor: default; }
 
   // shoe
   let shoe = [], cut = 0, uid = 0;
+  // Hi-Lo: 2 to 6 count +1, 7 to 9 count 0, tens and aces count -1
+  let running = 0;
+  const counted = new Set();
+  const hilo = c => ("23456".includes(c.r) ? 1 : c.r === "10" || "JQKA".includes(c.r) ? -1 : 0);
+  let showCount = false;
+  try { showCount = localStorage.getItem("bj.count") === "1"; } catch (e) {}
   function rand(n) {
     const a = new Uint32Array(1);
     (window.crypto || {}).getRandomValues ? crypto.getRandomValues(a) : (a[0] = Math.random() * 2 ** 32);
     return a[0] % n;
   }
   function newShoe() {
+    running = 0; counted.clear();
     shoe = [];
     for (let d = 0; d < DECKS; d++) for (const s of SUITS) for (const r of RANKS) shoe.push({ r, s });
     for (let i = shoe.length - 1; i > 0; i--) { const j = rand(i + 1); [shoe[i], shoe[j]] = [shoe[j], shoe[i]]; }
@@ -411,8 +437,26 @@ button:disabled { opacity: .35; cursor: default; }
   }
   const TAGS = { win: "Gagné", lose: "Perdu", push: "Égalité", bj: "Blackjack" };
 
+  function renderShoe() {
+    // count every card that is face up on the table
+    const up = S.dealer.filter((c, i) => !(i === 1 && S.hole)).concat(...S.hands.map(h => h.cards));
+    up.forEach(c => { if (!counted.has(c.id)) { counted.add(c.id); running += hilo(c); } });
+    const total = DECKS * 52, left = shoe.length, beforeShuffle = Math.max(0, left - cut);
+    const decksLeft = Math.max(.25, left / 52);
+    const trueCount = running / decksLeft;
+    const tc = (Math.round(trueCount * 10) / 10).toLocaleString("fr-FR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+    $("shoebar").innerHTML = `<div class="shoe" title="Sabot de ${DECKS} jeux">
+        <span class="shoe-ico" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span><b>${left}</b> cartes · mélange dans <b>${beforeShuffle}</b></span>
+        <span class="shoe-meter" aria-hidden="true"><i style="width:${left / total * 100}%"></i><u style="left:${cut / total * 100}%"></u></span>
+      </div>
+      ${showCount ? `<div class="count" aria-label="Comptage Hi-Lo"><span class="${running > 0 ? "hot" : running < 0 ? "cold" : ""}">Compte ${running > 0 ? "+" : ""}${running}</span><span class="${trueCount >= 2 ? "hot" : trueCount <= -1 ? "cold" : ""}" title="Compte divisé par les jeux restants (${(Math.round(decksLeft * 10) / 10).toLocaleString("fr-FR")})">Réel ${trueCount > 0 ? "+" : ""}${tc}</span></div>` : ""}`;
+    $("shoebar").title = showCount ? (trueCount >= 2 ? "Compte réel élevé : il reste beaucoup de 10 et d'As, c'est le moment de miser plus." : trueCount <= -1 ? "Compte réel négatif : il reste surtout des petites cartes, mise le minimum." : "Compte neutre.") : "";
+  }
+
   let lastBank = S.bankroll;
   function render() {
+    renderShoe();
     const bankEl = $("bank");
     bankEl.textContent = fmt(S.bankroll);
     if (S.bankroll > lastBank) { bankEl.classList.remove("bump"); void bankEl.offsetWidth; bankEl.classList.add("bump"); }
@@ -522,7 +566,7 @@ button:disabled { opacity: .35; cursor: default; }
     render();
     const h = S.hands[0];
     await give(h); await giveD(); await give(h); await giveD();
-    if (reshuffled) say("Nouveau sabot mélangé");
+    if (reshuffled) say(showCount ? "Nouveau sabot mélangé · le compte repart à 0" : "Nouveau sabot mélangé");
     const dBJ = value(S.dealer).t === 21;
     if (isBJ(h) || dBJ) { await reveal(); settle(); return; }
     if (value(h.cards).t === 21) { await next(); return; }
@@ -633,6 +677,12 @@ button:disabled { opacity: .35; cursor: default; }
   $("menuBtn").onclick = () => { renderStats(); $("menu").hidden = false; };
   $("closeMenu").onclick = () => { $("menu").hidden = true; };
   $("menu").onclick = e => { if (e.target.id === "menu") $("menu").hidden = true; };
+  $("countToggle").checked = showCount;
+  $("countToggle").onchange = e => {
+    showCount = e.target.checked;
+    try { localStorage.setItem("bj.count", showCount ? "1" : "0"); } catch (err) {}
+    render();
+  };
   $("resetBtn").onclick = () => {
     const b = $("resetBtn");
     if (!b.classList.contains("armed")) {

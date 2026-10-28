@@ -198,6 +198,10 @@ button:disabled { opacity: .35; cursor: default; }
 .raise .presets button { height: 36px; border-radius: 10px; background: rgba(255,255,255,.06); font-size: 14px; font-weight: 600; }
 .raise input[type="range"] { width: 100%; accent-color: var(--brass); height: 28px; }
 
+.potrow { display: flex; align-items: center; justify-content: center; gap: 14px; flex-wrap: wrap; }
+.deckinfo { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.deckinfo b { color: var(--ink); }
+.deckinfo i { width: 11px; height: 15px; border-radius: 2px; background: repeating-linear-gradient(45deg, transparent 0 2px, rgba(216,178,106,.45) 2px 3px), #7a1f2b; border: 1px solid var(--card); flex: none; }
 /* video poker */
 .paytable { display: grid; grid-template-columns: 1fr auto; border-radius: 12px; overflow: hidden; border: 1.5px solid var(--brass); background: rgba(10, 18, 40, .55); font-size: 13.5px; }
 .paytable div { padding: 4px 10px; font-variant-numeric: tabular-nums; }
@@ -330,7 +334,7 @@ button:disabled { opacity: .35; cursor: default; }
   <section class="game" id="holdem">
     <div class="bots" id="bots"></div>
     <div class="center">
-      <div class="pot">Pot<b id="pot">0</b></div>
+      <div class="potrow"><div class="pot">Pot<b id="pot">0</b></div><div class="deckinfo" id="deckInfo"></div></div>
       <div class="board" id="board"></div>
     </div>
     <div class="msg-wrap"><div class="msg" id="hMsg" role="status" aria-live="polite"></div></div>
@@ -342,6 +346,7 @@ button:disabled { opacity: .35; cursor: default; }
   <section class="game" id="video" hidden>
     <div class="paytable" id="paytable"></div>
     <div class="vp-hand" id="vpHand"></div>
+    <div style="display:flex;justify-content:center"><div class="deckinfo" id="vpDeck"></div></div>
     <div class="msg-wrap"><div class="msg" id="vMsg" role="status" aria-live="polite"></div></div>
     <div class="tray">
       <div class="chips" id="vpChips" role="group" aria-label="Mise">
@@ -790,6 +795,7 @@ button:disabled { opacity: .35; cursor: default; }
     }).join("");
 
     $("pot").textContent = fmt(potTotal());
+    $("deckInfo").innerHTML = H.deck.length && H.phase !== "idle" ? `<i aria-hidden="true"></i>Paquet <b>${H.deck.length}</b> cartes` : "";
     const bestCards = reveal && P().eval && P().win ? P().eval.cards : null;
     const champ = reveal ? H.players.filter(p => p.win > 0 && p.eval).sort((a, b) => b.win - a.win)[0] : null;
     const hl = champ ? champ.eval.cards : bestCards;
@@ -852,6 +858,7 @@ button:disabled { opacity: .35; cursor: default; }
     $("vpHand").innerHTML = slots.join("");
     $("vpHand").querySelectorAll(".vp-slot:disabled").forEach(b => b.style.opacity = 1);
     $("vpBet").textContent = fmt(VP.bet);
+    $("vpDeck").innerHTML = VP.deck.length ? `<i aria-hidden="true"></i>Paquet : <b>${VP.deck.length}</b> cartes · mélangé à chaque main` : "";
     document.querySelectorAll("#vpChips .chip").forEach(b => {
       b.setAttribute("aria-pressed", String(+b.dataset.v === VP.bet));
       b.disabled = VP.phase === "draw" || VP.phase === "busy";
