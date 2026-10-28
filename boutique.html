@@ -109,6 +109,18 @@ button:disabled { opacity: .5; cursor: default; }
 .item .st.excl { color: #f3c9a4; }
 .badge { position: absolute; top: 12px; right: 12px; z-index: 2; font-size: 10.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; padding: 3px 7px; border-radius: 8px; background: rgba(0,0,0,.55); color: var(--gold); }
 .empty { text-align: center; color: var(--muted); padding: 10px; font-size: 14px; }
+.daily .ch { display: grid; grid-template-columns: 1fr auto; gap: 6px 10px; align-items: center; padding: 10px 12px; border-radius: 12px; background: rgba(0,0,0,.22); }
+.daily .ch + .ch { margin-top: 6px; }
+.daily .ch .lb { font-size: 14px; font-weight: 600; line-height: 1.3; }
+.daily .ch .cr { color: var(--gold); font-weight: 700; font-variant-numeric: tabular-nums; display: inline-flex; align-items: center; gap: 3px; white-space: nowrap; }
+.daily .ch .bar2 { grid-column: 1 / -1; height: 7px; border-radius: 4px; background: rgba(255,255,255,.1); overflow: hidden; }
+.daily .ch .bar2 i { display: block; height: 100%; background: linear-gradient(90deg, #e6c483, var(--brass)); border-radius: 4px; transition: width .6s cubic-bezier(.2,.8,.25,1); }
+.daily .ch .pg { grid-column: 1 / -1; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; margin-top: -2px; }
+.daily .ch.ok { background: rgba(127,217,154,.12); box-shadow: inset 0 0 0 1px rgba(127,217,154,.4); }
+.daily .ch.ok .cr { color: var(--win); }
+.daily .ch.bonus { background: linear-gradient(90deg, rgba(233,196,106,.22), rgba(0,0,0,.2)); }
+.dl-login { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+.dl-login b { font-size: 15px; }
 .shophead { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
 .shophead b { font-family: var(--f-display); font-weight: 400; font-size: 20px; }
 .shophead span { font-size: 13px; color: var(--brass); font-weight: 600; }
@@ -156,6 +168,14 @@ button:disabled { opacity: .5; cursor: default; }
   </div>
 
   <div class="scroll">
+    <section class="week daily" id="daily" aria-labelledby="dailyTitle">
+      <div class="week-head"><h2 id="dailyTitle">Défis du jour</h2><span class="countdown" id="dailyEnd"></span></div>
+      <div id="dailyList"><div class="myweek">Connecte-toi dans l'onglet Classement pour relever les défis du jour.</div></div>
+      <div class="dl-login">
+        <div class="week-head"><b>Connexion quotidienne</b><span class="countdown" id="streakTxt"></span></div>
+        <div id="streakBox"></div>
+      </div>
+    </section>
     <div class="shophead"><b>Sélection de la semaine</b><span id="shopEnd"></span></div>
     <div class="grid" id="grid"></div>
 
@@ -373,6 +393,28 @@ button:disabled { opacity: .5; cursor: default; }
   tickCountdown(); setInterval(tickCountdown, 30000);
   loadWeek();
   loadShop(); setInterval(tickShop, 60000);
+
+  // daily challenges and login streak
+  function paintDaily(st) {
+    if (!st) return;
+    const fmtP = (c, v) => c.id === "stake1000" || c.id === "net300" ? fmt(v) : v;
+    $("dailyList").innerHTML = st.challenges.map(c => {
+      const pct = Math.min(100, Math.round(+c.progress / +c.target * 100));
+      return `<div class="ch${c.claimed ? " ok" : ""}"><span class="lb">${UI.esc(c.label)}</span>
+        <span class="cr">${c.claimed ? "✓ " : "+"}${c.crowns} ${UI.CROWN}</span>
+        <span class="bar2"><i style="width:${pct}%"></i></span>
+        <span class="pg">${c.claimed ? "Réussi" : `${fmtP(c, +c.progress)} / ${fmtP(c, +c.target)}`}</span></div>`;
+    }).join("") + `<div class="ch bonus${st.bonus.claimed ? " ok" : ""}"><span class="lb">Bonus : les 3 défis</span><span class="cr">${st.bonus.claimed ? "✓ " : "+"}${st.bonus.crowns} ${UI.CROWN}</span></div>`;
+    $("streakBox").innerHTML = UI.streakHTML(st.streak);
+    $("streakTxt").textContent = st.streak >= 7 ? "7ᵉ jour : la série repart demain" : `Jour ${st.streak} · demain +${st.login_next}`;
+    const ms = new Date(st.resets_at) - Date.now(), h = Math.max(0, Math.floor(ms / 3600000)), m = Math.max(0, Math.floor(ms / 60000) % 60);
+    $("dailyEnd").textContent = `Nouveaux défis dans ${h} h ${String(m).padStart(2, "0")}`;
+    if (A.profile) $("bank").textContent = fmt(A.profile.crowns);
+  }
+  paintDaily(A.daily());
+  A.onDaily(paintDaily);
+  if (A.configured() && A.session) A.runDaily(true).then(st => { if (!st) $("dailyList").innerHTML = `<div class="myweek">Les défis arrivent avec la mise à jour du serveur.</div>`; });
+  setInterval(() => paintDaily(A.daily()), 60000);
   if (location.hash === "#saison") setTimeout(() => $("saison").scrollIntoView({ behavior: "smooth", block: "start" }), 400);
   if (A.configured() && A.session) A.loadProfile().then(() => { render(false); tickCountdown(); seasonUI(); }).catch(err => say(err.raw && /my_profile/.test(err.raw) ? "Le serveur n'a pas encore la mise à jour de la boutique." : ""));
 })();

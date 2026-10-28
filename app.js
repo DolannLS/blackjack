@@ -136,6 +136,7 @@
       });
       const sent = new Set(mine.map(x => x.cid));
       write(QUEUE, read(QUEUE, []).filter(x => !sent.has(x.cid)));
+      if (typeof afterFlush === "function") afterFlush();
     } catch (e) {
       // keep the queue; it is retried on the next result, page load or reconnection
     } finally { flushing = false; }
@@ -1128,7 +1129,7 @@ body::before { content: ""; position: fixed; inset: 0; pointer-events: none; bac
 .ps-hit .go { color: rgba(255,255,255,.6); font-size: 20px; }
 
 /* ===== tablets ===== */
-@media (min-width: 700px) {
+@media (min-width: 700px) and (min-height: 500px) {
   .app { max-width: 880px; }
   .tabbar { max-width: 640px; margin-inline: auto; border-radius: 22px 22px 0 0; }
   .tabbar a { font-size: 11.5px; }
@@ -1148,7 +1149,7 @@ body::before { content: ""; position: fixed; inset: 0; pointer-events: none; bac
   body[data-page="historique"] .app, body[data-page="classement"] .app { max-width: 980px; }
 }
 /* roulette: wheel beside the betting layout on wide screens */
-@media (min-width: 900px) {
+@media (min-width: 900px) and (min-height: 500px) {
   body[data-page="roulette"] .app { display: grid; max-width: 1180px; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); grid-template-rows: auto minmax(0, 1fr) auto auto; grid-template-areas: "bar bar" "stage board" "stage controls" "tab tab"; column-gap: 28px; }
   body[data-page="roulette"] .bar { grid-area: bar; }
   body[data-page="roulette"] .stage { grid-area: stage; }
@@ -1161,7 +1162,7 @@ body::before { content: ""; position: fixed; inset: 0; pointer-events: none; bac
   body[data-page="roulette"] .history { display: flex !important; }
 }
 /* shop and locker: preview beside the grid */
-@media (min-width: 1000px) {
+@media (min-width: 1000px) and (min-height: 500px) {
   body[data-page="boutique"] .app, body[data-page="casier"] .app { display: grid; max-width: 1180px; grid-template-columns: 380px minmax(0, 1fr); grid-template-rows: auto auto auto minmax(0, 1fr) auto; grid-template-areas: "bar bar" "preview seg" "preview tools" "preview scroll" "tab tab"; column-gap: 28px; }
   body[data-page="boutique"] .bar, body[data-page="casier"] .bar { grid-area: bar; }
   body[data-page="boutique"] .preview, body[data-page="casier"] .preview { grid-area: preview; align-self: start; }
@@ -1425,7 +1426,8 @@ body::before { content: ""; position: fixed; inset: 0; pointer-events: none; bac
         ["Gagner des couronnes", `<ul>
           <li>150 offertes à la création du compte.</li>
           <li>Chaque lundi, selon ta place au classement de la semaine.</li>
-          <li>Chaque fin de mois, selon ton rang de saison.</li></ul>`],
+          <li>Chaque fin de mois, selon ton rang de saison.</li>
+          <li>Chaque jour : 3 défis (bonus de 50 si tu fais les 3) et la connexion quotidienne (5, 5, 5, 20, 20, 20 puis 50 couronnes le 7ᵉ jour d'affilée).</li></ul>`],
         ["La boutique", `<ul>
           <li>Une sélection différente chaque lundi : 6 bannières, 4 cadres et 5 titres.</li>
           <li>Touche un objet pour l'essayer en aperçu, puis Acheter. Il rejoint ton casier.</li>
@@ -1519,7 +1521,128 @@ body::before { content: ""; position: fixed; inset: 0; pointer-events: none; bac
   }
 
   Object.assign(window.CasinoUI, { openSearch, rarity, openHelp });
+  // ---------- iPhone: full height, safe areas, portrait only ----------
+  // iOS ignores the manifest orientation for web apps, so on phones held sideways the
+  // whole page is turned back upright; the app height is measured instead of trusting 100%.
+  const isIOS = document.documentElement.classList.contains("is-ios");
+  function fitScreen() {
+    const root = document.documentElement;
+    const phone = matchMedia("(pointer: coarse)").matches && Math.min(screen.width, screen.height) < 600;
+    const landscape = innerWidth > innerHeight;
+    root.classList.remove("rot-l", "rot-r");
+    if (phone && landscape) {
+      const a = screen.orientation && typeof screen.orientation.angle === "number" ? screen.orientation.angle : (window.orientation || 90);
+      root.classList.add(a === 270 || a === -90 ? "rot-r" : "rot-l");
+      root.style.setProperty("--rot-w", innerHeight + "px");
+      root.style.setProperty("--rot-h", innerWidth + "px");
+    }
+    const standalone = navigator.standalone || matchMedia("(display-mode: standalone)").matches;
+    const h = isIOS && standalone && !landscape ? Math.max(innerHeight, screen.height) : innerHeight;
+    root.style.setProperty("--app-h", h + "px");
+  }
+  fitScreen();
+  addEventListener("resize", fitScreen);
+  addEventListener("orientationchange", () => setTimeout(fitScreen, 120));
+  const css5 = document.createElement("style");
+  css5.textContent = `
+html { height: var(--app-h, 100%) !important; padding-bottom: 0 !important; }
+html, body { min-height: 0 !important; }
+body { height: 100% !important; }
+.app { padding-bottom: 0 !important; }
+.tabbar { margin-bottom: 0 !important; padding-bottom: calc(4px + env(safe-area-inset-bottom, 0px)) !important; }
+html.rot-l, html.rot-r { height: 100% !important; overflow: hidden; padding: 0 !important; }
+html.rot-l body, html.rot-r body { position: fixed; width: var(--rot-w) !important; height: var(--rot-h) !important; transform-origin: 0 0; overflow: hidden; box-sizing: border-box; }
+html.rot-l body { top: 100%; left: 0; transform: rotate(-90deg); padding-top: env(safe-area-inset-left, 0px); }
+html.rot-r body { top: 0; left: 100%; transform: rotate(90deg); padding-top: env(safe-area-inset-right, 0px); }
+html.rot-l .tabbar, html.rot-r .tabbar { padding-bottom: 4px !important; }
+
+/* small notices */
+.toasts { position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 86px); transform: translateX(-50%); z-index: 60; display: flex; flex-direction: column; gap: 8px; align-items: center; pointer-events: none; width: min(92vw, 420px); }
+.toast { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 14px; background: rgba(6, 30, 23, .94); border: 1px solid var(--brass); color: var(--ink); font: 600 14px var(--f-ui); box-shadow: 0 10px 30px rgba(0,0,0,.45); animation: toast-in .4s cubic-bezier(.3,1.4,.5,1) both; pointer-events: auto; }
+.toast.out { animation: toast-out .3s ease both; }
+.toast b { color: var(--brass); white-space: nowrap; }
+.toast span { flex: 1; min-width: 0; }
+@keyframes toast-in { from { transform: translateY(16px) scale(.95); opacity: 0; } }
+@keyframes toast-out { to { transform: translateY(10px); opacity: 0; } }
+@media (min-width: 1100px) and (hover: hover) and (pointer: fine) { .toasts { bottom: 24px; left: calc(50% + 48px); } }
+
+/* 7-day login track */
+.streak { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 5px; }
+.streak div { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 7px 0 6px; border-radius: 10px; background: rgba(0,0,0,.25); border: 1px solid rgba(255,255,255,.08); font-size: 10.5px; color: var(--muted); }
+.streak div b { font-size: 14px; color: var(--ink); font-variant-numeric: tabular-nums; }
+.streak div.done { background: rgba(216,178,106,.18); border-color: rgba(216,178,106,.45); }
+.streak div.done b { color: var(--brass); }
+.streak div.today { background: var(--brass); border-color: var(--brass); color: var(--brass-ink); }
+.streak div.today b { color: var(--brass-ink); }
+.streak div.big b { font-size: 16px; }`;
+  document.head.appendChild(css5);
+
+  // ---------- daily login and challenges ----------
+  const LOGIN_TRACK = [5, 5, 5, 20, 20, 20, 50];
+  let daily = read("casino.daily", null), dailyBusy = false, dailyAt = 0;
+  const dailyListeners = new Set();
+  function streakHTML(streak, todayDone) {
+    return `<div class="streak">${LOGIN_TRACK.map((c, i) => {
+      const day = i + 1, cls = day < streak ? "done" : day === streak ? "today" : "";
+      return `<div class="${cls}${day === 7 ? " big" : ""}">J${day}<b>${c}</b></div>`;
+    }).join("")}</div>`;
+  }
+  function toast(text, crowns) {
+    let box = document.querySelector(".toasts");
+    if (!box) { box = document.createElement("div"); box.className = "toasts"; box.setAttribute("role", "status"); box.setAttribute("aria-live", "polite"); document.body.appendChild(box); }
+    const t = document.createElement("div");
+    t.className = "toast";
+    t.innerHTML = `${CROWN}<span>${escHTML(text)}</span>${crowns ? `<b>+${crowns}</b>` : ""}`;
+    box.appendChild(t);
+    setTimeout(() => { t.classList.add("out"); setTimeout(() => t.remove(), 320); }, 3800);
+  }
+  function showLogin(st) {
+    if (document.querySelector(".reward-scrim")) { setTimeout(() => showLogin(st), 800); return; }
+    const box = document.createElement("div");
+    box.className = "reward-scrim";
+    box.setAttribute("role", "dialog");
+    box.setAttribute("aria-modal", "true");
+    const next = st.streak >= 7 ? "La série recommence demain au jour 1." : `Reviens demain pour +${st.login_next} couronnes.`;
+    box.innerHTML = `<div class="reward-box">
+      <h2>Connexion du jour</h2>
+      <p>${st.streak === 1 ? "Premier jour de ta série." : `${st.streak} jours d'affilée !`}</p>
+      <div class="reward-crowns">+${st.login_gain} ${CROWN}</div>
+      ${streakHTML(st.streak, true)}
+      <p>${next} Un jour manqué remet la série à zéro.</p>
+      <button class="btn primary" type="button">Récupérer</button>
+    </div>`;
+    document.body.appendChild(box);
+    if (st.streak === 7) confetti();
+    box.querySelector("button").onclick = () => box.remove();
+  }
+  async function runDaily(force) {
+    if (!configured() || !session || navigator.onLine === false || dailyBusy) return daily;
+    if (!force && Date.now() - dailyAt < 15000) return daily;
+    dailyBusy = true;
+    try {
+      const st = await api("/rest/v1/rpc/daily_status", { method: "POST", body: {} });
+      dailyAt = Date.now();
+      if (st) {
+        daily = st;
+        write("casino.daily", st);
+        if (profile && typeof st.crowns === "number") keepProfile({ ...profile, crowns: st.crowns });
+        if (st.login_gain > 0) showLogin(st);
+        (st.newly || []).forEach((n, i) => setTimeout(() => toast(`Défi réussi : ${n.label}`, n.crowns), 400 + i * 700));
+        dailyListeners.forEach(f => { try { f(st); } catch (e) {} });
+      }
+    } catch (e) { /* server not updated yet, or offline */ }
+    dailyBusy = false;
+    return daily;
+  }
+  // games just uploaded may complete a challenge
+  const afterFlush = () => setTimeout(() => runDaily(false), 600);
+  Object.assign(window.CasinoAccount, {
+    daily: () => daily, runDaily, onDaily: f => { dailyListeners.add(f); return () => dailyListeners.delete(f); }, LOGIN_TRACK
+  });
+  Object.assign(window.CasinoUI, { toast, streakHTML });
+
   const boot = () => { mountNav(); mountSearch(); mountHelp(); };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot); else boot();
   setTimeout(checkRewards, 1200);
+  setTimeout(() => runDaily(true), 1900);
 })();
