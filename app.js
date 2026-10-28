@@ -628,7 +628,7 @@ body::before { content: ""; position: fixed; inset: 0; pointer-events: none; bac
 
   function chipHTML() {
     const n = session && session.username;
-    if (!n) return `<span class="av">?</span><span>Se connecter</span>`;
+    if (!n) return `<span class="av"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></span><span>Se connecter</span>`;
     return `${avatarHTML(n, profile && profile.frame, "", profile && profile.avatar_url)}<span>${escHTML(n)}</span>`;
   }
   function mountNav() {
@@ -1262,8 +1262,264 @@ body::before { content: ""; position: fixed; inset: 0; pointer-events: none; bac
     bar.prepend(b);
   });
 
-  Object.assign(window.CasinoUI, { openSearch, rarity });
-  const boot = () => { mountNav(); mountSearch(); };
+  // ---------- rules and help for every game ----------
+  // mini playing cards for examples, e.g. cards("A♠ R♠ D♠ V♠ 10♠")
+  function cards(spec) {
+    return `<span class="hc-row">${spec.split(" ").map(c => {
+      const suit = c.slice(-1), rank = c.slice(0, -1), red = suit === "♥" || suit === "♦";
+      return `<span class="hc${red ? " red" : ""}">${rank}<i>${suit}&#xFE0E;</i></span>`;
+    }).join("")}</span>`;
+  }
+  const chipDot = (c, v) => `<span class="hchip" style="--c:${c}">${v}</span>`;
+  const HELP = {
+    blackjack: {
+      title: "Blackjack",
+      intro: "Bats le croupier en t'approchant le plus possible de 21, sans jamais dépasser.",
+      sections: [
+        ["Valeur des cartes", `<ul>
+          <li>De 2 à 10 : leur valeur. ${cards("7♣ 10♥")} = 17</li>
+          <li>Valet, Dame, Roi (V, D, R) : 10. ${cards("R♠ 6♦")} = 16</li>
+          <li>As : 1 ou 11, au mieux pour toi. ${cards("A♥ 6♠")} s'affiche <b>7/17</b> : la main est « souple », tirer ne peut pas te faire sauter.</li></ul>`],
+        ["Déroulement d'une main", `<ol>
+          <li>Choisis ta mise avec les jetons ${chipDot("#c43a3a", 5)} ${chipDot("#2f8a55", 25)} ${chipDot("#1d1f24", 100)} ${chipDot("#6b3fa0", 500)}, puis <b>Distribuer</b>.</li>
+          <li>Tu reçois 2 cartes visibles. Le croupier en a 2, dont une cachée.</li>
+          <li>Tu joues ta main (voir les actions ci-dessous).</li>
+          <li>Le croupier retourne sa carte et tire jusqu'à avoir au moins 17. Il reste sur tous les 17.</li></ol>`],
+        ["Tes actions", `<dl>
+          <dt>Tirer</dt><dd>Prendre une carte de plus. Au-dessus de 21, tu sautes et tu perds ta mise.</dd>
+          <dt>Rester</dt><dd>Garder ta main telle quelle.</dd>
+          <dt>Doubler</dt><dd>Doubler ta mise sur tes 2 premières cartes : tu reçois une seule carte, puis tu restes.</dd>
+          <dt>Séparer</dt><dd>Avec deux cartes de même valeur ${cards("8♠ 8♦")}, en faire deux mains, chacune avec ta mise. Jusqu'à 4 mains. As séparés : une seule carte chacun.</dd></dl>`],
+        ["Ce que tu gagnes", `<table class="hpay">
+          <tr><td>Blackjack ${cards("A♠ R♥")}</td><td>3 pour 2</td><td>mise 20 → +30</td></tr>
+          <tr><td>Main gagnante</td><td>1 pour 1</td><td>mise 20 → +20</td></tr>
+          <tr><td>Égalité</td><td>mise rendue</td><td>0</td></tr>
+          <tr><td>Tu sautes ou tu perds</td><td>mise perdue</td><td>−20</td></tr></table>`],
+        ["Astuces de base", `<ul>
+          <li>Reste toujours à 17 ou plus.</li>
+          <li>Tire toujours à 11 ou moins : tu ne peux pas sauter.</li>
+          <li>Double sur 10 ou 11 quand le croupier montre une petite carte (2 à 9).</li>
+          <li>Sépare toujours les As et les 8. Ne sépare jamais les 10 ni les 5.</li>
+          <li>De 12 à 16, reste si le croupier montre 2 à 6 : c'est lui qui risque de sauter.</li></ul>`]
+      ]
+    },
+    roulette: {
+      title: "Roulette française",
+      intro: "Devine où la bille va s'arrêter. 37 cases : de 1 à 36 en rouge ou noir, et le 0 vert.",
+      sections: [
+        ["Comment miser", `<ol>
+          <li>Choisis la valeur du jeton en bas ${chipDot("#c43a3a", 5)} ${chipDot("#2f8a55", 25)} ${chipDot("#1d1f24", 100)} ${chipDot("#6b3fa0", 500)}.</li>
+          <li>Touche les cases du tapis. Chaque toucher ajoute un jeton, et tu peux miser sur plusieurs cases.</li>
+          <li><b>Lancer</b> fait tourner la roue. <b>Remiser</b> rejoue les mêmes mises, <b>Effacer</b> retire tout.</li></ol>`],
+        ["Les mises et leurs gains", `<table class="hpay">
+          <tr><th>Mise</th><th>Paie</th><th>Chances</th></tr>
+          <tr><td><b>Plein</b> : un seul numéro</td><td>35 pour 1</td><td>2,7 %</td></tr>
+          <tr><td><b>Douzaine</b> : 1–12, 13–24 ou 25–36</td><td>2 pour 1</td><td>32,4 %</td></tr>
+          <tr><td><b>Colonne</b> : les cases « 2:1 » au bout de chaque ligne</td><td>2 pour 1</td><td>32,4 %</td></tr>
+          <tr><td><b>Chances simples</b> : rouge ou noir, pair ou impair, 1–18 ou 19–36</td><td>1 pour 1</td><td>48,6 %</td></tr></table>
+          <p>« 35 pour 1 » : 10 jetons sur le bon numéro te rapportent 350 jetons, et tu gardes tes 10.</p>`],
+        ["Le zéro et la partage", `<p>Le 0 n'est ni rouge ni noir, ni pair ni impair. Quand il sort, tes mises sur les chances simples ne sont pas perdues entièrement : <b>la moitié t'est rendue</b>. C'est la règle de « la partage » de la roulette française.</p>`],
+        ["Astuces", `<ul>
+          <li>Les chances simples font durer ton solde. Les pleins rapportent gros, mais rarement.</li>
+          <li>Les derniers numéros sortis s'affichent sous la roue. Ils n'influencent pas le prochain : chaque lancer est indépendant.</li></ul>`]
+      ]
+    },
+    holdem: {
+      title: "Texas Hold'em",
+      intro: "Remporte le pot avec la meilleure main de 5 cartes, ou en faisant coucher tous les autres joueurs.",
+      sections: [
+        ["Déroulement d'une main", `<ol>
+          <li><b>Blindes</b> : les deux joueurs à gauche du bouton <span class="hd">D</span> misent d'office 10 et 20.</li>
+          <li><b>Préflop</b> : chacun reçoit 2 cartes cachées, puis un tour de mises.</li>
+          <li><b>Flop</b> : 3 cartes communes au milieu, puis un tour de mises.</li>
+          <li><b>Turn</b> : une 4ᵉ carte, puis un tour de mises.</li>
+          <li><b>River</b> : une 5ᵉ carte, puis un dernier tour de mises.</li>
+          <li><b>Abattage</b> : les joueurs encore en jeu montrent leurs cartes. Chacun garde sa meilleure main de 5 cartes parmi les 7 (2 à lui + 5 communes).</li></ol>`],
+        ["Tes actions", `<dl>
+          <dt>Se coucher</dt><dd>Abandonner la main. Tu perds ce que tu as déjà misé.</dd>
+          <dt>Parole</dt><dd>Passer sans miser, possible seulement si personne n'a misé.</dd>
+          <dt>Suivre</dt><dd>Mettre autant que la plus grosse mise.</dd>
+          <dt>Miser / Relancer</dt><dd>Augmenter la mise. Raccourcis Min, ½ pot, Pot ou Tapis, ou curseur.</dd>
+          <dt>Tapis</dt><dd>Miser tous tes jetons. Tu ne peux gagner que ce que les autres ont misé face à toi : le reste forme un pot à part.</dd></dl>`],
+        ["Les combinaisons, de la plus forte à la plus faible", `<table class="hrank">
+          <tr><td>Quinte flush royale</td><td>${cards("A♠ R♠ D♠ V♠ 10♠")}</td></tr>
+          <tr><td>Quinte flush</td><td>${cards("9♥ 8♥ 7♥ 6♥ 5♥")}</td></tr>
+          <tr><td>Carré</td><td>${cards("7♠ 7♥ 7♦ 7♣ R♠")}</td></tr>
+          <tr><td>Full</td><td>${cards("D♠ D♥ D♦ 4♣ 4♠")}</td></tr>
+          <tr><td>Couleur</td><td>${cards("A♦ V♦ 8♦ 6♦ 2♦")}</td></tr>
+          <tr><td>Quinte</td><td>${cards("10♣ 9♦ 8♠ 7♥ 6♣")}</td></tr>
+          <tr><td>Brelan</td><td>${cards("5♠ 5♥ 5♦ R♣ 9♠")}</td></tr>
+          <tr><td>Double paire</td><td>${cards("V♠ V♥ 3♦ 3♣ A♠")}</td></tr>
+          <tr><td>Paire</td><td>${cards("A♥ A♣ 9♠ 7♦ 4♣")}</td></tr>
+          <tr><td>Hauteur</td><td>${cards("R♦ 10♠ 8♥ 5♣ 2♦")}</td></tr></table>
+          <p>À combinaison égale, la plus haute gagne (paire d'As > paire de Rois), puis la carte restante la plus forte départage. Si tout est égal, le pot est partagé. L'As compte aussi comme 1 dans la quinte ${cards("5♠ 4♥ 3♦ 2♣ A♠")}.</p>`],
+        ["Astuces", `<ul>
+          <li>Ne joue pas toutes les mains : les paires et deux grosses cartes (As, Roi, Dame) sont un bon départ.</li>
+          <li>Ta main en cours s'affiche à côté de tes cartes, par exemple « Paire de 9 ».</li>
+          <li>Relancer avec une bonne main fait payer les autres. Relancer sans rien, c'est bluffer : ça marche parfois.</li></ul>`]
+      ]
+    },
+    videopoker: {
+      title: "Vidéo poker",
+      intro: "Le poker des machines de casino (Jacks or Better) : une seule main de 5 cartes, contre la machine.",
+      sections: [
+        ["Comment jouer", `<ol>
+          <li>Choisis ta mise, puis <b>Distribuer</b> : tu reçois 5 cartes.</li>
+          <li>Touche les cartes à <b>garder</b> (elles se soulèvent, marquées « GARDÉE »).</li>
+          <li><b>Tirer</b> remplace les autres, une seule fois.</li>
+          <li>Tu es payé selon ta main finale, d'après la table en haut de l'écran.</li></ol>`],
+        ["Table des gains (pour 1 jeton misé)", `<table class="hpay">
+          <tr><td>Quinte flush royale ${cards("A♠ R♠ D♠ V♠ 10♠")}</td><td>800</td></tr>
+          <tr><td>Quinte flush</td><td>50</td></tr><tr><td>Carré</td><td>25</td></tr><tr><td>Full</td><td>9</td></tr>
+          <tr><td>Couleur</td><td>6</td></tr><tr><td>Quinte</td><td>4</td></tr><tr><td>Brelan</td><td>3</td></tr>
+          <tr><td>Double paire</td><td>2</td></tr><tr><td>Paire de Valets ou mieux ${cards("V♥ V♣")}</td><td>1 (mise rendue)</td></tr></table>
+          <p>Une paire de 10 ou moins ne rapporte rien.</p>`],
+        ["Astuces", `<ul>
+          <li>Garde toujours une main déjà payante, sauf pour viser plus haut avec 4 cartes de la même couleur.</li>
+          <li>Avec une petite paire, garde-la et tire 3 cartes.</li>
+          <li>Sans rien, garde les figures (V, D, R) et l'As, et tire le reste.</li></ul>`]
+      ]
+    },
+    online: {
+      title: "Poker en ligne",
+      intro: "Une table de Texas Hold'em entre amis, de 2 à 6 joueurs, chacun sur son téléphone.",
+      sections: [
+        ["Créer ou rejoindre", `<ol>
+          <li>Écris ton prénom.</li>
+          <li><b>Créer une table</b> donne un code de 5 caractères. <b>Inviter</b> l'envoie par message.</li>
+          <li>Les autres tapent le code et touchent <b>Rejoindre</b>, ou ouvrent le lien reçu.</li>
+          <li>Le créateur touche <b>Distribuer</b>. Il peut ajouter des bots pour compléter la table.</li></ol>`],
+        ["Règles de la table", `<ul>
+          <li>Mêmes règles que le Texas Hold'em (voir l'onglet Hold'em de cette aide).</li>
+          <li>Chacun commence avec 1 000 jetons de table, séparés de ton solde du casino. À sec, tu repars à 1 000 à la main suivante.</li>
+          <li>40 secondes pour jouer : ensuite, tu passes si c'est possible, sinon tu te couches.</li>
+          <li>Les mains s'enchaînent toutes seules toutes les 8 secondes.</li></ul>`],
+        ["Bon à savoir", `<ul>
+          <li>Le téléphone du créateur fait tourner la table : s'il quitte l'app, la table s'arrête.</li>
+          <li>Si ta connexion coupe, rejoins avec le même code et le même prénom pour retrouver ta place.</li>
+          <li>Au bureau, si la connexion ne passe pas, essaie en 4G/5G.</li></ul>`]
+      ]
+    },
+    classement: {
+      title: "Classement, semaines et saisons",
+      intro: "Tout ce que tu joues compte pour trois classements, et rapporte des couronnes à dépenser en boutique.",
+      sections: [
+        ["Les trois classements", `<dl>
+          <dt>Semaine</dt><dd>Gains nets du lundi au dimanche. Classé à partir de 10 parties. Récompenses chaque lundi.</dd>
+          <dt>Saison</dt><dd>Un mois. 1 point par partie, plus 1 point par tranche de 50 jetons gagnés. Perdre ne retire rien.</dd>
+          <dt>Depuis toujours</dt><dd>Total gagné moins total misé. Les recharges de solde ne comptent pas.</dd></dl>`],
+        ["Récompenses de la semaine", `<ul>
+          <li>1ᵉʳ : 1 000 couronnes, plus le cadre Couronne et le titre Champion de la semaine, gardés tant que tu restes 1ᵉʳ.</li>
+          <li>2ᵉ : 600, 3ᵉ : 400, 4ᵉ à 10ᵉ : 200, tous les autres classés : 50.</li></ul>`],
+        ["Rangs de saison", `<p>Bronze (20 pts), Fer (100), Argent (250), Or (400), Platine (600), Diamant (1 000), Alexandrite (2 000), Top 100 (les 100 meilleurs dès 2 000 points).</p>
+          <p>En fin de saison, tu reçois la bannière, le cadre, le titre et les couronnes de ton rang <b>et de tous les rangs en dessous</b>. Ces objets portent le numéro de la saison et ne reviennent jamais. Le 1ᵉʳ de la saison, dès le rang Argent, reçoit en plus l'ensemble Champion et 5 000 couronnes.</p>`],
+        ["Amis et profils", `<ul>
+          <li><b>Mon QR code</b> : fais-le scanner pour devenir amis dans les deux sens.</li>
+          <li>Touche un joueur pour voir son profil, ou utilise la loupe en haut pour le chercher.</li></ul>`]
+      ]
+    },
+    boutique: {
+      title: "Boutique, couronnes et casier",
+      intro: "Les couronnes servent à personnaliser ta carte de joueur : bannière, cadre autour de ta photo, titre sous ton pseudo.",
+      sections: [
+        ["Gagner des couronnes", `<ul>
+          <li>150 offertes à la création du compte.</li>
+          <li>Chaque lundi, selon ta place au classement de la semaine.</li>
+          <li>Chaque fin de mois, selon ton rang de saison.</li></ul>`],
+        ["La boutique", `<ul>
+          <li>Une sélection différente chaque lundi : 6 bannières, 4 cadres et 5 titres.</li>
+          <li>Touche un objet pour l'essayer en aperçu, puis Acheter. Il rejoint ton casier.</li>
+          <li>La rareté indique combien de joueurs l'ont : Commun, Rare, Épique, Légendaire.</li></ul>`],
+        ["Le casier", `<ul>
+          <li>Tous tes objets : achats, récompenses de semaine et de saison, objets gratuits.</li>
+          <li>Cherche un objet par son nom, touche-le pour l'essayer, puis Équiper.</li>
+          <li><b>Changer la photo</b> met ta propre image dans ton avatar.</li></ul>`]
+      ]
+    }
+  };
+  HELP.casier = HELP.boutique;
+  const css4 = document.createElement("style");
+  css4.textContent = `
+.help-btn { font: 700 18px var(--f-display, Georgia, serif); color: var(--brass); }
+.hc-row { display: inline-flex; gap: 3px; vertical-align: middle; margin: 0 2px; }
+.hc { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; width: 24px; height: 32px; border-radius: 4px; background: #fbf8f1; color: #1b1e24; font: 700 11px/1 var(--f-ui, Arial, sans-serif); box-shadow: 0 1px 3px rgba(0,0,0,.4); }
+.hc i { font-style: normal; font-size: 12px; margin-top: 1px; }
+.hc.red { color: #c22f3a; }
+.hchip { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--c); color: #fff; font-size: 10px; font-weight: 700; border: 2px dashed rgba(255,255,255,.6); vertical-align: middle; box-sizing: border-box; }
+.hd { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: #fbf8f1; color: #1b1e24; font-size: 11px; font-weight: 700; vertical-align: middle; }
+.help-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+.help-tabs button { height: 34px; padding: 0 14px; border-radius: 17px; border: 1px solid var(--felt-line); background: var(--glass); color: var(--muted); font: 600 14px var(--f-ui); cursor: pointer; }
+.help-tabs button[aria-pressed="true"] { background: var(--brass); color: var(--brass-ink); border-color: var(--brass); }
+.help-intro { margin: 0; font-size: 16px; line-height: 1.5; color: var(--ink); }
+.help-sec { background: var(--glass); border-radius: 14px; overflow: hidden; }
+.help-sec summary { list-style: none; cursor: pointer; padding: 13px 14px; font-weight: 700; font-size: 15.5px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.help-sec summary::-webkit-details-marker { display: none; }
+.help-sec summary::after { content: "+"; font-size: 20px; color: var(--brass); transition: transform .2s; }
+.help-sec[open] summary::after { transform: rotate(45deg); }
+.help-body { padding: 0 14px 14px; font-size: 14.5px; line-height: 1.6; color: rgba(242,238,227,.88); }
+.help-body p { margin: 8px 0 0; }
+.help-body ul, .help-body ol { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; }
+.help-body dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; }
+.help-body dt { font-weight: 700; color: var(--brass); }
+.help-body dd { margin: 0; }
+.help-body table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.help-body td, .help-body th { padding: 7px 6px; border-bottom: 1px solid rgba(255,255,255,.08); text-align: left; vertical-align: middle; }
+.help-body th { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.hpay td:nth-child(2) { color: var(--brass); font-weight: 700; white-space: nowrap; }
+.hpay td:nth-child(3) { color: var(--muted); white-space: nowrap; }
+.hrank td:first-child { font-weight: 600; white-space: nowrap; padding-right: 10px; }
+.help-foot { display: flex; justify-content: center; }
+@media (max-width: 480px) { .bar .acct-chip > span:last-child { display: none; } .bar .acct-chip { padding: 0 4px; max-width: none; } }
+@media (max-width: 380px) { .hc { width: 21px; height: 29px; font-size: 10px; } .help-body dl { grid-template-columns: 1fr; gap: 2px; } .help-body dd { margin-bottom: 6px; } }`;
+  document.head.appendChild(css4);
+
+  function helpTopic() {
+    const p = document.body.dataset.page;
+    if (p === "poker") return document.getElementById("modeV") && document.getElementById("modeV").getAttribute("aria-pressed") === "true" ? "videopoker" : "holdem";
+    return HELP[p] ? p : null;
+  }
+  function openHelp(topic) {
+    topic = topic || helpTopic();
+    if (!HELP[topic]) return;
+    const page = document.body.dataset.page;
+    const tabs = page === "poker" || page === "online" ? ["holdem", "videopoker", "online"] : null;
+    openSheet((sheet) => {
+      const paint = t => {
+        const h = HELP[t];
+        try { localStorage.setItem("casino.help." + t, "1"); } catch (e) {}
+        sheet.innerHTML = `<div class="grab" aria-hidden="true"></div>
+          <div class="ph"><h2>Règles · ${h.title}</h2><button class="x" data-close aria-label="Fermer">×</button></div>
+          ${tabs ? `<div class="help-tabs" role="group" aria-label="Jeu">${tabs.map(k => `<button data-t="${k}" aria-pressed="${k === t}">${HELP[k].title}</button>`).join("")}</div>` : ""}
+          <p class="help-intro">${h.intro}</p>
+          ${h.sections.map(([name, body], i) => `<details class="help-sec rise" style="--i:${i}"${i < 2 ? " open" : ""}><summary>${name}</summary><div class="help-body">${body}</div></details>`).join("")}
+          <div class="help-foot"><button class="btn primary" data-close>J'ai compris</button></div>`;
+        sheet.scrollTop = 0;
+      };
+      sheet.addEventListener("click", e => { const b = e.target.closest("[data-t]"); if (b) paint(b.dataset.t); });
+      paint(topic);
+    });
+  }
+  function mountHelp() {
+    const right = document.querySelector(".app .bar .bar-right");
+    if (!right || right.querySelector(".help-btn") || !helpTopic()) return;
+    const b = document.createElement("button");
+    b.className = "search-btn help-btn";
+    b.type = "button";
+    b.setAttribute("aria-label", "Règles du jeu");
+    b.textContent = "?";
+    b.onclick = () => openHelp();
+    right.prepend(b);
+    // the first time a game is opened, show its rules once
+    const t = helpTopic();
+    let seen = true;
+    try { seen = !!localStorage.getItem("casino.help." + t); } catch (e) {}
+    if (!seen && ["blackjack", "roulette", "holdem", "videopoker", "online"].includes(t)) {
+      setTimeout(() => { if (!document.querySelector(".psheet-scrim, .reward-scrim")) openHelp(t); }, document.documentElement.classList.contains("booting") ? 2200 : 700);
+    }
+  }
+
+  Object.assign(window.CasinoUI, { openSearch, rarity, openHelp });
+  const boot = () => { mountNav(); mountSearch(); mountHelp(); };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot); else boot();
   setTimeout(checkRewards, 1200);
 })();
