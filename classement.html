@@ -79,9 +79,8 @@ p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.5; max-width
 .btn.primary { background: var(--brass); color: var(--brass-ink); border-color: var(--brass); }
 .btn.quiet { height: 40px; font-size: 14px; color: var(--muted); }
 
-.plate { display: grid; grid-template-columns: auto 1fr auto; gap: 14px; align-items: center; padding: 14px 16px; border-radius: 18px;
+.plate-old { display: none;
   background: linear-gradient(135deg, rgba(216,178,106,.22), rgba(4,22,17,.55)); border: 1px solid var(--brass); }
-.av { width: 46px; height: 46px; border-radius: 50%; background: var(--brass); color: var(--brass-ink); display: grid; place-items: center; font-weight: 700; font-size: 20px; }
 .plate .who b { display: block; font-size: 18px; }
 .plate .who span { font-size: 13px; color: var(--muted); }
 .plate .net { text-align: right; font-variant-numeric: tabular-nums; }
@@ -93,8 +92,18 @@ p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.5; max-width
 .add input { height: 44px; border-radius: 12px; border: 1px solid var(--felt-line); background: rgba(0,0,0,.25); color: var(--ink); font: 600 16px var(--f-ui); padding: 0 12px; min-width: 0; }
 .add .btn { height: 44px; }
 .board { display: flex; flex-direction: column; gap: 6px; }
-.line { display: grid; grid-template-columns: 34px 1fr auto auto; gap: 10px; align-items: center; padding: 10px 12px; border-radius: 12px; background: var(--glass); font-variant-numeric: tabular-nums; }
-.line.me { border: 1.5px solid var(--brass); background: rgba(216,178,106,.12); }
+.line { position: relative; isolation: isolate; overflow: hidden; display: grid; grid-template-columns: 30px auto 1fr auto auto; gap: 10px; align-items: center; padding: 10px 12px; border-radius: 14px; font-variant-numeric: tabular-nums; border: 1px solid rgba(255,255,255,.08); }
+.line::after { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(90deg, rgba(3,16,12,.86) 0%, rgba(3,16,12,.72) 55%, rgba(3,16,12,.55)); }
+.line.me { border: 1.5px solid var(--brass); }
+.line .name > span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+.line .name .ttl { display: block; color: #f1dfb0; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; font-size: 11px; }
+.line .name .ttl.gold { color: var(--gold); }
+.line .val { text-shadow: 0 1px 2px rgba(0,0,0,.6); }
+.period { display: flex; gap: 8px; justify-content: center; }
+.period button { height: 32px; padding: 0 14px; border-radius: 16px; border: 1px solid var(--felt-line); background: var(--glass); font-size: 13.5px; font-weight: 600; color: var(--muted); }
+.period button[aria-pressed="true"] { border-color: var(--brass); color: var(--brass); background: rgba(216,178,106,.12); }
+.weeknote { text-align: center; font-size: 13px; color: var(--muted); margin-top: -4px; }
+.weeknote a { color: var(--brass); }
 .line.gap-before { margin-top: 10px; }
 .pos { font-weight: 700; color: var(--muted); text-align: center; }
 .pos.p1, .pos.p2, .pos.p3 { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; color: var(--brass-ink); justify-self: center; }
@@ -199,15 +208,16 @@ p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.5; max-width
 
     <!-- signed in -->
     <section id="ranks" hidden style="display:flex;flex-direction:column;gap:14px">
-      <div class="plate">
-        <div class="av" id="meAv">?</div>
-        <div class="who"><b id="meName">—</b><span id="meRank">Classement en cours…</span></div>
-        <div class="net"><span class="label">Gains nets</span><b id="meNet">—</b></div>
-      </div>
+      <div id="meCard"></div>
       <div class="seg" role="group" aria-label="Liste">
         <button id="segF" aria-pressed="true">Mes amis</button>
         <button id="segA" aria-pressed="false">Tous les joueurs</button>
       </div>
+      <div class="period" role="group" aria-label="Période">
+        <button id="perW" aria-pressed="false">Cette semaine</button>
+        <button id="perA" aria-pressed="true">Depuis toujours</button>
+      </div>
+      <p class="weeknote" id="weekNote" hidden>Classés à partir de 10 parties dans la semaine. Le podium gagne des couronnes et des objets exclusifs : <a href="boutique.html">voir les récompenses</a>.</p>
       <div id="friendTools" style="display:flex;flex-direction:column;gap:8px">
         <div class="tools">
           <button class="btn primary" id="myQrBtn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h2v2h-2zM18 18h2v2h-2zM14 18h2M18 14h2"/></svg>Mon QR code</button>
@@ -248,7 +258,7 @@ p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.5; max-width
 <script src="app.js"></script>
 <script>
 (() => {
-  const A = window.CasinoAccount;
+  const A = window.CasinoAccount, UI = window.CasinoUI;
   const $ = id => document.getElementById(id);
   const fmt = n => Number(n).toLocaleString("fr-FR", { maximumFractionDigits: 0 });
   const signed = n => (n > 0 ? "+" : n < 0 ? "−" : "") + fmt(Math.abs(n));
@@ -264,8 +274,7 @@ p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.5; max-width
     $("auth").hidden = !conf || !!s;
     $("ranks").hidden = !conf || !s;
     if (conf && s) {
-      $("meAv").textContent = s.username[0].toUpperCase();
-      $("meName").textContent = s.username;
+      paintMe();
       loadBoard();
     }
   }
@@ -300,31 +309,53 @@ p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.5; max-width
     $("segA").setAttribute("aria-pressed", String(s === "all"));
     $("friendTools").hidden = s !== "friends";
     $("listErr").textContent = "";
-    if (cache[s]) renderBoard(cache[s]);
+    if (cache[s + "|" + period]) renderBoard(cache[s + "|" + period]);
     loadBoard();
   }
+  let period = location.hash === "#semaine" ? "week" : "all";
+  function setPeriod(p) {
+    period = p;
+    $("perW").setAttribute("aria-pressed", String(p === "week"));
+    $("perA").setAttribute("aria-pressed", String(p === "all"));
+    $("weekNote").hidden = p !== "week";
+    meLine = null; paintMe();
+    const c = cache[scope + "|" + period];
+    if (c) renderBoard(c);
+    loadBoard();
+  }
+  $("perW").onclick = () => setPeriod("week");
+  $("perA").onclick = () => setPeriod("all");
   $("segF").onclick = () => setScope("friends");
   $("segA").onclick = () => setScope("all");
 
+  let meLine = null;
+  function paintMe() {
+    const s = A.session, p = A.profile || {};
+    if (!s) return;
+    let sub = "Classement en cours…", right = "";
+    if (meLine) {
+      const net = +meLine.net, total = (cache["all|" + period] || []).length;
+      if (meLine.rank) sub = `${+meLine.rank === 1 ? "1ᵉʳ" : meLine.rank + "ᵉ"} sur ${total}${total >= 50 ? "+" : ""} joueur${total > 1 ? "s" : ""} · ${fmt(meLine.games)} partie${+meLine.games > 1 ? "s" : ""}`;
+      else sub = period === "week" ? `${fmt(meLine.games)}/10 parties cette semaine` : "Joue une partie pour entrer au classement";
+      right = `<span class="label" style="color:rgba(255,255,255,.75)">${period === "week" ? "Semaine" : "Gains nets"}</span><b style="display:block;font-size:22px" class="${net > 0 ? "plus" : net < 0 ? "minus" : ""}">${signed(net)}</b>`;
+    }
+    $("meCard").innerHTML = UI.cardHTML({ name: s.username, banner: p.banner, frame: p.frame, title: p.title, sub, right });
+  }
   async function loadBoard() {
     if (!A.configured() || !A.session) return;
-    const want = scope;
+    const want = scope + "|" + period, sc = scope, per = period;
     if (!cache[want]) $("board").innerHTML = `<div class="empty">Chargement…</div>`;
     try {
       await A.flush();
-      const [rows, all] = await Promise.all([A.leaderboard(want, 50), want === "all" ? null : A.leaderboard("all", 50)]);
+      const [rows, all] = await Promise.all([A.leaderboard(sc, 50, per), sc === "all" ? null : A.leaderboard("all", 50, per)]);
       cache[want] = rows;
-      if (all) cache.all = all;
-      const meAll = (cache.all || []).find(r => r.is_me);
-      if (meAll) {
-        const total = cache.all.length;
-        $("meRank").textContent = +meAll.games ? `${+meAll.rank === 1 ? "1ᵉʳ" : meAll.rank + "ᵉ"} sur ${total}${total >= 50 ? "+" : ""} joueur${total > 1 ? "s" : ""} · ${fmt(meAll.games)} partie${+meAll.games > 1 ? "s" : ""}` : "Joue une partie pour entrer au classement";
-        $("meNet").textContent = signed(+meAll.net);
-        $("meNet").className = +meAll.net > 0 ? "plus" : +meAll.net < 0 ? "minus" : "";
-      }
-      if (scope === want) renderBoard(rows);
+      if (all) cache["all|" + per] = all;
+      if (scope + "|" + period !== want) return;
+      meLine = (cache["all|" + per] || []).find(r => r.is_me) || null;
+      paintMe();
+      renderBoard(rows);
     } catch (e) {
-      if (scope !== want) return;
+      if (scope + "|" + period !== want) return;
       if (!cache[want]) $("board").innerHTML = `<div class="empty"><b>Classement indisponible</b>${esc(e.code === "network" ? "Il faut une connexion internet pour voir le classement." : e.message)}</div>`;
     }
   }
@@ -337,18 +368,21 @@ p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.5; max-width
     }
     if (!rows.length) { $("board").innerHTML = `<div class="empty"><b>Personne pour l'instant</b>Le premier à jouer prend la tête.</div>`; return; }
     let prev = 0, html = "";
-    for (const r of rows) {
-      html += lineHTML(r, +r.rank > prev + 1 && prev > 0);
-      prev = +r.rank;
-    }
+    rows.forEach((r, i) => {
+      html += lineHTML(r, r.rank && +r.rank > prev + 1 && prev > 0, i);
+      if (r.rank) prev = +r.rank;
+    });
     $("board").innerHTML = html;
   }
-  function lineHTML(r, gap) {
-    const rank = +r.rank, net = +r.net;
+  function lineHTML(r, gap, i = 0) {
+    const rank = r.rank ? +r.rank : 0, net = +r.net;
     const canDel = scope === "friends" && r.is_friend && !r.is_me;
-    return `<div class="line${r.is_me ? " me" : ""}${gap ? " gap-before" : ""}">
-      <span class="pos${rank <= 3 && +r.games ? " p" + rank : ""}">${+r.games ? rank : "–"}</span>
-      <div class="name"><b>${esc(r.username)}${r.is_me ? " (toi)" : ""}</b><span>${fmt(r.games)} partie${+r.games > 1 ? "s" : ""}${+r.best > 0 ? " · record +" + fmt(r.best) : ""}</span></div>
+    const ttl = UI.titleText(r.title), gold = A.ITEM[r.title] && A.ITEM[r.title].price === null;
+    const games = `${fmt(r.games)}${period === "week" && !r.eligible ? "/10" : ""} partie${+r.games > 1 ? "s" : ""}`;
+    return `<div class="line rise bn-${esc(r.banner || "tapis")}${r.is_me ? " me" : ""}${gap ? " gap-before" : ""}" style="--i:${Math.min(i, 12)}">
+      <span class="pos${rank && rank <= 3 ? " p" + rank : ""}">${rank || "–"}</span>
+      ${UI.avatarHTML(r.username, r.frame, "md")}
+      <div class="name"><b>${esc(r.username)}${r.is_me ? " (toi)" : ""}</b>${ttl ? `<span class="ttl${gold ? " gold" : ""}">${esc(ttl)}</span>` : ""}<span>${games}${+r.best > 0 && period !== "week" ? " · record +" + fmt(r.best) : ""}</span></div>
       <span class="val ${net > 0 ? "plus" : net < 0 ? "minus" : ""}">${signed(net)}</span>
       ${canDel ? `<button class="del" data-del="${esc(r.username)}" aria-label="Retirer ${esc(r.username)} de mes amis">×</button>` : "<span></span>"}
     </div>`;
@@ -403,7 +437,7 @@ p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.5; max-width
       $("inviteTitle").innerHTML = `Toi et ${esc(name)} êtes amis`;
       $("inviteText").textContent = standalone() ? "Retrouvez-vous dans la liste Mes amis ci-dessous." : "Pour jouer, installe l'app depuis Safari : Partager → « Sur l'écran d'accueil », puis connecte-toi avec ton pseudo.";
       $("installSteps").hidden = true;
-      cache.friends = null;
+      delete cache["friends|all"]; delete cache["friends|week"];
       setScope("friends");
     } catch (err) {
       A.pendingInvite.clear();
@@ -515,7 +549,7 @@ p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.5; max-width
             const who = await A.acceptInvite(code);
             stopScanner(); $("scanSheet").hidden = true;
             told(`Toi et ${who} êtes maintenant amis.`, true);
-            cache.friends = null; setScope("friends");
+            delete cache["friends|all"]; delete cache["friends|week"]; setScope("friends");
           } catch (err) {
             $("scanStatus").textContent = err.message;
             setTimeout(() => { if (stream) { scanning = true; requestAnimationFrame(scanFrame); } }, 1800);
@@ -538,8 +572,10 @@ p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.5; max-width
 
   A.onChange(() => { show(); handleInvite(); });
   setMode("up");
-  setScope("friends");
+  setScope(location.hash === "#semaine" ? "all" : "friends");
+  setPeriod(period);
   show();
+  if (A.configured() && A.session) A.loadProfile().then(paintMe).catch(() => {});
   handleInvite();
   if (A.session && location.hash === "#qr") showMyQr();
 })();

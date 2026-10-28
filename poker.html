@@ -174,7 +174,7 @@ button:disabled { opacity: .35; cursor: default; }
 .betchip::before { content: ""; width: 14px; height: 14px; border-radius: 50%; background: var(--brass); border: 2px dashed rgba(42,31,12,.5); box-sizing: border-box; }
 .betchip:empty { visibility: hidden; }
 
-.center { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
+.center { flex: 1 0 auto; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
 .pot { font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; }
 .pot b { color: var(--ink); font-size: 18px; margin-left: 4px; }
 .board { display: flex; gap: 6px; justify-content: center; }
@@ -259,6 +259,33 @@ button:disabled { opacity: .35; cursor: default; }
   .paytable div { padding: 2px 10px; }
   .btn { height: 44px; }
   .chip { width: 42px; height: 42px; font-size: 13px; }
+}
+@media (max-height: 800px) {
+  .game { gap: 6px; }
+  .seat .betchip { position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); z-index: 2; box-shadow: 0 2px 6px rgba(0,0,0,.4); background: rgba(3,16,12,.9); }
+  .seat .betchip:empty { display: none; }
+  .bots { margin-bottom: 8px; }
+  .center { flex: 1 0 auto; gap: 6px; }
+  .seat { padding: 6px 4px 12px; gap: 2px; }
+  .mini .card { --cw: min(7.5vw, 28px); }
+  .board .card { --cw: min(14vw, 6.9dvh, 66px); }
+  .me .hole .card { --cw: min(16vw, 8.9dvh, 84px); }
+  .me { gap: 10px; }
+  .msg-wrap { min-height: 30px; }
+  .msg { padding: 5px 14px; font-size: 14px; }
+  .raise { gap: 7px; padding: 8px; }
+  .raise .presets button { height: 32px; }
+  .raise input[type="range"] { height: 22px; }
+  .btn { height: 44px; }
+}
+@media (max-height: 680px) {
+  .board .card { --cw: min(13vw, 6.3dvh, 66px); }
+  .me .hole .card { --cw: min(15vw, 8.2dvh, 84px); }
+  .raise .presets button { height: 30px; }
+  .raise .row .btn { height: 42px; }
+  .modes button, .modes a { padding-block: 2px; }
+  .game { gap: 4px; }
+  .app { gap: 6px; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; }
