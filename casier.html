@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<title>Casier du joueur</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Casino">
+<meta name="theme-color" content="#072a22">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Outfit:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: status bar, a fixed preview of your player card with photo and equip controls, category switch and search, then a scrolling grid of everything you own with its rarity. */
+:root {
+  --felt: #0f4c3c;
+  --felt-deep: #062a21;
+  --felt-line: rgba(216, 178, 106, .32);
+  --brass: #d8b26a;
+  --brass-ink: #2a1f0c;
+  --ink: #f2eee3;
+  --muted: rgba(242, 238, 227, .62);
+  --glass: rgba(4, 22, 17, .55);
+  --win: #7fd99a;
+  --lose: #ff8a7a;
+  --gold: #e9c46a;
+  --f-display: "DM Serif Display", Georgia, "Times New Roman", serif;
+  --f-ui: "Outfit", -apple-system, "Helvetica Neue", Arial, sans-serif;
+  color-scheme: dark;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  box-sizing: border-box;
+  height: 100%;
+}
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  background: radial-gradient(120% 80% at 50% 10%, var(--felt) 0%, #0b3d30 45%, var(--felt-deep) 100%) fixed, var(--felt-deep);
+  color: var(--ink); font-family: var(--f-ui); overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+button { font: inherit; color: inherit; cursor: pointer; border: 0; background: none; }
+button:focus-visible, a:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+button:disabled { opacity: .5; cursor: default; }
+.app {
+  height: 100%; display: flex; flex-direction: column; gap: 12px; box-sizing: border-box;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 8px 10px; max-width: 560px; margin: 0 auto;
+}
+.bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.bank { display: flex; flex-direction: column; }
+.label, .bank small { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.bank strong { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.1; color: var(--gold); display: inline-flex; align-items: center; gap: 4px; }
+.bank strong .crown-ico { width: 18px; height: 18px; }
+
+.preview { display: flex; flex-direction: column; gap: 10px; flex: none; }
+.preview .pcard { min-height: 84px; transition: transform .25s; }
+.preview .pcard.swap { animation: swap .35s cubic-bezier(.2,.8,.25,1); }
+@keyframes swap { from { transform: scale(.97); opacity: .6; } }
+.action { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; }
+.action .what { min-width: 0; }
+.action .what b { display: block; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.action .what span { font-size: 13px; color: var(--muted); }
+.btn { height: 46px; border-radius: 14px; font-weight: 600; font-size: 15.5px; background: var(--glass); border: 1px solid var(--felt-line); display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 0 16px; color: var(--ink); text-decoration: none; white-space: nowrap; }
+.btn.primary { color: var(--brass-ink); border-color: var(--brass); }
+.msg { min-height: 18px; font-size: 14px; color: var(--lose); }
+.msg.ok { color: var(--win); }
+
+.seg { display: grid; grid-template-columns: repeat(3, 1fr); padding: 3px; border-radius: 12px; background: rgba(0,0,0,.25); border: 1px solid var(--felt-line); flex: none; }
+.seg button { height: 34px; border-radius: 9px; font-weight: 600; font-size: 14.5px; color: var(--muted); }
+.seg button[aria-pressed="true"] { background: var(--brass); color: var(--brass-ink); }
+
+.scroll { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; display: flex; flex-direction: column; gap: 14px; padding-bottom: 8px; margin-inline: -4px; padding-inline: 4px; }
+
+.week { display: flex; flex-direction: column; gap: 10px; padding: 14px; border-radius: 18px; background: linear-gradient(150deg, rgba(216,178,106,.2), rgba(4,22,17,.6) 60%); border: 1px solid var(--felt-line); }
+.week-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.week h2 { margin: 0; font-family: var(--f-display); font-weight: 400; font-size: 22px; }
+.countdown { font-size: 13px; color: var(--brass); font-weight: 600; font-variant-numeric: tabular-nums; }
+.myweek { font-size: 14px; color: var(--muted); line-height: 1.4; }
+.myweek b { color: var(--ink); }
+.ladder { display: flex; flex-direction: column; gap: 4px; }
+.step { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; padding: 7px 10px; border-radius: 10px; background: rgba(0,0,0,.2); font-size: 14px; }
+.step.me { background: rgba(216,178,106,.2); box-shadow: inset 0 0 0 1px var(--brass); }
+.step .r { font-weight: 600; }
+.step .r small { display: block; font-weight: 500; color: var(--muted); font-size: 12px; }
+.step .c { color: var(--gold); font-weight: 700; font-variant-numeric: tabular-nums; display: inline-flex; gap: 3px; align-items: center; }
+.week .note { font-size: 12.5px; color: var(--muted); margin: 0; }
+.week a { color: var(--brass); font-size: 14px; font-weight: 600; }
+
+.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.item { position: relative; display: flex; flex-direction: column; gap: 8px; padding: 8px; border-radius: 16px; background: var(--glass); border: 1.5px solid transparent; text-align: left; min-width: 0; }
+.item[aria-pressed="true"] { border-color: var(--brass); background: rgba(216,178,106,.1); }
+.item .sw { position: relative; height: 62px; border-radius: 11px; overflow: hidden; display: grid; place-items: center; }
+.item .sw.frame-sw, .item .sw.title-sw { background: radial-gradient(circle at 50% 40%, #13604b, #062a21); }
+.item .sw .av { width: 34px; height: 34px; font-size: 15px; }
+.item .sw .ttl { font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #f1dfb0; padding: 0 8px; text-align: center; }
+.item .sw .ttl.gold { color: var(--gold); }
+.item .nm { font-weight: 600; font-size: 14.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-inline: 2px; }
+.item .st { font-size: 12.5px; font-weight: 600; padding-inline: 2px; display: inline-flex; align-items: center; gap: 3px; color: var(--gold); }
+.item .st.owned { color: var(--muted); }
+.item .st.on { color: var(--win); }
+.item .st.excl { color: #f3c9a4; }
+.badge { position: absolute; top: 12px; right: 12px; z-index: 2; font-size: 10.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; padding: 3px 7px; border-radius: 8px; background: rgba(0,0,0,.55); color: var(--gold); }
+.empty { text-align: center; color: var(--muted); padding: 10px; font-size: 14px; }
+.shophead { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.shophead b { font-family: var(--f-display); font-weight: 400; font-size: 20px; }
+.shophead span { font-size: 13px; color: var(--brass); font-weight: 600; }
+.item .rar { padding-inline: 2px; }
+.tierprev { display: grid; grid-template-columns: 1fr; gap: 6px; }
+.tierprev .pcard { min-height: 56px; padding: 10px 12px; }
+.tierprev .pcard .av.lg { width: 40px; height: 40px; font-size: 17px; }
+.tierprev .pcard b { font-size: 15px; }
+.step .tier { height: 22px; font-size: 11.5px; }
+.step.champ { background: linear-gradient(90deg, rgba(233,196,106,.25), rgba(0,0,0,.2)); }
+#seasonMe .ps-box { background: rgba(0,0,0,.22); }
+.seg { grid-template-columns: repeat(4, 1fr); }
+.tools { flex: none; display: flex; flex-direction: column; gap: 8px; }
+.find { position: relative; }
+.find input { height: 44px; width: 100%; box-sizing: border-box; border-radius: 12px; border: 1px solid var(--felt-line); background: rgba(0,0,0,.25); color: var(--ink); font: 600 16px var(--f-ui); padding: 0 14px 0 40px; }
+.find svg { position: absolute; left: 13px; top: 50%; width: 17px; height: 17px; transform: translateY(-50%); fill: none; stroke: var(--muted); stroke-width: 2; stroke-linecap: round; }
+.count { font-size: 13px; color: var(--muted); }
+.photo { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.photo .btn { height: 40px; font-size: 14px; }
+.photo input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.item .src { font-size: 12px; color: var(--muted); padding-inline: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.kindtag { position: absolute; top: 12px; left: 12px; z-index: 2; font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; padding: 3px 7px; border-radius: 8px; background: rgba(0,0,0,.55); color: var(--ink); }
+</style>
+<link rel="apple-touch-startup-image" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="splash/splash-750x1334.jpg">
+<link rel="apple-touch-startup-image" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="splash/splash-828x1792.jpg">
+<link rel="apple-touch-startup-image" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="splash/splash-1125x2436.jpg">
+<link rel="apple-touch-startup-image" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="splash/splash-1242x2688.jpg">
+<link rel="apple-touch-startup-image" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="splash/splash-1170x2532.jpg">
+<link rel="apple-touch-startup-image" media="(device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="splash/splash-1284x2778.jpg">
+<link rel="apple-touch-startup-image" media="(device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="splash/splash-1179x2556.jpg">
+<link rel="apple-touch-startup-image" media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="splash/splash-1290x2796.jpg">
+<link rel="apple-touch-startup-image" media="(device-width: 402px) and (device-height: 874px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="splash/splash-1206x2622.jpg">
+<link rel="apple-touch-startup-image" media="(device-width: 440px) and (device-height: 956px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="splash/splash-1320x2868.jpg">
+<script src="boot.js"></script>
+</head>
+<body>
+<div class="app">
+  <header class="bar">
+    <div class="bank"><small>Objets</small><strong><span id="bank">—</span></strong></div>
+    <nav class="switch"></nav>
+  </header>
+
+  <section class="preview" aria-label="Ton profil">
+    <div id="card"></div>
+    <div class="photo">
+      <label class="btn" id="photoLabel" for="photoIn">Changer la photo<input id="photoIn" type="file" accept="image/*"></label>
+      <button class="btn" id="photoDel" type="button">Retirer la photo</button>
+    </div>
+    <div class="action">
+      <div class="what"><b id="selName">Ton casier</b><span id="selInfo">Touche un objet pour l'essayer, puis équipe-le.</span></div>
+      <button class="btn primary" id="actBtn" hidden>Équiper</button>
+    </div>
+    <div class="msg" id="msg" role="status" aria-live="polite"></div>
+  </section>
+
+  <div class="seg" role="group" aria-label="Catégorie">
+    <button data-k="all" aria-pressed="true">Tout</button>
+    <button data-k="banner" aria-pressed="false">Bannières</button>
+    <button data-k="frame" aria-pressed="false">Cadres</button>
+    <button data-k="title" aria-pressed="false">Titres</button>
+  </div>
+
+  <div class="tools">
+    <label class="find"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+      <input id="q" type="search" placeholder="Chercher un objet par son nom" autocomplete="off" aria-label="Chercher un objet"></label>
+  </div>
+
+  <div class="scroll">
+    <span class="count" id="count"></span>
+    <div class="grid" id="grid"></div>
+  </div>
+</div>
+<script src="app.js"></script>
+<script>
+(() => {
+  const A = window.CasinoAccount, UI = window.CasinoUI;
+  const $ = id => document.getElementById(id);
+  const fmt = n => Number(n).toLocaleString("fr-FR", { maximumFractionDigits: 0 });
+  const KIND = { banner: "Bannière", frame: "Cadre", title: "Titre" };
+  const norm = s => String(s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+
+  let kind = "all", selected = null, busy = false, items = null, players = 0;
+  const P = () => A.profile || { banner: "tapis", frame: "aucun", title: "sans-titre", owned: [] };
+  const equipped = id => { const it = A.ITEM[id]; return it && P()[it.kind] === id; };
+  function say(t, ok) { $("msg").className = "msg" + (ok ? " ok" : ""); $("msg").textContent = t || ""; }
+
+  // offline we rebuild the locker from the cached profile (no rarity then)
+  function fallbackItems() {
+    const own = (P().owned || []).map(id => A.ITEM[id]).filter(Boolean).map(it => ({ ...it, source: "", holders: null }));
+    const free = A.SHOP.filter(x => x.price === 0).map(it => ({ ...it, source: "gratuit", holders: null }));
+    return [...own, ...free];
+  }
+  function sourceText(it) {
+    const s = it.source || "";
+    if (s === "gratuit") return "Gratuit";
+    if (s === "achat") return "Acheté en boutique";
+    if (/^saison/.test(s)) return it.tier ? `Récompense de la ${s}` : s;
+    if (s) return s.charAt(0).toUpperCase() + s.slice(1);
+    return it.price ? "Acheté en boutique" : "Récompense";
+  }
+
+  function renderCard(animate) {
+    const p = P(), s = selected && A.ITEM[selected];
+    const look = { banner: p.banner, frame: p.frame, title: p.title };
+    if (s) look[s.kind] = s.id;
+    const name = A.session ? A.session.username : "Toi";
+    $("card").innerHTML = UI.cardHTML({ name, ...look, avatar: p.avatar_url, sub: s ? "Aperçu" : A.session ? "Ta tenue actuelle" : "Connecte-toi pour ouvrir ton casier" });
+    if (animate) $("card").firstElementChild.classList.add("swap");
+    $("photoDel").hidden = !p.avatar_url;
+    $("photoLabel").style.gridColumn = p.avatar_url ? "" : "1 / -1";
+  }
+  function renderAction() {
+    const btn = $("actBtn"), s = selected && A.ITEM[selected];
+    btn.hidden = !s;
+    if (!s) { $("selName").textContent = "Ton casier"; $("selInfo").textContent = "Touche un objet pour l'essayer, puis équipe-le."; return; }
+    const row = (items || []).find(x => x.id === s.id) || {};
+    $("selName").textContent = s.name;
+    $("selInfo").textContent = `${KIND[s.kind]} · ${sourceText({ ...s, ...row })}`;
+    btn.className = "btn primary";
+    btn.disabled = busy;
+    if (equipped(s.id)) { btn.textContent = "Équipé"; btn.disabled = true; btn.className = "btn"; }
+    else btn.textContent = "Équiper";
+  }
+  function swatch(it) {
+    const p = P(), name = A.session ? A.session.username : "Toi";
+    if (it.kind === "banner") return `<div class="sw bn-${UI.esc(it.id)}">${UI.avatarHTML(name, p.frame, "md", p.avatar_url)}</div>`;
+    if (it.kind === "frame") return `<div class="sw frame-sw">${UI.avatarHTML(name, it.id, "md", p.avatar_url)}</div>`;
+    return `<div class="sw title-sw"><span class="ttl${it.price === null ? " gold" : ""}">${it.id === "sans-titre" ? "—" : UI.esc(it.name)}</span></div>`;
+  }
+  function rarityLine(it) {
+    if (it.price === 0 || it.holders == null) return "";
+    const r = UI.rarity(it.holders, players);
+    return r ? `<span class="rar rar-${r.key}">${r.label} · ${r.holders} joueur${r.holders > 1 ? "s" : ""} sur ${r.players}</span>` : "";
+  }
+  function renderGrid() {
+    if (!A.configured() || !A.session) { $("grid").innerHTML = `<div class="empty" style="grid-column:1/-1">Connecte-toi dans l'onglet Classement pour retrouver tes objets.</div>`; $("count").textContent = ""; return; }
+    const list = items || fallbackItems();
+    const q = norm($("q").value.trim());
+    const shown = list.filter(it => (kind === "all" || it.kind === kind) && (!q || norm(it.name).includes(q)));
+    const owned = list.filter(it => it.price !== 0).length;
+    $("bank").textContent = fmt(owned);
+    $("count").textContent = q ? `${shown.length} résultat${shown.length > 1 ? "s" : ""} pour « ${$("q").value.trim()} »` : `${shown.length} objet${shown.length > 1 ? "s" : ""}`;
+    $("grid").innerHTML = shown.map((it, i) => `<button class="item rise" style="--i:${Math.min(i, 14)}" data-id="${UI.esc(it.id)}" aria-pressed="${selected === it.id}">
+        ${kind === "all" ? `<span class="kindtag">${KIND[it.kind]}</span>` : ""}${swatch(it)}
+        <span class="nm">${UI.esc(it.name)}</span>
+        ${equipped(it.id) ? `<span class="st on">Équipé</span>` : `<span class="src">${UI.esc(sourceText(it))}</span>`}
+        ${rarityLine(it)}</button>`).join("") ||
+      `<div class="empty" style="grid-column:1/-1">${q ? "Aucun objet ne porte ce nom." : "Rien ici pour l'instant. Achète des objets en boutique ou gagne-en au classement."}</div>`;
+  }
+  function render(animate) { renderCard(animate); renderAction(); renderGrid(); }
+
+  async function load() {
+    if (!A.configured() || !A.session) { render(false); return; }
+    try {
+      const r = await A.locker();
+      items = r.items.map(x => ({ ...(A.ITEM[x.id] || {}), ...x }));
+      players = r.players;
+    } catch (e) {
+      if (/locker/.test(e.raw || "")) say("Le casier complet arrive avec la mise à jour du serveur. En attendant, voici tes objets connus.");
+    }
+    render(false);
+  }
+
+  $("grid").addEventListener("click", e => {
+    const b = e.target.closest(".item"); if (!b) return;
+    selected = selected === b.dataset.id ? null : b.dataset.id;
+    say("");
+    renderCard(true); renderAction();
+    $("grid").querySelectorAll(".item").forEach(x => { x.setAttribute("aria-pressed", String(x.dataset.id === selected)); x.classList.remove("rise"); });
+  });
+  document.querySelectorAll(".seg button").forEach(b => b.onclick = () => {
+    kind = b.dataset.k;
+    document.querySelectorAll(".seg button").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+    renderGrid();
+  });
+  let qt;
+  $("q").addEventListener("input", () => { clearTimeout(qt); qt = setTimeout(renderGrid, 120); });
+  $("actBtn").onclick = async () => {
+    const s = selected && A.ITEM[selected];
+    if (!s || busy) return;
+    busy = true; renderAction(); say("");
+    try { await A.equip(s.id); say(`${s.name} équipé.`, true); selected = null; render(true); }
+    catch (err) { say(err.message); }
+    busy = false; renderAction();
+  };
+  $("photoIn").addEventListener("change", async e => {
+    const f = e.target.files && e.target.files[0];
+    e.target.value = "";
+    if (!f) return;
+    if (!A.session) { say("Connecte-toi d'abord."); return; }
+    say("Envoi de la photo…", true);
+    try { await A.uploadAvatar(f); say("Photo de profil mise à jour.", true); render(true); }
+    catch (err) { say(err.message); }
+  });
+  $("photoDel").onclick = async () => {
+    try { await A.removeAvatar(); say("Photo retirée.", true); render(true); } catch (err) { say(err.message); }
+  };
+
+  A.onChange(() => render(false));
+  render(false);
+  load();
+  if (A.configured() && A.session) A.loadProfile().then(() => render(false)).catch(() => {});
+})();
+</script>
+<script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});</script>
+</body>
+</html>

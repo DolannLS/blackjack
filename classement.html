@@ -100,6 +100,8 @@ p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.5; max-width
 .line .name .ttl.gold { color: var(--gold); }
 .line .val { text-shadow: 0 1px 2px rgba(0,0,0,.6); }
 .period { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+.findbtn { display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 14px; border-radius: 12px; border: 1px solid var(--felt-line); background: rgba(0,0,0,.25); color: var(--muted); font-size: 16px; font-weight: 600; cursor: pointer; }
+.findbtn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
 .mebtns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: -4px; }
 .mebtns .btn { height: 42px; font-size: 14.5px; gap: 8px; }
 .mebtns svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
@@ -240,6 +242,7 @@ p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.5; max-width
 
     <!-- signed in -->
     <section id="ranks" hidden style="display:flex;flex-direction:column;gap:14px">
+      <button class="findbtn" id="findBtn" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>Chercher un joueur</button>
       <div id="meCard" class="clickable" role="button" tabindex="0" aria-label="Voir mon profil"></div>
       <div class="mebtns">
         <button class="btn" id="accountBtn"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Mon compte</button>
@@ -389,7 +392,7 @@ p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.5; max-width
         right = UI.tierBadge(meLine.tier);
       }
     }
-    $("meCard").innerHTML = UI.cardHTML({ name: s.username, banner: p.banner, frame: p.frame, title: p.title, sub, right });
+    $("meCard").innerHTML = UI.cardHTML({ name: s.username, banner: p.banner, frame: p.frame, title: p.title, avatar: p.avatar_url, sub, right });
   }
   async function loadBoard() {
     if (!A.configured() || !A.session) return;
@@ -435,7 +438,7 @@ p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.5; max-width
       : `<span class="val ${net > 0 ? "plus" : net < 0 ? "minus" : ""}">${signed(net)}</span>`;
     return `<div class="line rise bn-${esc(r.banner || "tapis")}${r.is_me ? " me" : ""}${gap ? " gap-before" : ""}" style="--i:${Math.min(i, 12)}" data-user="${esc(r.username)}" role="button" tabindex="0">
       <span class="pos${rank && rank <= 3 ? " p" + rank : ""}">${rank || "–"}</span>
-      ${UI.avatarHTML(r.username, r.frame, "md")}
+      ${UI.avatarHTML(r.username, r.frame, "md", r.avatar_url)}
       <div class="name"><b>${esc(r.username)}${r.is_me ? " (toi)" : ""}</b>${ttl ? `<span class="ttl${gold ? " gold" : ""}">${esc(ttl)}</span>` : ""}<span>${games}${period === "season" ? ` · ${signed(net)}` : +r.best > 0 && period !== "week" ? " · record +" + fmt(r.best) : ""}</span></div>
       ${value}
       ${canDel ? `<button class="del" data-del="${esc(r.username)}" aria-label="Retirer ${esc(r.username)} de mes amis">×</button>` : "<span></span>"}
@@ -623,6 +626,7 @@ p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.5; max-width
     try { await A.removeFriend(b.dataset.del); loadBoard(); } catch (err) { $("listErr").textContent = err.message; }
   });
   $("accountBtn").onclick = () => UI.openAccount();
+  $("findBtn").onclick = () => UI.openSearch();
   $("myProfileBtn").onclick = () => A.session && UI.openProfile(A.session.username);
   $("meCard").onclick = () => A.session && UI.openProfile(A.session.username);
   const openRow = e => {
@@ -651,7 +655,7 @@ p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.5; max-width
       $("live").innerHTML = rows.map(r => {
         const key = r.username + r.played_at + r.net, fresh = !first && !liveSeen.has(key);
         liveSeen.add(key);
-        return `<div class="feed${fresh ? " new" : ""}" data-user="${esc(r.username)}" role="button" tabindex="0">${UI.avatarHTML(r.username, r.frame, "md")}
+        return `<div class="feed${fresh ? " new" : ""}" data-user="${esc(r.username)}" role="button" tabindex="0">${UI.avatarHTML(r.username, r.frame, "md", r.avatar_url)}
           <div class="what"><b>${esc(r.username)}</b> gagne ${GAME_VERB[r.game] || ""}<span>${esc(r.detail || "")} · ${ago(r.played_at)}</span></div>
           <span class="amt">+${fmt(r.net)}</span></div>`;
       }).join("");

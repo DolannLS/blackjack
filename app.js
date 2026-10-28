@@ -191,9 +191,16 @@
     { id: "jetons", kind: "banner", name: "Pile de jetons", price: 800 },
     { id: "marbre", kind: "banner", name: "Marbre", price: 1000 },
     { id: "aurore", kind: "banner", name: "Aurore boréale", price: 1500 },
-    { id: "or-champion", kind: "banner", name: "Or du champion", price: null, how: "1ᵉʳ de la semaine" },
-    { id: "argent-podium", kind: "banner", name: "Argent du podium", price: null, how: "2ᵉ de la semaine" },
-    { id: "bronze-podium", kind: "banner", name: "Bronze du podium", price: null, how: "3ᵉ de la semaine" },
+    { id: "vegas", kind: "banner", name: "Néons de Vegas", price: 700 },
+    { id: "monaco", kind: "banner", name: "Monaco", price: 900 },
+    { id: "jade", kind: "banner", name: "Jade", price: 500 },
+    { id: "braise", kind: "banner", name: "Braise", price: 600 },
+    { id: "glacier", kind: "banner", name: "Glacier", price: 600 },
+    { id: "cuir", kind: "banner", name: "Cuir club", price: 500 },
+    { id: "pop", kind: "banner", name: "Pop", price: 400 },
+    { id: "damier", kind: "banner", name: "Damier", price: 450 },
+    { id: "feutre-bleu", kind: "banner", name: "Feutre bleu", price: 350 },
+    { id: "sakura", kind: "banner", name: "Sakura", price: 650 },
     { id: "aucun", kind: "frame", name: "Sans cadre", price: 0 },
     { id: "laiton", kind: "frame", name: "Laiton", price: 300 },
     { id: "emeraude", kind: "frame", name: "Émeraude", price: 500 },
@@ -201,7 +208,12 @@
     { id: "saphir", kind: "frame", name: "Saphir", price: 500 },
     { id: "prisme", kind: "frame", name: "Prisme", price: 900 },
     { id: "flammes", kind: "frame", name: "Flammes", price: 1200 },
-    { id: "couronne", kind: "frame", name: "Couronne", price: null, how: "1ᵉʳ de la semaine" },
+    { id: "or-rose", kind: "frame", name: "Or rose", price: 450 },
+    { id: "onyx", kind: "frame", name: "Onyx", price: 400 },
+    { id: "perle", kind: "frame", name: "Perle", price: 600 },
+    { id: "turquoise", kind: "frame", name: "Turquoise", price: 500 },
+    { id: "ambre", kind: "frame", name: "Ambre", price: 500 },
+    { id: "couronne", kind: "frame", name: "Couronne", price: null, how: "1ᵉʳ de la semaine, tant que tu le restes" },
     { id: "sans-titre", kind: "title", name: "Sans titre", price: 0 },
     { id: "chanceux", kind: "title", name: "Chanceux", price: 150 },
     { id: "flambeur", kind: "title", name: "Flambeur", price: 250 },
@@ -210,46 +222,60 @@
     { id: "compteur", kind: "title", name: "Compteur de cartes", price: 400 },
     { id: "high-roller", kind: "title", name: "High roller", price: 800 },
     { id: "legende", kind: "title", name: "Légende du casino", price: 1500 },
-    { id: "champion", kind: "title", name: "Champion de la semaine", price: null, how: "1ᵉʳ de la semaine" },
-    { id: "podium", kind: "title", name: "Sur le podium", price: null, how: "2ᵉ ou 3ᵉ de la semaine" },
-    { id: "joueur-du-dimanche", kind: "title", name: "Joueur du dimanche", price: null, how: "rang Bronze en fin de saison" },
-    { id: "main-de-fer", kind: "title", name: "Main de fer", price: null, how: "rang Fer en fin de saison" },
-    { id: "joueur-d-argent", kind: "title", name: "Joueur d'argent", price: null, how: "rang Argent en fin de saison" },
-    { id: "mise-de-platine", kind: "title", name: "Mise de platine", price: null, how: "rang Platine en fin de saison" },
-    { id: "coeur-de-diamant", kind: "title", name: "Cœur de diamant", price: null, how: "rang Diamant en fin de saison" },
-    { id: "alexandrite", kind: "title", name: "Alexandrite", price: null, how: "rang Alexandrite en fin de saison" },
-    { id: "top-100", kind: "title", name: "Top 100", price: null, how: "Top 100 en fin de saison" },
-    { id: "champion-saison", kind: "title", name: "Champion de la saison", price: null, how: "1ᵉʳ de la saison" },
-    { id: "cadre-platine", kind: "frame", name: "Platine", price: null, how: "rang Platine en fin de saison" },
-    { id: "cadre-diamant", kind: "frame", name: "Diamant", price: null, how: "rang Diamant en fin de saison" },
-    { id: "cadre-alexandrite", kind: "frame", name: "Alexandrite", price: null, how: "rang Alexandrite en fin de saison" },
-    { id: "cadre-champion-saison", kind: "frame", name: "Couronne de saison", price: null, how: "1ᵉʳ de la saison" },
-    { id: "saison-diamant", kind: "banner", name: "Éclat de diamant", price: null, how: "rang Diamant en fin de saison" },
-    { id: "saison-alexandrite", kind: "banner", name: "Alexandrite", price: null, how: "rang Alexandrite en fin de saison" },
-    { id: "saison-top100", kind: "banner", name: "Élite Top 100", price: null, how: "Top 100 en fin de saison" },
-    { id: "saison-champion", kind: "banner", name: "Trône de la saison", price: null, how: "1ᵉʳ de la saison" }
+    { id: "beau-joueur", kind: "title", name: "Beau joueur", price: 150 },
+    { id: "roi-du-tapis", kind: "title", name: "Roi du tapis", price: 700 },
+    { id: "tete-brulee", kind: "title", name: "Tête brûlée", price: 300 },
+    { id: "gros-poisson", kind: "title", name: "Gros poisson", price: 350 },
+    { id: "main-chaude", kind: "title", name: "Main chaude", price: 300 },
+    { id: "sang-froid", kind: "title", name: "Sang-froid", price: 450 },
+    { id: "pro-du-split", kind: "title", name: "Pro du split", price: 350 },
+    { id: "roi-roulette", kind: "title", name: "Roi de la roulette", price: 600 },
+    { id: "champion", kind: "title", name: "Champion de la semaine", price: null, how: "1ᵉʳ de la semaine, tant que tu le restes" }
   ];
-  const ITEM = Object.fromEntries(SHOP.map(x => [x.id, x]));
+  const STATIC = Object.fromEntries(SHOP.map(x => [x.id, x]));
+  // monthly season ranks, lowest first (mirrors supabase/casier.sql)
+  const TIERS = [
+    { id: "bronze", name: "Bronze", min: 20, crowns: 100, base: "Joueur du dimanche" },
+    { id: "fer", name: "Fer", min: 100, crowns: 200, base: "Main de fer" },
+    { id: "argent", name: "Argent", min: 250, crowns: 350, base: "Joueur d'argent" },
+    { id: "or", name: "Or", min: 400, crowns: 550, base: "Main en or" },
+    { id: "platine", name: "Platine", min: 600, crowns: 800, base: "Mise de platine" },
+    { id: "diamant", name: "Diamant", min: 1000, crowns: 1200, base: "Cœur de diamant" },
+    { id: "alexandrite", name: "Alexandrite", min: 2000, crowns: 2000, base: "Alexandrite" },
+    { id: "top-100", name: "Top 100", min: 2000, crowns: 3000, base: "Top 100", note: "100 meilleurs, dès 2 000 points" }
+  ];
+  const TIER = Object.fromEntries(TIERS.map(t => [t.id, t]));
+  const CHAMPION = { id: "champion", name: "Champion", crowns: 5000, base: "Champion de la saison", note: "1ᵉʳ de la saison, dès le rang Argent" };
+  // season 1 = October 2026; each season has its own banner, frame and title for every rank
+  const seasonNumber = (d = new Date()) => (d.getFullYear() - 2026) * 12 + d.getMonth() + 1 - 10 + 1;
+  const SEASON_RE = /^s(\d+)-([a-z0-9-]+?)(-cadre|-titre)?$/;
+  function itemInfo(id) {
+    if (!id) return null;
+    if (STATIC[id]) return STATIC[id];
+    const m = SEASON_RE.exec(id);
+    if (!m) return null;
+    const t = m[2] === "champion" ? CHAMPION : TIER[m[2]];
+    if (!t) return null;
+    const n = +m[1], kind = m[3] === "-cadre" ? "frame" : m[3] === "-titre" ? "title" : "banner";
+    return { id, kind, season: n, tier: t.id, price: null, how: `${t.id === "champion" ? "Champion" : "rang " + t.name} de la saison ${n}`,
+      name: kind === "title" ? `${t.base} · S${n}` : `Saison ${n} · ${t.name}` };
+  }
+  const ITEM = new Proxy(STATIC, { get: (o, k) => (typeof k === "string" ? itemInfo(k) || undefined : o[k]) });
+  const seasonSet = (n, tierId) => [`s${n}-${tierId}`, `s${n}-${tierId}-cadre`, `s${n}-${tierId}-titre`];
   // weekly prizes by global weekly rank (players with at least 10 games that week)
   const PRIZES = [
-    { ranks: "1ᵉʳ", crowns: 1000, items: ["or-champion", "couronne", "champion"] },
-    { ranks: "2ᵉ", crowns: 600, items: ["argent-podium", "podium"] },
-    { ranks: "3ᵉ", crowns: 400, items: ["bronze-podium", "podium"] },
+    { ranks: "1ᵉʳ", crowns: 1000, items: ["couronne", "champion"], note: "gardés tant que tu restes 1ᵉʳ" },
+    { ranks: "2ᵉ", crowns: 600, items: [] },
+    { ranks: "3ᵉ", crowns: 400, items: [] },
     { ranks: "4ᵉ à 10ᵉ", crowns: 200, items: [] },
     { ranks: "Tous les autres classés", crowns: 50, items: [] }
   ];
-  // monthly season ranks, lowest first (mirrors supabase/saisons.sql)
-  const TIERS = [
-    { id: "bronze", name: "Bronze", min: 20, crowns: 100, items: ["joueur-du-dimanche"] },
-    { id: "fer", name: "Fer", min: 100, crowns: 200, items: ["main-de-fer"] },
-    { id: "argent", name: "Argent", min: 250, crowns: 400, items: ["joueur-d-argent"] },
-    { id: "platine", name: "Platine", min: 500, crowns: 700, items: ["mise-de-platine", "cadre-platine"] },
-    { id: "diamant", name: "Diamant", min: 1000, crowns: 1200, items: ["coeur-de-diamant", "cadre-diamant", "saison-diamant"] },
-    { id: "alexandrite", name: "Alexandrite", min: 2000, crowns: 2000, items: ["alexandrite", "cadre-alexandrite", "saison-alexandrite"] },
-    { id: "top-100", name: "Top 100", min: 2000, crowns: 3000, items: ["top-100", "saison-top100"], note: "100 meilleurs, dès 2 000 points" }
-  ];
-  const TIER = Object.fromEntries(TIERS.map(t => [t.id, t]));
-  const CHAMPION = { crowns: 5000, items: ["champion-saison", "saison-champion", "cadre-champion-saison"], note: "1ᵉʳ de la saison, dès le rang Argent" };
+  function rarity(holders, players) {
+    if (holders == null || !players) return null;
+    const pct = holders / players * 100;
+    const label = pct <= 2 ? "Légendaire" : pct <= 8 ? "Épique" : pct <= 25 ? "Rare" : "Commun";
+    return { holders, players, pct, label, key: label.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "") };
+  }
   const PROFILE = "casino.profile";
   let profile = read(PROFILE, null);
   if (profile && session && profile.username !== session.username) profile = null;
@@ -265,7 +291,8 @@
   }
   const SHOP_ERR = {
     solde: "Pas assez de couronnes pour l'instant.", exclusif: "Cet objet se gagne uniquement en récompense.",
-    possede: "Tu l'as déjà.", non_possede: "Achète-le d'abord.", introuvable: "Objet introuvable."
+    possede: "Tu l'as déjà.", non_possede: "Cet objet n'est pas dans ton casier.", introuvable: "Objet introuvable.",
+    hors_rotation: "Cet objet n'est plus en boutique cette semaine."
   };
   const shopError = e => new Error(SHOP_ERR[e.raw] || (/my_profile|buy_item|equip|function/.test(e.raw || "") ? "Le serveur n'a pas encore la mise à jour de la boutique." : e.message));
   async function buy(id) {
@@ -278,12 +305,12 @@
   async function equip(id) {
     try {
       await api("/rest/v1/rpc/equip", { method: "POST", body: { item: id } });
-      const kind = ITEM[id].kind;
+      const kind = itemInfo(id).kind;
       if (profile) keepProfile({ ...profile, [kind]: id });
     } catch (e) { throw shopError(e); }
   }
   const markRewardsSeen = () => api("/rest/v1/rpc/mark_rewards_seen", { method: "POST", body: {} })
-    .then(() => profile && keepProfile({ ...profile, rewards: [] }));
+    .then(() => profile && keepProfile({ ...profile, rewards: [], season_rewards: [] }));
   // falls back to the older all-time ranking while the server lacks the shop update
   const leaderboardBy = (scope, max = 50, period = "all") =>
     api("/rest/v1/rpc/leaderboard", { method: "POST", body: { scope, max_rows: max, period } }).catch(e => {
@@ -291,21 +318,71 @@
       if (period === "week") throw new Error("Le classement de la semaine arrive avec la mise à jour du serveur.");
       return api("/rest/v1/rpc/leaderboard", { method: "POST", body: { scope, max_rows: max } });
     });
+  // locker, weekly shop, rarity, search
+  const shopWeek = () => api("/rest/v1/rpc/shop_week", { method: "POST", body: {} });
+  const itemStats = () => api("/rest/v1/rpc/item_stats", { method: "POST", body: {} });
+  const locker = () => api("/rest/v1/rpc/locker", { method: "POST", body: {} });
+  const searchPlayers = q => api("/rest/v1/rpc/search_players", { method: "POST", body: { q } });
+
+  // profile photo: cropped to a 256 px square JPEG on the phone, then uploaded to the player's own folder
+  function squareJpeg(file) {
+    return new Promise((ok, ko) => {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        const side = Math.min(img.naturalWidth, img.naturalHeight), out = 256;
+        const cv = document.createElement("canvas");
+        cv.width = cv.height = out;
+        cv.getContext("2d").drawImage(img, (img.naturalWidth - side) / 2, (img.naturalHeight - side) / 2, side, side, 0, 0, out, out);
+        URL.revokeObjectURL(url);
+        cv.toBlob(b => (b ? ok(b) : ko(new Error("Image illisible."))), "image/jpeg", .86);
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); ko(new Error("Ce fichier n'est pas une image lisible. Essaie une photo JPEG ou PNG.")); };
+      img.src = url;
+    });
+  }
+  async function uploadAvatar(file) {
+    if (!session) throw new Error("Connecte-toi d'abord.");
+    const blob = await squareJpeg(file);
+    const t = await token();
+    const path = `${session.user_id}/${Date.now()}.jpg`;
+    let r;
+    try {
+      r = await fetch(`${CFG.url}/storage/v1/object/avatars/${path}`, {
+        method: "POST", headers: { apikey: CFG.key, Authorization: "Bearer " + t, "Content-Type": "image/jpeg", "x-upsert": "true" }, body: blob
+      });
+    } catch (e) { throw new Error("Pas de connexion internet."); }
+    if (!r.ok) {
+      const txt = await r.text();
+      throw new Error(/bucket not found|not found/i.test(txt) ? "Le serveur n'a pas encore la mise à jour des photos." : "Envoi de la photo impossible : " + txt.slice(0, 80));
+    }
+    const pub = `${CFG.url}/storage/v1/object/public/avatars/${path}`;
+    await api("/rest/v1/rpc/set_avatar", { method: "POST", body: { url: pub } });
+    if (profile) keepProfile({ ...profile, avatar_url: pub });
+    return pub;
+  }
+  async function removeAvatar() {
+    await api("/rest/v1/rpc/set_avatar", { method: "POST", body: { url: null } });
+    if (profile) keepProfile({ ...profile, avatar_url: null });
+  }
 
   // ---------- shared player card ----------
   const escHTML = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-  function avatarHTML(name, frame, size = "") {
-    return `<span class="av ${size} fr-${frame || "aucun"}">${escHTML((name || "?")[0].toUpperCase())}</span>`;
+  const safeUrl = u => (typeof u === "string" && /^https:\/\/[^"'<>\s]+$/.test(u) ? u : "");
+  function avatarHTML(name, frame, size = "", photo = "") {
+    const src = safeUrl(photo);
+    return `<span class="av ${size} fr-${escHTML(frame || "aucun")}${src ? " has-photo" : ""}">${src ? `<img src="${src}" alt="" loading="lazy" decoding="async">` : escHTML((name || "?")[0].toUpperCase())}</span>`;
   }
   function titleText(id) {
-    const t = ITEM[id];
+    const t = itemInfo(id);
     return t && t.kind === "title" && t.id !== "sans-titre" ? t.name : "";
   }
-  function cardHTML({ name, banner, frame, title, sub = "", right = "", cls = "" }) {
+  function cardHTML({ name, banner, frame, title, avatar = "", sub = "", right = "", cls = "" }) {
     const t = titleText(title);
-    const special = ITEM[title] && ITEM[title].price === null ? " gold" : "";
-    return `<div class="pcard bn-${banner || "tapis"} ${cls}">
-      ${avatarHTML(name, frame, "lg")}
+    const it = itemInfo(title);
+    const special = it && it.price === null ? " gold" : "";
+    return `<div class="pcard bn-${escHTML(banner || "tapis")} ${cls}">
+      ${avatarHTML(name, frame, "lg", avatar)}
       <div class="pc-who"><b>${escHTML(name)}</b>${t ? `<span class="pc-title${special}">${escHTML(t)}</span>` : ""}${sub ? `<span class="pc-sub">${sub}</span>` : ""}</div>
       ${right ? `<div class="pc-right">${right}</div>` : ""}
     </div>`;
@@ -347,7 +424,8 @@
     configured, GAMES, get session() { return session; }, get profile() { return profile; },
     signUp, signIn, logout, record, flush, pending, history, leaderboard: leaderboardBy, addFriend, removeFriend,
     myInvite, resetInvite, inviteInfo, acceptInvite, inviteUrl, parseInvite, pendingInvite, NAME_RE,
-    SHOP, ITEM, PRIZES, TIERS, TIER, CHAMPION, loadProfile, buy, equip, markRewardsSeen,
+    SHOP, ITEM, itemInfo, PRIZES, TIERS, TIER, CHAMPION, seasonNumber, seasonSet, rarity, loadProfile, buy, equip, markRewardsSeen,
+    shopWeek, itemStats, locker, searchPlayers, uploadAvatar, removeAvatar,
     seasonBoard, publicProfile, liveFeed, botsTick, renameAccount, changePassword, deleteAccount,
     localHistory: () => read(HISTORY, []),
     onChange: f => { listeners.add(f); return () => listeners.delete(f); }
@@ -364,6 +442,7 @@
     poker: '<path d="M12 3c-2.6 3.6-7 6-7 10a3.5 3.5 0 0 0 6.1 2.3L10 20.5h4l-1.1-5.2A3.5 3.5 0 0 0 19 13c0-4-4.4-6.4-7-10z"/>',
     shop: '<path d="M5 8h14l-1.2 11.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 8z"/><path d="M9 10V7a3 3 0 0 1 6 0v3"/>',
     history: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.2 2"/>',
+    locker: '<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M12 3v18M9 10v2M15 10v2"/>',
     rank: '<path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4zM7 6H4a3 3 0 0 0 3 4.2M17 6h3a3 3 0 0 1-3 4.2"/>'
   };
   const TABS = [
@@ -371,6 +450,7 @@
     ["roulette.html", "roulette", "Roulette", /roulette\.html$/],
     ["poker.html", "poker", "Poker", /(poker|online)\.html$/],
     ["boutique.html", "shop", "Boutique", /boutique\.html$/],
+    ["casier.html", "locker", "Casier", /casier\.html$/],
     ["historique.html", "history", "Historique", /historique\.html$/],
     ["classement.html", "rank", "Classement", /classement\.html$/]
   ];
@@ -404,7 +484,7 @@ body::before { content: ""; position: fixed; inset: 0; pointer-events: none; bac
 /* bottom tab bar */
 .tray .chips, #chips { padding: 8px 2px 2px 6px; margin: -8px -2px -2px -6px; }
 .msg-wrap { margin-block: 2px; }
-.tabbar { flex: none; position: relative; margin-top: 8px; display: grid; grid-template-columns: repeat(6, 1fr); gap: 0; padding: 6px 4px 2px; border-radius: 18px 18px 0 0; background: rgba(3, 18, 14, .62); border-top: 1px solid var(--felt-line); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); margin-inline: -6px; margin-bottom: -6px; }
+.tabbar { flex: none; position: relative; margin-top: 8px; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 0; padding: 6px 2px 2px; border-radius: 18px 18px 0 0; background: rgba(3, 18, 14, .62); border-top: 1px solid var(--felt-line); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); margin-inline: -6px; margin-bottom: -6px; }
 .tabbar a { position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 5px 0 4px; border-radius: 12px; color: var(--muted); text-decoration: none; font-size: 10px; font-weight: 600; letter-spacing: 0; white-space: nowrap; min-width: 0; }
 .tabbar a svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; transition: transform .25s cubic-bezier(.3,1.6,.5,1); }
 .tabbar a[aria-current] { color: var(--brass); }
@@ -491,7 +571,7 @@ body::before { content: ""; position: fixed; inset: 0; pointer-events: none; bac
   function chipHTML() {
     const n = session && session.username;
     if (!n) return `<span class="av">?</span><span>Se connecter</span>`;
-    return `${avatarHTML(n, profile && profile.frame)}<span>${escHTML(n)}</span>`;
+    return `${avatarHTML(n, profile && profile.frame, "", profile && profile.avatar_url)}<span>${escHTML(n)}</span>`;
   }
   function mountNav() {
     const app = document.querySelector(".app");
@@ -648,7 +728,7 @@ body::before { content: ""; position: fixed; inset: 0; pointer-events: none; bac
   function itemLine(id) {
     const it = ITEM[id];
     if (!it || !session) return "";
-    if (it.kind === "banner") return cardHTML({ name: session.username, banner: id, frame: profile && profile.frame, title: profile && profile.title, sub: "Nouvelle bannière : " + it.name });
+    if (it.kind === "banner") return cardHTML({ name: session.username, banner: id, frame: profile && profile.frame, title: profile && profile.title, avatar: profile && profile.avatar_url, sub: "Nouvelle bannière : " + it.name });
     return `<div class="pcard bn-tapis">${avatarHTML(session.username, it.kind === "frame" ? id : profile && profile.frame, "md")}<div class="pc-who"><b>${escHTML(it.name)}</b><span class="pc-sub">${it.kind === "frame" ? "Nouveau cadre" : "Nouveau titre"}</span></div></div>`;
   }
   function showRewards(weeks, seasons) {
@@ -744,7 +824,7 @@ body::before { content: ""; position: fixed; inset: 0; pointer-events: none; bac
       const right = p.season && p.season.tier ? tierBadge(p.season.tier) : "";
       sheet.innerHTML = `<div class="grab" aria-hidden="true"></div>
         <div class="ph"><h2>${p.is_me ? "Mon profil" : "Profil"}</h2><button class="x" data-close aria-label="Fermer">×</button></div>
-        ${cardHTML({ name: p.username, banner: p.banner, frame: p.frame, title: p.title, sub: `Membre depuis ${since}`, right })}
+        ${cardHTML({ name: p.username, banner: p.banner, frame: p.frame, title: p.title, avatar: p.avatar_url, sub: `Membre depuis ${since}`, right })}
         <div class="ps-actions">${p.is_me ? `<button class="btn" data-act="account">Modifier mon compte</button>`
           : p.is_friend ? `<button class="btn" disabled>Dans tes amis</button>` : `<button class="btn primary" data-act="friend">Ajouter en ami</button>`}</div>
         <div class="ps-msg" role="status"></div>
@@ -835,6 +915,258 @@ body::before { content: ""; position: fixed; inset: 0; pointer-events: none; bac
   }
   Object.assign(window.CasinoUI, { tierBadge, openProfile, openAccount, seasonBlock, rankText, monthName });
 
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", mountNav); else mountNav();
+  // ---------- devices, responsive layouts, season items, photos, search ----------
+  (function deviceClasses() {
+    const ua = navigator.userAgent || "", root = document.documentElement;
+    const ios = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    const android = /Android/i.test(ua);
+    const touch = matchMedia("(pointer: coarse)").matches;
+    const minSide = Math.min(screen.width, screen.height);
+    root.classList.add(ios ? "is-ios" : android ? "is-android" : "is-other");
+    root.classList.add(touch ? (minSide >= 600 ? "is-tablet" : "is-phone") : "is-desktop");
+    if (navigator.standalone || matchMedia("(display-mode: standalone)").matches) root.classList.add("is-standalone");
+    const p = (location.pathname.split("/").pop() || "index.html").replace(".html", "") || "index";
+    const name = { index: "blackjack", "": "blackjack" }[p] || p;
+    const set = () => document.body && (document.body.dataset.page = name);
+    if (document.body) set(); else document.addEventListener("DOMContentLoaded", set);
+  })();
+
+  // season banners and frames are drawn from their tier colours and the season number
+  const PAL = {
+    bronze: ["#5c3417", "#e3a978"], fer: ["#2c3138", "#b4bcc6"], argent: ["#56606c", "#f4f6f8"], or: ["#6b4a0e", "#ffd76a"],
+    platine: ["#1d5a54", "#d9fff8"], diamant: ["#16406f", "#bfe8ff"], alexandrite: ["#145641", "#c07ae8"],
+    "top-100": ["#5a0f19", "#ffcf5a"], champion: ["#2a0b3d", "#ffd76a"]
+  };
+  const MOTIFS = [
+    (a, b) => `repeating-linear-gradient(135deg, ${b}55 0 7px, transparent 7px 20px)`,
+    (a, b) => `repeating-linear-gradient(45deg, ${b}40 0 6px, transparent 6px 16px), repeating-linear-gradient(-45deg, ${b}40 0 6px, transparent 6px 16px)`,
+    (a, b) => `repeating-conic-gradient(from 0deg at 88% 50%, ${b}55 0 5deg, transparent 5deg 15deg)`,
+    (a, b) => `radial-gradient(${b}66 1.6px, transparent 2.2px) 0 0 / 14px 14px`,
+    (a, b) => `repeating-radial-gradient(circle at 100% 50%, ${b}50 0 3px, transparent 3px 15px)`,
+    (a, b) => `conic-gradient(from 45deg, ${b}38 25%, transparent 0 50%, ${b}38 0 75%, transparent 0) 0 0 / 24px 24px`
+  ];
+  const seasonCSS = document.createElement("style");
+  document.head.appendChild(seasonCSS);
+  const madeCSS = new Set();
+  function seasonRule(cls) {
+    if (madeCSS.has(cls)) return;
+    madeCSS.add(cls);
+    const m = /^(bn|fr)-s(\d+)-([a-z0-9-]+?)(-cadre)?$/.exec(cls);
+    if (!m) return;
+    const n = +m[2], tier = m[3], [a, b] = PAL[tier] || PAL.bronze;
+    const top = ["alexandrite", "top-100", "champion", "diamant"].includes(tier);
+    let rule;
+    if (m[1] === "bn") {
+      rule = `.${cls} { background: ${MOTIFS[n % MOTIFS.length](a, b)}, linear-gradient(135deg, ${a}, ${b}aa 140%) ${top ? "; background-size: auto, 220% 100%; animation: drift 8s ease-in-out infinite alternate" : ""}; }
+.${cls}::before { content: "S${n}"; position: absolute; right: 8px; bottom: -.14em; z-index: 0; pointer-events: none; font: 400 3.6em/1 var(--f-display, Georgia, serif); color: ${b}; opacity: .55; letter-spacing: -.02em; text-shadow: 0 2px 8px rgba(0,0,0,.4); }`;
+    } else {
+      rule = `.${cls}::before { background: conic-gradient(${b}, ${a}, ${b}, ${a}, ${b}); ${top ? "animation: spin 3.5s linear infinite;" : ""} }
+.${cls} { box-shadow: 0 0 ${top ? 14 : 8}px ${b}88; }
+.${cls}::after { content: "${n}"; position: absolute; right: -6px; bottom: -6px; min-width: 16px; height: 16px; padding: 0 3px; box-sizing: border-box; border-radius: 8px; background: ${b}; color: ${a}; font: 700 10px/16px var(--f-ui, Arial, sans-serif); text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,.5); }`;
+    }
+    seasonCSS.textContent += rule + "\n";
+  }
+  function scanSeasonClasses(rootEl) {
+    const els = rootEl.querySelectorAll ? rootEl.querySelectorAll('[class*="bn-s"], [class*="fr-s"]') : [];
+    const check = el => el.classList && el.classList.forEach(c => { if (/^(bn|fr)-s\d/.test(c)) seasonRule(c); });
+    check(rootEl); els.forEach(check);
+  }
+  new MutationObserver(list => list.forEach(m => {
+    if (m.type === "attributes") scanSeasonClasses(m.target);
+    else m.addedNodes.forEach(n => n.nodeType === 1 && scanSeasonClasses(n));
+  })).observe(document.documentElement, { subtree: true, childList: true, attributes: true, attributeFilter: ["class"] });
+
+  const css3 = document.createElement("style");
+  css3.textContent = `
+/* more shop designs */
+.bn-vegas { background: repeating-linear-gradient(90deg, rgba(255,64,200,.5) 0 2px, transparent 2px 22px), repeating-linear-gradient(0deg, rgba(64,220,255,.35) 0 2px, transparent 2px 22px), linear-gradient(135deg, #12002a, #3a0057); }
+.bn-monaco { background: repeating-linear-gradient(90deg, rgba(216,178,106,.35) 0 3px, transparent 3px 26px), linear-gradient(135deg, #07142e, #13306a); }
+.bn-jade { background: radial-gradient(ellipse at 20% 0%, rgba(255,255,255,.25), transparent 50%), linear-gradient(135deg, #0b4a3a, #1f9a73 55%, #8ee0b8); }
+.bn-braise { background: radial-gradient(circle at 80% 120%, #ffb347 0 15%, transparent 45%), linear-gradient(160deg, #1a0503, #6a1406 55%, #c2410c); }
+.bn-glacier { background: linear-gradient(115deg, transparent 45%, rgba(255,255,255,.45) 46%, transparent 48%), linear-gradient(150deg, #0e3a5a, #5fa8d3 55%, #e8f6ff); }
+.bn-cuir { background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.08), transparent 60%), repeating-linear-gradient(0deg, rgba(0,0,0,.12) 0 1px, transparent 1px 4px), linear-gradient(135deg, #3b2210, #6e4320); }
+.bn-pop { background: radial-gradient(circle, #ff3fa4 0 5px, transparent 5.5px) 0 0 / 22px 22px, linear-gradient(135deg, #ffd23f, #ff8c42); }
+.bn-damier { background: conic-gradient(#111 25%, #f2eee3 0 50%, #111 0 75%, #f2eee3 0) 0 0 / 26px 26px; }
+.bn-feutre-bleu { background: radial-gradient(circle at 25% 20%, #2b5fb4, #173a7a 55%, #0b1f45); }
+.bn-sakura { background: radial-gradient(circle at 15% 30%, #fff 0 3px, transparent 4px), radial-gradient(circle at 55% 70%, #ffe1ec 0 4px, transparent 5px), radial-gradient(circle at 80% 25%, #fff 0 2px, transparent 3px), linear-gradient(135deg, #e86a92, #f7b7cb 60%, #fde2ea); }
+.fr-or-rose::before { background: linear-gradient(135deg, #ffd9cf, #c97b6b); }
+.fr-onyx::before { background: linear-gradient(135deg, #555, #0b0b0b 60%, #444); }
+.fr-perle::before { background: conic-gradient(#fff, #e8e1f5, #fdf6e6, #e3f3ff, #fff); }
+.fr-perle { box-shadow: 0 0 10px rgba(255,255,255,.45); }
+.fr-turquoise::before { background: linear-gradient(135deg, #a7fff2, #0fa3a3); } .fr-turquoise { box-shadow: 0 0 10px rgba(15,163,163,.5); }
+.fr-ambre::before { background: linear-gradient(135deg, #ffe0a3, #c46a00); } .fr-ambre { box-shadow: 0 0 10px rgba(196,106,0,.5); }
+.t-or { --tc: linear-gradient(135deg, #fff1b8, #e0a92a 60%, #b07b12); }
+
+/* season number sits above the banner art but under the player info */
+[class*="bn-s"] > * { position: relative; z-index: 1; }
+.sw[class*="bn-s"]::before { font-size: 2.4em; }
+/* seven tabs on narrow phones */
+@media (max-width: 400px) {
+  .tabbar a { font-size: 9px; letter-spacing: -.01em; overflow: hidden; text-overflow: ellipsis; }
+  .tabbar a svg { width: 21px; height: 21px; }
+}
+
+/* profile photos */
+.av.has-photo { background: #0b3d30; }
+.av img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block; }
+
+/* rarity */
+.rar { display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; font-weight: 700; letter-spacing: .02em; }
+.rar::before { content: ""; width: 8px; height: 8px; border-radius: 2px; transform: rotate(45deg); background: currentColor; }
+.rar-commun { color: #b9c2bf; } .rar-rare { color: #6cc4ff; } .rar-epique { color: #c07ae8; } .rar-legendaire { color: #ffcf5a; }
+
+/* header search */
+.search-btn { width: 38px; height: 38px; flex: none; border-radius: 50%; background: var(--glass); border: 1px solid var(--felt-line); display: grid; place-items: center; color: var(--ink); cursor: pointer; }
+.search-btn svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+.bar .acct-chip { max-width: 38vw; }
+.bar-right { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.ps-search { position: relative; }
+.ps-search input { height: 48px; width: 100%; box-sizing: border-box; border-radius: 14px; border: 1px solid var(--felt-line); background: rgba(0,0,0,.25); color: var(--ink); font: 600 17px var(--f-ui); padding: 0 14px 0 42px; }
+.ps-search svg { position: absolute; left: 14px; top: 50%; width: 18px; height: 18px; transform: translateY(-50%); fill: none; stroke: var(--muted); stroke-width: 2; stroke-linecap: round; }
+.ps-results { display: flex; flex-direction: column; gap: 6px; }
+.ps-hit { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; padding: 8px 12px; border-radius: 14px; border: 0; color: #fff; text-align: left; font: inherit; cursor: pointer; position: relative; isolation: isolate; overflow: hidden; }
+.ps-hit::after { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(90deg, rgba(3,16,12,.85), rgba(3,16,12,.55)); }
+.ps-hit b { display: block; font-size: 15.5px; }
+.ps-hit span { font-size: 12px; color: #f1dfb0; letter-spacing: .08em; text-transform: uppercase; font-weight: 700; }
+.ps-hit .go { color: rgba(255,255,255,.6); font-size: 20px; }
+
+/* ===== tablets ===== */
+@media (min-width: 700px) {
+  .app { max-width: 880px; }
+  .tabbar { max-width: 640px; margin-inline: auto; border-radius: 22px 22px 0 0; }
+  .tabbar a { font-size: 11.5px; }
+  .tabbar a svg { width: 24px; height: 24px; }
+  body[data-page="blackjack"] { --cw: min(15vw, 14dvh, 130px); }
+  body[data-page="blackjack"] .hands[data-n="2"] { --cw: min(12vw, 12dvh, 110px); }
+  body[data-page="blackjack"] .hands[data-n="3"], body[data-page="blackjack"] .hands[data-n="4"] { --cw: min(9vw, 10dvh, 88px); }
+  body[data-page="blackjack"] .chip, body[data-page="roulette"] .chip, body[data-page="poker"] .chip { width: 64px; height: 64px; font-size: 17px; }
+  body[data-page="blackjack"] .controls, body[data-page="poker"] #hControls, body[data-page="online"] #hControls { max-width: 620px; width: 100%; margin-inline: auto; }
+  body[data-page="poker"] .board .card, body[data-page="online"] .board .card { --cw: min(10vw, 9dvh, 104px); }
+  body[data-page="poker"] .me .hole .card, body[data-page="online"] .me .hole .card { --cw: min(13vw, 11dvh, 124px); }
+  body[data-page="poker"] .me, body[data-page="online"] .me { padding-block: 6px; }
+  body[data-page="poker"] .mini .card, body[data-page="online"] .mini .card { --cw: min(5.5vw, 52px); }
+  body[data-page="poker"] .vp-slot .card { --cw: min(14vw, 17dvh, 150px); }
+  body[data-page="poker"] .paytable { font-size: 15px; }
+  body[data-page="poker"] .seat .name, body[data-page="online"] .seat .name { font-size: 16px; }
+  body[data-page="historique"] .app, body[data-page="classement"] .app { max-width: 980px; }
+}
+/* roulette: wheel beside the betting layout on wide screens */
+@media (min-width: 900px) {
+  body[data-page="roulette"] .app { display: grid; max-width: 1180px; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); grid-template-rows: auto minmax(0, 1fr) auto auto; grid-template-areas: "bar bar" "stage board" "stage controls" "tab tab"; column-gap: 28px; }
+  body[data-page="roulette"] .bar { grid-area: bar; }
+  body[data-page="roulette"] .stage { grid-area: stage; }
+  body[data-page="roulette"] .board { grid-area: board; align-self: center; grid-template-rows: repeat(3, minmax(44px, 8dvh)) repeat(2, minmax(40px, 6dvh)); }
+  body[data-page="roulette"] .controls { grid-area: controls; }
+  body[data-page="roulette"] .tabbar { grid-area: tab; }
+  body[data-page="roulette"] .wheel-wrap { width: min(38vw, 62dvh, 520px); }
+  body[data-page="roulette"] .result { font-size: calc(min(38vw, 62dvh, 520px) * .14); }
+  body[data-page="roulette"] .cell { font-size: clamp(13px, 1.4vw, 19px); }
+  body[data-page="roulette"] .history { display: flex !important; }
+}
+/* shop and locker: preview beside the grid */
+@media (min-width: 1000px) {
+  body[data-page="boutique"] .app, body[data-page="casier"] .app { display: grid; max-width: 1180px; grid-template-columns: 380px minmax(0, 1fr); grid-template-rows: auto auto auto minmax(0, 1fr) auto; grid-template-areas: "bar bar" "preview seg" "preview tools" "preview scroll" "tab tab"; column-gap: 28px; }
+  body[data-page="boutique"] .bar, body[data-page="casier"] .bar { grid-area: bar; }
+  body[data-page="boutique"] .preview, body[data-page="casier"] .preview { grid-area: preview; align-self: start; }
+  body[data-page="boutique"] .seg, body[data-page="casier"] .seg { grid-area: seg; }
+  body[data-page="casier"] .tools { grid-area: tools; }
+  body[data-page="boutique"] .scroll, body[data-page="casier"] .scroll { grid-area: scroll; }
+  body[data-page="boutique"] .tabbar, body[data-page="casier"] .tabbar { grid-area: tab; }
+  body[data-page="boutique"] .grid, body[data-page="casier"] .grid { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
+  body[data-page="classement"] #ranks { display: grid !important; grid-template-columns: 380px minmax(0, 1fr); column-gap: 28px; align-items: start;
+    grid-template-areas: "find seg" "me period" "btns notes" "tools board" "err board" "live board" "live foot"; }
+  body[data-page="classement"] #findBtn { grid-area: find; }
+  body[data-page="classement"] #meCard { grid-area: me; } body[data-page="classement"] .mebtns { grid-area: btns; margin-top: 0; }
+  body[data-page="classement"] #friendTools { grid-area: tools; } body[data-page="classement"] #listErr { grid-area: err; }
+  body[data-page="classement"] .seg { grid-area: seg; } body[data-page="classement"] .period { grid-area: period; justify-content: flex-start; }
+  body[data-page="classement"] #weekNote, body[data-page="classement"] #seasonNote { grid-area: notes; text-align: left; margin: 0; }
+  body[data-page="classement"] #board { grid-area: board; } body[data-page="classement"] .live { grid-area: live; margin-top: 12px; }
+  body[data-page="classement"] #ranks > .hint { grid-area: foot; }
+  body[data-page="classement"] .app, body[data-page="historique"] .app { max-width: 1180px; }
+  body[data-page="classement"] #auth, body[data-page="classement"] #noConfig { max-width: 560px; margin-inline: auto; width: 100%; }
+  .psheet-scrim { align-items: center; }
+  .psheet { border-radius: 22px; max-height: 88%; border: 1px solid var(--felt-line); }
+}
+/* ===== computers: side rail instead of the bottom bar ===== */
+@media (min-width: 1100px) and (hover: hover) and (pointer: fine) {
+  body { padding-left: 96px; }
+  .tabbar { position: fixed; left: 0; top: 0; bottom: 0; width: 96px; max-width: none; margin: 0; z-index: 30; grid-template-columns: 1fr; grid-auto-rows: 66px; align-content: center; gap: 4px; padding: 18px 8px; border-radius: 0; border-top: 0; border-right: 1px solid var(--felt-line); }
+  .tabbar::before { content: "CASINO"; position: absolute; top: 22px; left: 0; right: 0; text-align: center; font: 400 15px var(--f-display, Georgia, serif); letter-spacing: .24em; color: var(--brass); }
+  .tabbar a { font-size: 11.5px; justify-content: center; gap: 5px; }
+  .tabbar a:hover { color: var(--ink); background: rgba(255,255,255,.05); }
+  .btn:hover:not(:disabled), .small-btn:hover, .icon-btn:hover, .search-btn:hover { filter: brightness(1.12); }
+  .line:hover, .feed:hover, .item:hover, .ps-hit:hover { filter: brightness(1.1); }
+  .app { padding-top: 14px; }
+}`;
+  document.head.appendChild(css3);
+
+  // header: player search on every page
+  function mountSearch() {
+    const bar = document.querySelector(".app .bar");
+    if (!bar || bar.querySelector(".search-btn")) return;
+    const btn = document.createElement("button");
+    btn.className = "search-btn";
+    btn.type = "button";
+    btn.setAttribute("aria-label", "Chercher un joueur");
+    btn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>';
+    btn.onclick = () => openSearch();
+    const chip = bar.querySelector(".acct-chip");
+    if (chip) {
+      const wrap = document.createElement("div");
+      wrap.className = "bar-right";
+      chip.replaceWith(wrap);
+      wrap.append(btn, chip);
+    } else bar.insertBefore(btn, bar.lastElementChild);
+  }
+  function openSearch(start = "") {
+    openSheet((sheet, close) => {
+      sheet.innerHTML = `<div class="grab" aria-hidden="true"></div>
+        <div class="ph"><h2>Chercher un joueur</h2><button class="x" data-close aria-label="Fermer">×</button></div>
+        <label class="ps-search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+          <input id="psQ" type="search" placeholder="Pseudo" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Pseudo du joueur" value="${escHTML(start)}"></label>
+        <div class="ps-results" id="psRes"><p class="loading">Tape au moins une lettre.</p></div>`;
+      const input = sheet.querySelector("#psQ"), out = sheet.querySelector("#psRes");
+      let timer, seq = 0;
+      const run = async () => {
+        const q = input.value.trim(), my = ++seq;
+        if (!q) { out.innerHTML = `<p class="loading">Tape au moins une lettre.</p>`; return; }
+        if (!configured() || !session) { out.innerHTML = `<p class="loading">Connecte-toi dans l'onglet Classement pour chercher des joueurs.</p>`; return; }
+        try {
+          const rows = await searchPlayers(q);
+          if (my !== seq) return;
+          out.innerHTML = rows.length ? rows.map((r, i) => `<button class="ps-hit rise bn-${escHTML(r.banner || "tapis")}" style="--i:${i}" data-user="${escHTML(r.username)}">
+              ${avatarHTML(r.username, r.frame, "md", r.avatar_url)}
+              <div><b>${escHTML(r.username)}${r.is_friend ? " · ami" : ""}</b>${titleText(r.title) ? `<span>${escHTML(titleText(r.title))}</span>` : ""}</div><span class="go" aria-hidden="true">›</span></button>`).join("")
+            : `<p class="loading">Aucun joueur ne correspond à « ${escHTML(q)} ».</p>`;
+        } catch (e) {
+          if (my === seq) out.innerHTML = `<p class="loading">${escHTML(e.code === "network" ? "Il faut internet pour chercher." : /search_players/.test(e.raw || "") ? "La recherche arrive avec la mise à jour du serveur." : e.message)}</p>`;
+        }
+      };
+      input.addEventListener("input", () => { clearTimeout(timer); timer = setTimeout(run, 220); });
+      out.addEventListener("click", e => { const b = e.target.closest("[data-user]"); if (b) { close(); openProfile(b.dataset.user); } });
+      setTimeout(() => input.focus(), 250);
+      if (start) run();
+    });
+  }
+
+  // install button where the browser offers one (Android, computers)
+  let installEvt = null;
+  addEventListener("beforeinstallprompt", e => {
+    e.preventDefault();
+    installEvt = e;
+    const bar = document.querySelector(".app .bar .bar-right");
+    if (!bar || bar.querySelector(".install-btn")) return;
+    const b = document.createElement("button");
+    b.className = "search-btn install-btn";
+    b.type = "button";
+    b.setAttribute("aria-label", "Installer l'app");
+    b.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>';
+    b.onclick = async () => { if (!installEvt) return; installEvt.prompt(); await installEvt.userChoice.catch(() => {}); installEvt = null; b.remove(); };
+    bar.prepend(b);
+  });
+
+  Object.assign(window.CasinoUI, { openSearch, rarity });
+  const boot = () => { mountNav(); mountSearch(); };
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot); else boot();
   setTimeout(checkRewards, 1200);
 })();

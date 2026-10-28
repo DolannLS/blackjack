@@ -109,6 +109,14 @@ button:disabled { opacity: .5; cursor: default; }
 .item .st.excl { color: #f3c9a4; }
 .badge { position: absolute; top: 12px; right: 12px; z-index: 2; font-size: 10.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; padding: 3px 7px; border-radius: 8px; background: rgba(0,0,0,.55); color: var(--gold); }
 .empty { text-align: center; color: var(--muted); padding: 10px; font-size: 14px; }
+.shophead { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.shophead b { font-family: var(--f-display); font-weight: 400; font-size: 20px; }
+.shophead span { font-size: 13px; color: var(--brass); font-weight: 600; }
+.item .rar { padding-inline: 2px; }
+.tierprev { display: grid; grid-template-columns: 1fr; gap: 6px; }
+.tierprev .pcard { min-height: 56px; padding: 10px 12px; }
+.tierprev .pcard .av.lg { width: 40px; height: 40px; font-size: 17px; }
+.tierprev .pcard b { font-size: 15px; }
 .step .tier { height: 22px; font-size: 11.5px; }
 .step.champ { background: linear-gradient(90deg, rgba(233,196,106,.25), rgba(0,0,0,.2)); }
 #seasonMe .ps-box { background: rgba(0,0,0,.22); }
@@ -141,20 +149,21 @@ button:disabled { opacity: .5; cursor: default; }
     <div class="msg" id="msg" role="status" aria-live="polite"></div>
   </section>
 
-  <div class="seg" role="group" aria-label="Catégorie">
+  <div class="seg" role="group" aria-label="Catégorie" style="position:relative">
     <button data-k="banner" aria-pressed="true">Bannières</button>
     <button data-k="frame" aria-pressed="false">Cadres</button>
     <button data-k="title" aria-pressed="false">Titres</button>
   </div>
 
   <div class="scroll">
+    <div class="shophead"><b>Sélection de la semaine</b><span id="shopEnd"></span></div>
     <div class="grid" id="grid"></div>
 
     <section class="week" id="saison" aria-labelledby="seasonTitle">
       <div class="week-head"><h2 id="seasonTitle">Saison du mois</h2><span class="countdown" id="seasonEnd"></span></div>
       <div id="seasonMe"><div class="myweek">Crée un compte dans l'onglet Classement pour participer à la saison.</div></div>
       <div class="ladder" id="tiers"></div>
-      <p class="note">Une saison dure un mois. 1 point par partie, plus 1 point par tranche de 50 jetons gagnés ; perdre ne retire rien. À la fin du mois, chacun reçoit la récompense de son rang (et les titres des rangs en dessous). Top 100 : les 100 meilleurs, dès 2 000 points.</p>
+      <p class="note">Une saison dure un mois. 1 point par partie, plus 1 point par tranche de 50 jetons gagnés ; perdre ne retire rien. À la fin du mois, chaque rang reçoit sa bannière, son cadre et son titre, numérotés et propres à cette saison : ils ne reviendront jamais. Top 100 : les 100 meilleurs, dès 2 000 points.</p>
       <a href="classement.html#saison">Voir le classement de la saison</a>
     </section>
 
@@ -162,7 +171,7 @@ button:disabled { opacity: .5; cursor: default; }
       <div class="week-head"><h2 id="weekTitle">Récompenses de la semaine</h2><span class="countdown" id="countdown"></span></div>
       <div class="myweek" id="myweek">Joue au moins 10 parties dans la semaine pour être classé.</div>
       <div class="ladder" id="ladder"></div>
-      <p class="note">Classement général de la semaine, par gains nets. Clôture le lundi à 0 h, les récompenses arrivent à la prochaine ouverture de l'app.</p>
+      <p class="note">Classement général de la semaine, par gains nets. Clôture le lundi à 0 h. Le n°1 reçoit le cadre Couronne et le titre Champion de la semaine, qu'il garde tant qu'il reste premier : ils passent au nouveau n°1 la semaine suivante.</p>
       <a href="classement.html#semaine">Voir le classement de la semaine</a>
     </section>
   </div>
@@ -187,7 +196,7 @@ button:disabled { opacity: .5; cursor: default; }
     const look = { banner: p.banner, frame: p.frame, title: p.title };
     if (s) look[s.kind] = s.id;
     const name = A.session ? A.session.username : "Toi";
-    $("card").innerHTML = UI.cardHTML({ name, ...look, sub: s ? "Aperçu" : A.session ? "Ta bannière actuelle" : "Connecte-toi pour personnaliser" });
+    $("card").innerHTML = UI.cardHTML({ name, ...look, avatar: A.profile && A.profile.avatar_url, sub: s ? "Aperçu" : A.session ? "Ta bannière actuelle" : "Connecte-toi pour personnaliser" });
     if (animate) { const c = $("card").firstElementChild; c.classList.add("swap"); }
   }
 
@@ -216,8 +225,9 @@ button:disabled { opacity: .5; cursor: default; }
 
   function swatch(it) {
     const p = P(), name = A.session ? A.session.username : "Toi";
-    if (it.kind === "banner") return `<div class="sw bn-${it.id}">${UI.avatarHTML(name, p.frame, "md")}</div>`;
-    if (it.kind === "frame") return `<div class="sw frame-sw">${UI.avatarHTML(name, it.id, "md")}</div>`;
+    const photo = A.profile && A.profile.avatar_url;
+    if (it.kind === "banner") return `<div class="sw bn-${it.id}">${UI.avatarHTML(name, p.frame, "md", photo)}</div>`;
+    if (it.kind === "frame") return `<div class="sw frame-sw">${UI.avatarHTML(name, it.id, "md", photo)}</div>`;
     return `<div class="sw title-sw"><span class="ttl${it.price === null ? " gold" : ""}">${it.id === "sans-titre" ? "—" : UI.esc(it.name)}</span></div>`;
   }
   function status(it) {
@@ -227,10 +237,37 @@ button:disabled { opacity: .5; cursor: default; }
     if (it.price === null) return `<span class="st excl">Exclusif</span>`;
     return `<span class="st">${UI.CROWN}${fmt(it.price)}</span>`;
   }
+  // this week's selection (same draw as the server); offline we keep the last one we saw
+  let week = null, stats = null;
+  try { week = JSON.parse(localStorage.getItem("casino.shopweek") || "null"); } catch (e) {}
+  function rarityLine(it) {
+    if (!stats || it.price === 0) return "";
+    const r = UI.rarity(stats.holders[it.id] || 0, stats.players);
+    return r ? `<span class="rar rar-${r.key}" title="${r.holders} joueur${r.holders > 1 ? "s" : ""} sur ${r.players}">${r.label} · ${r.holders} joueur${r.holders > 1 ? "s" : ""}</span>` : "";
+  }
   function renderGrid() {
-    const items = A.SHOP.filter(x => x.kind === kind);
+    if (!week) { $("grid").innerHTML = `<div class="empty" style="grid-column:1/-1">${A.configured() && A.session ? "Chargement de la sélection de la semaine…" : "Connecte-toi dans l'onglet Classement pour voir la sélection de la semaine."}</div>`; return; }
+    const items = week.items.map(id => A.ITEM[id]).filter(it => it && it.kind === kind);
     $("grid").innerHTML = items.map((it, i) => `<button class="item rise" style="--i:${i}" data-id="${it.id}" aria-pressed="${selected === it.id}">
-      ${it.price === null ? `<span class="badge">Récompense</span>` : ""}${swatch(it)}<span class="nm">${UI.esc(it.name)}</span>${status(it)}</button>`).join("");
+      ${swatch(it)}<span class="nm">${UI.esc(it.name)}</span>${status(it)}${rarityLine(it)}</button>`).join("") ||
+      `<div class="empty" style="grid-column:1/-1">Rien dans cette catégorie cette semaine.</div>`;
+  }
+  async function loadShop() {
+    if (!A.configured() || !A.session) return;
+    try {
+      const [w, st] = await Promise.all([A.shopWeek(), A.itemStats().catch(() => null)]);
+      week = w; stats = st;
+      try { localStorage.setItem("casino.shopweek", JSON.stringify(w)); } catch (e) {}
+      renderGrid(); tickShop();
+    } catch (e) {
+      if (!week) $("grid").innerHTML = `<div class="empty" style="grid-column:1/-1">${UI.esc(/shop_week/.test(e.raw || "") ? "La boutique tournante arrive avec la mise à jour du serveur." : e.code === "network" ? "Il faut internet pour voir la boutique." : e.message)}</div>`;
+    }
+  }
+  function tickShop() {
+    const el = $("shopEnd"); if (!el) return;
+    const end = week && week.week_end ? new Date(week.week_end) : nextMonday();
+    const ms = end - Date.now(), d = Math.floor(ms / 86400000), h = Math.floor(ms / 3600000) % 24;
+    el.textContent = ms > 0 ? `Nouvelle sélection dans ${d ? d + " j " : ""}${h} h` : "Nouvelle sélection en cours";
   }
   function render(animate) {
     $("bank").textContent = A.session && A.profile ? fmt(A.profile.crowns) : "—";
@@ -312,10 +349,16 @@ button:disabled { opacity: .5; cursor: default; }
       $("seasonMe").innerHTML = UI.seasonBlock(se, "Ta progression");
     }
     const mine = se && se.tier;
-    $("tiers").innerHTML = A.TIERS.map(t => `<div class="step${t.id === mine ? " me" : ""}">
-        <span class="r">${UI.tierBadge(t.id)}<small>${t.note || `dès ${fmt(t.min)} points`} · ${t.items.map(id => A.ITEM[id].name).join(" · ")}</small></span>
-        <span class="c">+${fmt(t.crowns)} ${UI.CROWN}</span></div>`).reverse().join("") +
-      `<div class="step champ"><span class="r">Champion de la saison<small>${A.CHAMPION.note} · ${A.CHAMPION.items.map(id => A.ITEM[id].name).join(" · ")}</small></span><span class="c">+${fmt(A.CHAMPION.crowns)} ${UI.CROWN}</span></div>`;
+    const n = (A.profile && A.profile.season_number) || A.seasonNumber();
+    $("seasonTitle").textContent = `Saison ${n}`;
+    const name = A.session ? A.session.username : "Toi", photo = A.profile && A.profile.avatar_url;
+    const row = (t, isChamp) => {
+      const [b, f, ti] = A.seasonSet(n, t.id);
+      return `<div class="step${!isChamp && t.id === mine ? " me" : ""}${isChamp ? " champ" : ""}" style="grid-template-columns:1fr">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">${isChamp ? "<b>Champion de la saison</b>" : UI.tierBadge(t.id)}<span class="c">+${fmt(t.crowns)} ${UI.CROWN}</span></div>
+        <div class="tierprev">${UI.cardHTML({ name, banner: b, frame: f, title: ti, avatar: photo, sub: isChamp ? t.note : (t.note || `dès ${fmt(t.min)} points`) })}</div></div>`;
+    };
+    $("tiers").innerHTML = row(A.CHAMPION, true) + A.TIERS.slice().reverse().map(t => row(t, false)).join("");
   }
 
   A.onChange(() => { render(false); seasonUI(); });
@@ -323,6 +366,7 @@ button:disabled { opacity: .5; cursor: default; }
   render(false);
   tickCountdown(); setInterval(tickCountdown, 30000);
   loadWeek();
+  loadShop(); setInterval(tickShop, 60000);
   if (location.hash === "#saison") setTimeout(() => $("saison").scrollIntoView({ behavior: "smooth", block: "start" }), 400);
   if (A.configured() && A.session) A.loadProfile().then(() => { render(false); tickCountdown(); seasonUI(); }).catch(err => say(err.raw && /my_profile/.test(err.raw) ? "Le serveur n'a pas encore la mise à jour de la boutique." : ""));
 })();
