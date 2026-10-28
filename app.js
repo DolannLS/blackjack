@@ -211,7 +211,23 @@
     { id: "high-roller", kind: "title", name: "High roller", price: 800 },
     { id: "legende", kind: "title", name: "Légende du casino", price: 1500 },
     { id: "champion", kind: "title", name: "Champion de la semaine", price: null, how: "1ᵉʳ de la semaine" },
-    { id: "podium", kind: "title", name: "Sur le podium", price: null, how: "2ᵉ ou 3ᵉ de la semaine" }
+    { id: "podium", kind: "title", name: "Sur le podium", price: null, how: "2ᵉ ou 3ᵉ de la semaine" },
+    { id: "joueur-du-dimanche", kind: "title", name: "Joueur du dimanche", price: null, how: "rang Bronze en fin de saison" },
+    { id: "main-de-fer", kind: "title", name: "Main de fer", price: null, how: "rang Fer en fin de saison" },
+    { id: "joueur-d-argent", kind: "title", name: "Joueur d'argent", price: null, how: "rang Argent en fin de saison" },
+    { id: "mise-de-platine", kind: "title", name: "Mise de platine", price: null, how: "rang Platine en fin de saison" },
+    { id: "coeur-de-diamant", kind: "title", name: "Cœur de diamant", price: null, how: "rang Diamant en fin de saison" },
+    { id: "alexandrite", kind: "title", name: "Alexandrite", price: null, how: "rang Alexandrite en fin de saison" },
+    { id: "top-100", kind: "title", name: "Top 100", price: null, how: "Top 100 en fin de saison" },
+    { id: "champion-saison", kind: "title", name: "Champion de la saison", price: null, how: "1ᵉʳ de la saison" },
+    { id: "cadre-platine", kind: "frame", name: "Platine", price: null, how: "rang Platine en fin de saison" },
+    { id: "cadre-diamant", kind: "frame", name: "Diamant", price: null, how: "rang Diamant en fin de saison" },
+    { id: "cadre-alexandrite", kind: "frame", name: "Alexandrite", price: null, how: "rang Alexandrite en fin de saison" },
+    { id: "cadre-champion-saison", kind: "frame", name: "Couronne de saison", price: null, how: "1ᵉʳ de la saison" },
+    { id: "saison-diamant", kind: "banner", name: "Éclat de diamant", price: null, how: "rang Diamant en fin de saison" },
+    { id: "saison-alexandrite", kind: "banner", name: "Alexandrite", price: null, how: "rang Alexandrite en fin de saison" },
+    { id: "saison-top100", kind: "banner", name: "Élite Top 100", price: null, how: "Top 100 en fin de saison" },
+    { id: "saison-champion", kind: "banner", name: "Trône de la saison", price: null, how: "1ᵉʳ de la saison" }
   ];
   const ITEM = Object.fromEntries(SHOP.map(x => [x.id, x]));
   // weekly prizes by global weekly rank (players with at least 10 games that week)
@@ -222,6 +238,18 @@
     { ranks: "4ᵉ à 10ᵉ", crowns: 200, items: [] },
     { ranks: "Tous les autres classés", crowns: 50, items: [] }
   ];
+  // monthly season ranks, lowest first (mirrors supabase/saisons.sql)
+  const TIERS = [
+    { id: "bronze", name: "Bronze", min: 20, crowns: 100, items: ["joueur-du-dimanche"] },
+    { id: "fer", name: "Fer", min: 100, crowns: 200, items: ["main-de-fer"] },
+    { id: "argent", name: "Argent", min: 250, crowns: 400, items: ["joueur-d-argent"] },
+    { id: "platine", name: "Platine", min: 500, crowns: 700, items: ["mise-de-platine", "cadre-platine"] },
+    { id: "diamant", name: "Diamant", min: 1000, crowns: 1200, items: ["coeur-de-diamant", "cadre-diamant", "saison-diamant"] },
+    { id: "alexandrite", name: "Alexandrite", min: 2000, crowns: 2000, items: ["alexandrite", "cadre-alexandrite", "saison-alexandrite"] },
+    { id: "top-100", name: "Top 100", min: 2000, crowns: 3000, items: ["top-100", "saison-top100"], note: "100 meilleurs, dès 2 000 points" }
+  ];
+  const TIER = Object.fromEntries(TIERS.map(t => [t.id, t]));
+  const CHAMPION = { crowns: 5000, items: ["champion-saison", "saison-champion", "cadre-champion-saison"], note: "1ᵉʳ de la saison, dès le rang Argent" };
   const PROFILE = "casino.profile";
   let profile = read(PROFILE, null);
   if (profile && session && profile.username !== session.username) profile = null;
@@ -283,11 +311,44 @@
     </div>`;
   }
 
+  // seasons, public profiles, account settings, live activity
+  const seasonBoard = (scope, max = 50) => api("/rest/v1/rpc/season_board", { method: "POST", body: { scope, max_rows: max } });
+  const publicProfile = name => api("/rest/v1/rpc/public_profile", { method: "POST", body: { name } });
+  const liveFeed = (max = 15) => api("/rest/v1/rpc/live_feed", { method: "POST", body: { max_rows: max } });
+  const botsTick = () => api("/rest/v1/rpc/bots_tick", { method: "POST", body: {} }).catch(() => 0);
+  const ACCOUNT_ERR = { pseudo_pris: "Ce pseudo est déjà pris.", pseudo_invalide: "Le pseudo fait 3 à 16 caractères : lettres sans accent, chiffres, - ou _." };
+  async function renameAccount(name) {
+    try {
+      const n = await api("/rest/v1/rpc/rename_account", { method: "POST", body: { new_name: name } });
+      session = { ...session, username: n };
+      write(SESSION, session);
+      if (profile) profile = { ...profile, username: n };
+      write(PROFILE, profile);
+      emit();
+      return n;
+    } catch (e) { throw new Error(ACCOUNT_ERR[e.raw] || (/rename_account/.test(e.raw || "") ? "Le serveur n'a pas encore la mise à jour des comptes." : friendly(e))); }
+  }
+  async function changePassword(current, next) {
+    if (next.length < 6) throw new Error("Le nouveau mot de passe doit faire au moins 6 caractères.");
+    try { await api("/auth/v1/token?grant_type=password", { method: "POST", auth: false, body: { email: emailFor(session.username), password: current } }); }
+    catch (e) { throw new Error(/invalid login/i.test(e.raw || "") ? "Mot de passe actuel incorrect." : friendly(e)); }
+    try { await api("/auth/v1/user", { method: "PUT", body: { password: next } }); }
+    catch (e) { throw new Error(/same/i.test(e.raw || "") ? "Choisis un mot de passe différent de l'actuel." : friendly(e)); }
+  }
+  async function deleteAccount() {
+    await api("/rest/v1/rpc/delete_account", { method: "POST", body: {} });
+    write(QUEUE, []);
+    write(PROFILE, null);
+    profile = null;
+    logout();
+  }
+
   window.CasinoAccount = {
     configured, GAMES, get session() { return session; }, get profile() { return profile; },
     signUp, signIn, logout, record, flush, pending, history, leaderboard: leaderboardBy, addFriend, removeFriend,
     myInvite, resetInvite, inviteInfo, acceptInvite, inviteUrl, parseInvite, pendingInvite, NAME_RE,
-    SHOP, ITEM, PRIZES, loadProfile, buy, equip, markRewardsSeen,
+    SHOP, ITEM, PRIZES, TIERS, TIER, CHAMPION, loadProfile, buy, equip, markRewardsSeen,
+    seasonBoard, publicProfile, liveFeed, botsTick, renameAccount, changePassword, deleteAccount,
     localHistory: () => read(HISTORY, []),
     onChange: f => { listeners.add(f); return () => listeners.delete(f); }
   };
@@ -327,6 +388,7 @@
 .tabbar { view-transition-name: tabbar; }
 .bar { view-transition-name: topbar; }
 
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 body::before { content: ""; position: fixed; inset: 0; pointer-events: none; background-image: url("${GRAIN}"); opacity: .5; mix-blend-mode: soft-light; z-index: 0; }
 .app { position: relative; z-index: 1; }
 
@@ -506,36 +568,272 @@ body::before { content: ""; position: fixed; inset: 0; pointer-events: none; bac
     };
     requestAnimationFrame(step);
   }
-  function rankText(r) { return r === 1 ? "1ᵉʳ" : r + "ᵉ"; }
-  function showRewards(list) {
-    if (!list || !list.length || document.querySelector(".reward-scrim")) return;
-    const total = list.reduce((a, r) => a + r.crowns, 0);
-    const best = list.reduce((a, r) => Math.min(a, r.rank), 99);
-    const items = [...new Set(list.flatMap(r => r.items || []))];
+  function rankText(r) { return +r === 1 ? "1ᵉʳ" : r + "ᵉ"; }
+  const monthName = d => new Date(d + "T12:00:00").toLocaleDateString("fr-FR", { month: "long", year: "numeric" });
+  function tierBadge(id, size = "") {
+    const t = TIER[id];
+    if (!t) return `<span class="tier none ${size}">Sans rang</span>`;
+    return `<span class="tier t-${t.id} ${size}"><i aria-hidden="true"></i>${t.name}</span>`;
+  }
+
+  // ---------- extra look: ranks, season items, sheets ----------
+  const css2 = document.createElement("style");
+  css2.textContent = `
+.tier { display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 10px 0 6px; border-radius: 12px; font-size: 12px; font-weight: 700; letter-spacing: .04em; color: #111; background: var(--tc, #888); box-shadow: inset 0 1px 0 rgba(255,255,255,.5); white-space: nowrap; }
+.tier i { width: 12px; height: 12px; background: rgba(255,255,255,.75); clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); }
+.tier.lg { height: 30px; font-size: 14px; padding: 0 12px 0 8px; border-radius: 15px; }
+.tier.none { background: rgba(255,255,255,.12); color: var(--muted, #aaa); box-shadow: none; }
+.t-bronze { --tc: linear-gradient(135deg, #e3a978, #9a5f33); }
+.t-fer { --tc: linear-gradient(135deg, #c3c8cf, #6d737c); }
+.t-argent { --tc: linear-gradient(135deg, #f4f6f8, #a9b1ba); }
+.t-platine { --tc: linear-gradient(135deg, #d9fff8, #6fd1c4); }
+.t-diamant { --tc: linear-gradient(135deg, #e3f6ff, #6cc4ff 60%, #b6a2ff); }
+.t-alexandrite { --tc: linear-gradient(135deg, #48d6a2, #2f8f74 45%, #9b4fc4); color: #fff; }
+.t-top-100 { --tc: linear-gradient(135deg, #ffe08a, #ff9a4a 50%, #e8414f); }
+.tier { background: var(--tc); }
+
+.fr-cadre-platine::before { background: linear-gradient(135deg, #f0fffb, #6fd1c4, #e9fffb); }
+.fr-cadre-diamant::before { background: conic-gradient(#e3f6ff, #6cc4ff, #ffffff, #b6a2ff, #e3f6ff); animation: spin 5s linear infinite; }
+.fr-cadre-diamant { box-shadow: 0 0 14px rgba(140,200,255,.6); }
+.fr-cadre-alexandrite::before { background: conic-gradient(#48d6a2, #2f8f74, #9b4fc4, #d07ae8, #48d6a2); animation: spin 3s linear infinite; }
+.fr-cadre-alexandrite { box-shadow: 0 0 14px rgba(155,79,196,.55); }
+.fr-cadre-champion-saison::before { background: conic-gradient(#fff3c4, #e9c46a, #e8414f, #e9c46a, #fff3c4); animation: spin 2.4s linear infinite; }
+.fr-cadre-champion-saison { box-shadow: 0 0 16px rgba(233,196,106,.7); }
+.fr-cadre-champion-saison::after { content: "♛"; position: absolute; top: -.95em; left: 50%; transform: translateX(-50%); font-size: .8em; color: #ffd76a; text-shadow: 0 1px 2px rgba(0,0,0,.6); }
+.bn-saison-diamant { background: conic-gradient(from 210deg at 70% 40%, rgba(255,255,255,.35), transparent 20%, rgba(182,162,255,.35) 35%, transparent 55%, rgba(108,196,255,.4) 75%, transparent), linear-gradient(135deg, #0d2a4a, #1f5f99 55%, #7fb8e8); }
+.bn-saison-alexandrite { background: linear-gradient(120deg, #0c3b2e, #2f8f74, #9b4fc4, #3c1550, #0c3b2e); background-size: 300% 100%; animation: drift 7s ease-in-out infinite alternate; }
+.bn-saison-top100 { background: repeating-linear-gradient(135deg, rgba(255,207,90,.22) 0 10px, transparent 10px 26px), linear-gradient(135deg, #2a0b10, #6a1520 60%, #b8323f); }
+.bn-saison-champion { background: repeating-conic-gradient(from 0deg at 85% 50%, rgba(255,215,106,.28) 0 4deg, transparent 4deg 14deg), radial-gradient(circle at 85% 50%, #ffd76a 0 6%, transparent 30%), linear-gradient(135deg, #1d0b2e, #4a1660 60%, #7a2a52); }
+
+.psheet-scrim { position: fixed; inset: 0; z-index: 40; background: rgba(0,0,0,.55); display: flex; align-items: flex-end; justify-content: center; animation: fade .2s both; }
+.psheet { width: 100%; max-width: 560px; max-height: 92%; overflow-y: auto; -webkit-overflow-scrolling: touch; box-sizing: border-box; background: #0a3328; border-top: 1px solid var(--felt-line); border-radius: 22px 22px 0 0; padding: 14px max(18px, env(safe-area-inset-right, 0px)) calc(20px + env(safe-area-inset-bottom, 0px)) max(18px, env(safe-area-inset-left, 0px)); display: flex; flex-direction: column; gap: 14px; animation: sheet-up .32s cubic-bezier(.2,.8,.25,1) both; color: var(--ink); font-family: var(--f-ui); }
+.psheet > * { flex: none; }
+@keyframes sheet-up { from { transform: translateY(100%); } }
+.psheet .grab { width: 40px; height: 5px; border-radius: 3px; background: rgba(255,255,255,.25); align-self: center; }
+.psheet .ph { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.psheet h2 { margin: 0; font-family: var(--f-display); font-weight: 400; font-size: 24px; }
+.psheet h3 { margin: 4px 0 0; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.psheet .x { width: 38px; height: 38px; border-radius: 50%; background: var(--glass); font-size: 20px; color: var(--ink); border: 0; }
+.ps-tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.ps-tile { background: var(--glass); border-radius: 12px; padding: 9px 10px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ps-tile span { font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.ps-tile b { font-size: 17px; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ps-box { background: var(--glass); border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+.ps-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 14px; }
+.ps-row .m { color: var(--muted); }
+.ps-bar { height: 8px; border-radius: 4px; background: rgba(255,255,255,.1); overflow: hidden; }
+.ps-bar i { display: block; height: 100%; border-radius: 4px; background: linear-gradient(90deg, #e6c483, var(--brass)); transform-origin: left; animation: grow .8s cubic-bezier(.2,.8,.25,1) both; }
+@keyframes grow { from { transform: scaleX(0); } }
+.ps-games { display: flex; flex-direction: column; gap: 6px; }
+.ps-game { display: grid; grid-template-columns: 1fr auto auto; gap: 12px; align-items: center; font-size: 14px; font-variant-numeric: tabular-nums; }
+.ps-game .m { color: var(--muted); font-size: 13px; }
+.ps-seasons { display: flex; flex-direction: column; gap: 6px; }
+.ps-plus { color: var(--win, #7fd99a); } .ps-minus { color: var(--lose, #ff8a7a); }
+.ps-actions { display: grid; grid-template-columns: 1fr; gap: 8px; }
+.ps-field { display: flex; flex-direction: column; gap: 6px; }
+.ps-field label { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.ps-field input { height: 46px; border-radius: 12px; border: 1px solid var(--felt-line); background: rgba(0,0,0,.25); color: var(--ink); font: 600 16px var(--f-ui); padding: 0 12px; box-sizing: border-box; width: 100%; }
+.ps-msg { min-height: 18px; font-size: 14px; color: var(--lose, #ff8a7a); }
+.ps-msg.ok { color: var(--win, #7fd99a); }
+.psheet .btn { height: 46px; border-radius: 14px; font-weight: 600; font-size: 15.5px; background: var(--glass); border: 1px solid var(--felt-line); color: var(--ink); display: flex; align-items: center; justify-content: center; padding: 0 14px; text-decoration: none; }
+.psheet .btn.primary { color: var(--brass-ink); background: linear-gradient(180deg, #e6c483, var(--brass) 55%, #c49a50); border-color: var(--brass); box-shadow: inset 0 1px 0 rgba(255,255,255,.45); }
+.psheet .btn.danger { color: var(--lose, #ff8a7a); }
+.psheet .btn:disabled { opacity: .45; }
+.psheet .loading { text-align: center; color: var(--muted); padding: 30px 0; }
+.clickable { cursor: pointer; }
+`;
+  document.head.appendChild(css2);
+
+  // ---------- reward celebration (week and season) ----------
+  function itemLine(id) {
+    const it = ITEM[id];
+    if (!it || !session) return "";
+    if (it.kind === "banner") return cardHTML({ name: session.username, banner: id, frame: profile && profile.frame, title: profile && profile.title, sub: "Nouvelle bannière : " + it.name });
+    return `<div class="pcard bn-tapis">${avatarHTML(session.username, it.kind === "frame" ? id : profile && profile.frame, "md")}<div class="pc-who"><b>${escHTML(it.name)}</b><span class="pc-sub">${it.kind === "frame" ? "Nouveau cadre" : "Nouveau titre"}</span></div></div>`;
+  }
+  function showRewards(weeks, seasons) {
+    weeks = weeks || []; seasons = seasons || [];
+    if ((!weeks.length && !seasons.length) || document.querySelector(".reward-scrim")) return;
+    const total = [...weeks, ...seasons].reduce((a, r) => a + r.crowns, 0);
+    const items = [...new Set([...seasons, ...weeks].flatMap(r => r.items || []))];
+    let head, text;
+    const champ = seasons.find(r => r.champion);
+    if (champ) { head = "Champion de la saison !"; text = `Tu termines 1ᵉʳ de la saison de ${monthName(champ.season)}.`; }
+    else if (seasons.length) { const r = seasons[0]; head = "Fin de saison"; text = `Saison de ${monthName(r.season)} terminée au rang ${TIER[r.tier] ? TIER[r.tier].name : r.tier} (${rankText(r.rank)}).`; }
+    else {
+      const best = weeks.reduce((a, r) => Math.min(a, r.rank), 99);
+      head = best <= 3 ? "Sur le podium !" : "Récompense de la semaine";
+      text = weeks.length > 1 ? `${weeks.length} semaines clôturées. Meilleure place : ${rankText(best)}.` : `La semaine est terminée : tu finis ${rankText(best)} du classement général.`;
+    }
+    if (seasons.length && weeks.length) text += ` Et ${weeks.length} semaine${weeks.length > 1 ? "s" : ""} récompensée${weeks.length > 1 ? "s" : ""}.`;
     const box = document.createElement("div");
     box.className = "reward-scrim";
     box.setAttribute("role", "dialog");
     box.setAttribute("aria-modal", "true");
     box.innerHTML = `<div class="reward-box">
-      <h2>${best <= 3 ? "Sur le podium !" : "Récompense de la semaine"}</h2>
-      <p>${list.length > 1 ? `${list.length} semaines clôturées. Meilleure place : ${rankText(best)}.` : `La semaine est terminée : tu finis ${rankText(best)} du classement général.`}</p>
+      <h2>${head}</h2>
+      ${seasons.length ? `<div style="display:flex;justify-content:center">${tierBadge(seasons[0].tier, "lg")}</div>` : ""}
+      <p>${text}</p>
       <div class="reward-crowns">+${total.toLocaleString("fr-FR")} ${CROWN}</div>
-      ${items.length ? `<div class="reward-items">${items.map(id => ITEM[id] ? (ITEM[id].kind === "banner"
-        ? cardHTML({ name: session.username, banner: id, frame: profile && profile.frame, title: profile && profile.title, sub: "Nouvelle bannière : " + ITEM[id].name })
-        : `<div class="pcard bn-tapis">${avatarHTML(session.username, ITEM[id].kind === "frame" ? id : profile && profile.frame, "md")}<div class="pc-who"><b>${escHTML(ITEM[id].name)}</b><span class="pc-sub">${ITEM[id].kind === "frame" ? "Nouveau cadre" : "Nouveau titre"}</span></div></div>`) : "").join("")}</div>` : ""}
+      ${items.length ? `<div class="reward-items">${items.map(itemLine).join("")}</div>` : ""}
       <button class="btn primary" type="button">Récupérer</button>
       <a href="boutique.html" class="btn" style="text-decoration:none;color:inherit">Voir la boutique</a>
     </div>`;
     document.body.appendChild(box);
     confetti();
-    const done = () => { box.remove(); markRewardsSeen().catch(() => {}); };
-    box.querySelector("button").onclick = done;
+    box.querySelector("button").onclick = () => { box.remove(); markRewardsSeen().catch(() => {}); };
     box.querySelector("a").onclick = () => { markRewardsSeen().catch(() => {}); };
   }
   async function checkRewards() {
     if (!configured() || !session || navigator.onLine === false) return;
-    try { const p = await loadProfile(); if (p && p.rewards && p.rewards.length) showRewards(p.rewards); } catch (e) {}
+    try {
+      const p = await loadProfile();
+      if (p && ((p.rewards && p.rewards.length) || (p.season_rewards && p.season_rewards.length))) showRewards(p.rewards, p.season_rewards);
+    } catch (e) {}
   }
+
+  // ---------- sheets: public profile and account settings ----------
+  function openSheet(build) {
+    const scrim = document.createElement("div");
+    scrim.className = "psheet-scrim";
+    scrim.innerHTML = `<div class="psheet" role="dialog" aria-modal="true"><div class="grab" aria-hidden="true"></div><div class="loading">Chargement…</div></div>`;
+    const sheet = scrim.firstElementChild;
+    const close = () => { scrim.remove(); document.removeEventListener("keydown", onKey); };
+    const onKey = e => { if (e.key === "Escape") close(); };
+    scrim.addEventListener("click", e => { if (e.target === scrim || e.target.closest("[data-close]")) close(); });
+    document.addEventListener("keydown", onKey);
+    // swipe down to close
+    let y0 = null;
+    sheet.addEventListener("touchstart", e => { y0 = sheet.scrollTop <= 0 ? e.touches[0].clientY : null; }, { passive: true });
+    sheet.addEventListener("touchend", e => { if (y0 !== null && e.changedTouches[0].clientY - y0 > 90) close(); y0 = null; }, { passive: true });
+    document.body.appendChild(scrim);
+    build(sheet, close);
+    return close;
+  }
+  const fmtN = n => Number(n || 0).toLocaleString("fr-FR", { maximumFractionDigits: 0 });
+  const signedN = n => (n > 0 ? "+" : n < 0 ? "−" : "") + fmtN(Math.abs(n));
+  const cls = n => n > 0 ? "ps-plus" : n < 0 ? "ps-minus" : "";
+
+  function seasonBlock(se, label) {
+    if (!se) return "";
+    const pts = +se.points || 0;
+    const cur = TIER[se.tier];
+    const next = se.next_tier ? TIER[se.next_tier] : null;
+    const from = cur ? cur.min : 0, to = next ? next.min : from;
+    const pct = next ? Math.max(4, Math.min(100, (pts - from) / Math.max(1, to - from) * 100)) : 100;
+    const end = se.season_end ? new Date(se.season_end) : null;
+    const days = end ? Math.max(0, Math.ceil((end - Date.now()) / 86400000)) : null;
+    return `<div class="ps-box">
+      <div class="ps-row"><b>${label || "Saison de " + monthName(se.season)}</b>${tierBadge(se.tier)}</div>
+      <div class="ps-row"><span class="m">${fmtN(pts)} points${se.rank ? ` · ${rankText(se.rank)} sur ${fmtN(se.players)}` : ""}</span><span class="m">${days !== null ? `fin dans ${days} j` : ""}</span></div>
+      ${next ? `<div class="ps-bar" aria-label="Progression vers ${next.name}"><i style="width:${pct}%"></i></div>
+      <div class="ps-row"><span class="m">Prochain rang : ${next.name}</span><span class="m">encore ${fmtN(next.min - pts)} pts</span></div>` : ""}
+    </div>`;
+  }
+
+  async function openProfile(name) {
+    openSheet(async (sheet, close) => {
+      let p;
+      try { p = await publicProfile(name); }
+      catch (e) { sheet.innerHTML = `<div class="grab"></div><div class="ph"><h2>Profil</h2><button class="x" data-close aria-label="Fermer">×</button></div><p class="loading">${escHTML(e.code === "network" ? "Il faut internet pour voir les profils." : /public_profile/.test(e.raw || "") ? "Le serveur n'a pas encore la mise à jour des profils." : e.message)}</p>`; return; }
+      if (!p) { sheet.innerHTML = `<div class="grab"></div><div class="ph"><h2>Profil</h2><button class="x" data-close aria-label="Fermer">×</button></div><p class="loading">Ce joueur n'existe plus.</p>`; return; }
+      const st = p.stats || {}, games = +st.games || 0;
+      const rate = games ? Math.round(+st.wins / games * 100) : 0;
+      const since = p.since ? new Date(p.since).toLocaleDateString("fr-FR", { month: "short", year: "numeric" }) : "—";
+      const tr = p.trophies || {};
+      const right = p.season && p.season.tier ? tierBadge(p.season.tier) : "";
+      sheet.innerHTML = `<div class="grab" aria-hidden="true"></div>
+        <div class="ph"><h2>${p.is_me ? "Mon profil" : "Profil"}</h2><button class="x" data-close aria-label="Fermer">×</button></div>
+        ${cardHTML({ name: p.username, banner: p.banner, frame: p.frame, title: p.title, sub: `Membre depuis ${since}`, right })}
+        <div class="ps-actions">${p.is_me ? `<button class="btn" data-act="account">Modifier mon compte</button>`
+          : p.is_friend ? `<button class="btn" disabled>Dans tes amis</button>` : `<button class="btn primary" data-act="friend">Ajouter en ami</button>`}</div>
+        <div class="ps-msg" role="status"></div>
+        <div class="ps-tiles">
+          <div class="ps-tile"><span>Gains nets</span><b class="${cls(+st.net)}">${signedN(+st.net)}</b></div>
+          <div class="ps-tile"><span>Parties</span><b>${fmtN(games)}</b></div>
+          <div class="ps-tile"><span>Victoires</span><b>${rate} %</b></div>
+          <div class="ps-tile"><span>Record</span><b>${+st.best > 0 ? "+" + fmtN(st.best) : "—"}</b></div>
+          <div class="ps-tile"><span>Total misé</span><b>${fmtN(st.staked)}</b></div>
+          <div class="ps-tile"><span>Semaine</span><b>${p.week && p.week.rank ? rankText(p.week.rank) : "—"}</b></div>
+        </div>
+        ${seasonBlock(p.season)}
+        <h3>Trophées</h3>
+        <div class="ps-box">
+          <div class="ps-row"><span>Semaines gagnées</span><b>${fmtN(tr.week_wins)}</b></div>
+          <div class="ps-row"><span>Podiums de la semaine</span><b>${fmtN(tr.week_podiums)}</b></div>
+          <div class="ps-row"><span>Meilleure semaine</span><b>${tr.best_week ? rankText(tr.best_week) : "—"}</b></div>
+          ${(tr.seasons || []).length ? `<div class="ps-seasons">${tr.seasons.map(x => `<div class="ps-row"><span>${monthName(x.season)}${x.champion ? " · Champion" : ""}</span>${tierBadge(x.tier)}</div>`).join("")}</div>` : `<div class="ps-row"><span class="m">Aucune saison terminée pour l'instant.</span></div>`}
+        </div>
+        ${(p.by_game || []).length ? `<h3>Par jeu</h3><div class="ps-box ps-games">${p.by_game.map(g => `<div class="ps-game"><span>${GAMES[g.game] || g.game}<br><span class="m">${fmtN(g.games)} parties · ${g.games ? Math.round(g.wins / g.games * 100) : 0} % gagnées</span></span><span></span><b class="${cls(+g.net)}">${signedN(+g.net)}</b></div>`).join("")}</div>` : ""}`;
+      const msg = sheet.querySelector(".ps-msg");
+      const act = sheet.querySelector("[data-act]");
+      if (act) act.onclick = async () => {
+        if (act.dataset.act === "account") { close(); openAccount(); return; }
+        act.disabled = true;
+        try { await addFriend(p.username); act.textContent = "Dans tes amis"; msg.className = "ps-msg ok"; msg.textContent = `${p.username} est dans tes amis.`; }
+        catch (e) { act.disabled = false; msg.textContent = e.message; }
+      };
+    });
+  }
+
+  function openAccount() {
+    if (!session) { location.href = "classement.html"; return; }
+    openSheet((sheet, close) => {
+      sheet.innerHTML = `<div class="grab" aria-hidden="true"></div>
+        <div class="ph"><h2>Mon compte</h2><button class="x" data-close aria-label="Fermer">×</button></div>
+        <form class="ps-box" data-f="name" novalidate>
+          <div class="ps-field"><label for="acName">Pseudo</label><input id="acName" maxlength="16" autocapitalize="off" spellcheck="false" autocomplete="username" value="${escHTML(session.username)}"></div>
+          <button class="btn primary" type="submit">Changer de pseudo</button>
+          <div class="ps-msg" role="status"></div>
+        </form>
+        <form class="ps-box" data-f="pass" novalidate>
+          <div class="ps-field"><label for="acOld">Mot de passe actuel</label><input id="acOld" type="password" autocomplete="current-password"></div>
+          <div class="ps-field"><label for="acNew">Nouveau mot de passe</label><input id="acNew" type="password" autocomplete="new-password" placeholder="6 caractères minimum"></div>
+          <div class="ps-field"><label for="acNew2">Confirme le nouveau</label><input id="acNew2" type="password" autocomplete="new-password"></div>
+          <button class="btn primary" type="submit">Changer de mot de passe</button>
+          <div class="ps-msg" role="status"></div>
+        </form>
+        <div class="ps-box">
+          <button class="btn" data-act="profile">Voir mon profil public</button>
+          <button class="btn" data-act="logout">Se déconnecter</button>
+        </div>
+        <form class="ps-box" data-f="delete" novalidate>
+          <div class="ps-field"><label for="acDel">Supprimer le compte : tape ton pseudo</label><input id="acDel" autocapitalize="off" spellcheck="false" placeholder="${escHTML(session.username)}"></div>
+          <button class="btn danger" type="submit">Supprimer définitivement</button>
+          <div class="ps-msg" role="status"></div>
+        </form>`;
+      const say = (form, t, ok) => { const m = form.querySelector(".ps-msg"); m.className = "ps-msg" + (ok ? " ok" : ""); m.textContent = t; };
+      sheet.querySelectorAll("form").forEach(form => form.addEventListener("submit", async e => {
+        e.preventDefault();
+        const btn = form.querySelector("button"); btn.disabled = true; say(form, "");
+        try {
+          if (form.dataset.f === "name") {
+            const v = form.querySelector("#acName").value.trim();
+            if (v === session.username) throw new Error("C'est déjà ton pseudo.");
+            const n = await renameAccount(v);
+            say(form, `Tu t'appelles maintenant ${n}. Utilise ce pseudo pour te connecter.`, true);
+          } else if (form.dataset.f === "pass") {
+            const a = form.querySelector("#acOld").value, b = form.querySelector("#acNew").value, c = form.querySelector("#acNew2").value;
+            if (!a) throw new Error("Entre ton mot de passe actuel.");
+            if (b !== c) throw new Error("Les deux nouveaux mots de passe ne sont pas identiques.");
+            await changePassword(a, b);
+            form.reset();
+            say(form, "Mot de passe changé.", true);
+          } else {
+            if (form.querySelector("#acDel").value.trim() !== session.username) throw new Error("Tape exactement ton pseudo pour confirmer.");
+            await deleteAccount();
+            close();
+            location.href = "classement.html";
+            return;
+          }
+        } catch (err) { say(form, err.message); }
+        btn.disabled = false;
+      }));
+      sheet.querySelector('[data-act="profile"]').onclick = () => { const n = session.username; close(); openProfile(n); };
+      sheet.querySelector('[data-act="logout"]').onclick = () => { logout(); close(); };
+    });
+  }
+  Object.assign(window.CasinoUI, { tierBadge, openProfile, openAccount, seasonBlock, rankText, monthName });
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", mountNav); else mountNav();
   setTimeout(checkRewards, 1200);

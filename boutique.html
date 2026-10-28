@@ -109,7 +109,21 @@ button:disabled { opacity: .5; cursor: default; }
 .item .st.excl { color: #f3c9a4; }
 .badge { position: absolute; top: 12px; right: 12px; z-index: 2; font-size: 10.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; padding: 3px 7px; border-radius: 8px; background: rgba(0,0,0,.55); color: var(--gold); }
 .empty { text-align: center; color: var(--muted); padding: 10px; font-size: 14px; }
+.step .tier { height: 22px; font-size: 11.5px; }
+.step.champ { background: linear-gradient(90deg, rgba(233,196,106,.25), rgba(0,0,0,.2)); }
+#seasonMe .ps-box { background: rgba(0,0,0,.22); }
 </style>
+<link rel="apple-touch-startup-image" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="splash/splash-750x1334.jpg">
+<link rel="apple-touch-startup-image" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="splash/splash-828x1792.jpg">
+<link rel="apple-touch-startup-image" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="splash/splash-1125x2436.jpg">
+<link rel="apple-touch-startup-image" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="splash/splash-1242x2688.jpg">
+<link rel="apple-touch-startup-image" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="splash/splash-1170x2532.jpg">
+<link rel="apple-touch-startup-image" media="(device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="splash/splash-1284x2778.jpg">
+<link rel="apple-touch-startup-image" media="(device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="splash/splash-1179x2556.jpg">
+<link rel="apple-touch-startup-image" media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="splash/splash-1290x2796.jpg">
+<link rel="apple-touch-startup-image" media="(device-width: 402px) and (device-height: 874px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="splash/splash-1206x2622.jpg">
+<link rel="apple-touch-startup-image" media="(device-width: 440px) and (device-height: 956px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="splash/splash-1320x2868.jpg">
+<script src="boot.js"></script>
 </head>
 <body>
 <div class="app">
@@ -135,6 +149,14 @@ button:disabled { opacity: .5; cursor: default; }
 
   <div class="scroll">
     <div class="grid" id="grid"></div>
+
+    <section class="week" id="saison" aria-labelledby="seasonTitle">
+      <div class="week-head"><h2 id="seasonTitle">Saison du mois</h2><span class="countdown" id="seasonEnd"></span></div>
+      <div id="seasonMe"><div class="myweek">Crée un compte dans l'onglet Classement pour participer à la saison.</div></div>
+      <div class="ladder" id="tiers"></div>
+      <p class="note">Une saison dure un mois. 1 point par partie, plus 1 point par tranche de 50 jetons gagnés ; perdre ne retire rien. À la fin du mois, chacun reçoit la récompense de son rang (et les titres des rangs en dessous). Top 100 : les 100 meilleurs, dès 2 000 points.</p>
+      <a href="classement.html#saison">Voir le classement de la saison</a>
+    </section>
 
     <section class="week" aria-labelledby="weekTitle">
       <div class="week-head"><h2 id="weekTitle">Récompenses de la semaine</h2><span class="countdown" id="countdown"></span></div>
@@ -278,11 +300,31 @@ button:disabled { opacity: .5; cursor: default; }
     } catch (e) { /* offline: keep the ladder */ }
   }
 
-  A.onChange(() => render(false));
+  function seasonUI() {
+    const se = A.profile && A.profile.season;
+    const end = se && se.season_end ? new Date(se.season_end) : (() => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth() + 1, 1); })();
+    const days = Math.max(0, Math.ceil((end - Date.now()) / 86400000));
+    $("seasonEnd").textContent = `Fin dans ${days} jour${days > 1 ? "s" : ""}`;
+    $("seasonTitle").textContent = "Saison de " + end.toLocaleDateString("fr-FR", { month: "long" }).replace(/^./, c => c) ;
+    if (se) {
+      const d = new Date(se.season + "T12:00:00");
+      $("seasonTitle").textContent = "Saison de " + d.toLocaleDateString("fr-FR", { month: "long" });
+      $("seasonMe").innerHTML = UI.seasonBlock(se, "Ta progression");
+    }
+    const mine = se && se.tier;
+    $("tiers").innerHTML = A.TIERS.map(t => `<div class="step${t.id === mine ? " me" : ""}">
+        <span class="r">${UI.tierBadge(t.id)}<small>${t.note || `dès ${fmt(t.min)} points`} · ${t.items.map(id => A.ITEM[id].name).join(" · ")}</small></span>
+        <span class="c">+${fmt(t.crowns)} ${UI.CROWN}</span></div>`).reverse().join("") +
+      `<div class="step champ"><span class="r">Champion de la saison<small>${A.CHAMPION.note} · ${A.CHAMPION.items.map(id => A.ITEM[id].name).join(" · ")}</small></span><span class="c">+${fmt(A.CHAMPION.crowns)} ${UI.CROWN}</span></div>`;
+  }
+
+  A.onChange(() => { render(false); seasonUI(); });
+  seasonUI();
   render(false);
   tickCountdown(); setInterval(tickCountdown, 30000);
   loadWeek();
-  if (A.configured() && A.session) A.loadProfile().then(() => { render(false); tickCountdown(); }).catch(err => say(err.raw && /my_profile/.test(err.raw) ? "Le serveur n'a pas encore la mise à jour de la boutique." : ""));
+  if (location.hash === "#saison") setTimeout(() => $("saison").scrollIntoView({ behavior: "smooth", block: "start" }), 400);
+  if (A.configured() && A.session) A.loadProfile().then(() => { render(false); tickCountdown(); seasonUI(); }).catch(err => say(err.raw && /my_profile/.test(err.raw) ? "Le serveur n'a pas encore la mise à jour de la boutique." : ""));
 })();
 </script>
 <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});</script>

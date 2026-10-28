@@ -99,7 +99,28 @@ p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.5; max-width
 .line .name .ttl { display: block; color: #f1dfb0; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; font-size: 11px; }
 .line .name .ttl.gold { color: var(--gold); }
 .line .val { text-shadow: 0 1px 2px rgba(0,0,0,.6); }
-.period { display: flex; gap: 8px; justify-content: center; }
+.period { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+.mebtns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: -4px; }
+.mebtns .btn { height: 42px; font-size: 14.5px; gap: 8px; }
+.mebtns svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.line { cursor: pointer; }
+.line .pts { font-size: 12px; color: rgba(255,255,255,.7); font-weight: 600; display: block; text-align: right; }
+.line .tier { height: 20px; font-size: 11px; padding: 0 8px 0 5px; }
+.line .tier i { width: 10px; height: 10px; }
+.line .right { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
+.live { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; }
+.live-head { display: flex; justify-content: space-between; align-items: baseline; }
+.live h2 { margin: 0; font-family: var(--f-display); font-weight: 400; font-size: 22px; display: flex; align-items: center; gap: 8px; }
+.live .dot { width: 9px; height: 9px; border-radius: 50%; background: #ff5a5a; box-shadow: 0 0 0 0 rgba(255,90,90,.6); animation: pulse 1.6s infinite; }
+@keyframes pulse { 70% { box-shadow: 0 0 0 8px rgba(255,90,90,0); } 100% { box-shadow: 0 0 0 0 rgba(255,90,90,0); } }
+.live-list { display: flex; flex-direction: column; gap: 6px; }
+.feed { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; padding: 8px 12px; border-radius: 12px; background: var(--glass); cursor: pointer; }
+.feed .what { min-width: 0; font-size: 14px; }
+.feed .what b { font-weight: 600; }
+.feed .what span { display: block; font-size: 12.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.feed .amt { font-weight: 700; font-variant-numeric: tabular-nums; color: var(--win); }
+.feed.new { animation: flash 1.2s ease; }
+@keyframes flash { from { background: rgba(216,178,106,.35); } }
 .period button { height: 32px; padding: 0 14px; border-radius: 16px; border: 1px solid var(--felt-line); background: var(--glass); font-size: 13.5px; font-weight: 600; color: var(--muted); }
 .period button[aria-pressed="true"] { border-color: var(--brass); color: var(--brass); background: rgba(216,178,106,.12); }
 .weeknote { text-align: center; font-size: 13px; color: var(--muted); margin-top: -4px; }
@@ -151,6 +172,17 @@ p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.5; max-width
 .cam .frame { position: absolute; inset: 14%; border: 3px solid var(--brass); border-radius: 16px; box-shadow: 0 0 0 999px rgba(0,0,0,.35); }
 .center-text { text-align: center; }
 </style>
+<link rel="apple-touch-startup-image" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="splash/splash-750x1334.jpg">
+<link rel="apple-touch-startup-image" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="splash/splash-828x1792.jpg">
+<link rel="apple-touch-startup-image" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="splash/splash-1125x2436.jpg">
+<link rel="apple-touch-startup-image" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="splash/splash-1242x2688.jpg">
+<link rel="apple-touch-startup-image" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="splash/splash-1170x2532.jpg">
+<link rel="apple-touch-startup-image" media="(device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="splash/splash-1284x2778.jpg">
+<link rel="apple-touch-startup-image" media="(device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="splash/splash-1179x2556.jpg">
+<link rel="apple-touch-startup-image" media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="splash/splash-1290x2796.jpg">
+<link rel="apple-touch-startup-image" media="(device-width: 402px) and (device-height: 874px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="splash/splash-1206x2622.jpg">
+<link rel="apple-touch-startup-image" media="(device-width: 440px) and (device-height: 956px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="splash/splash-1320x2868.jpg">
+<script src="boot.js"></script>
 </head>
 <body>
 <div class="app">
@@ -208,13 +240,18 @@ p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.5; max-width
 
     <!-- signed in -->
     <section id="ranks" hidden style="display:flex;flex-direction:column;gap:14px">
-      <div id="meCard"></div>
+      <div id="meCard" class="clickable" role="button" tabindex="0" aria-label="Voir mon profil"></div>
+      <div class="mebtns">
+        <button class="btn" id="accountBtn"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Mon compte</button>
+        <button class="btn" id="myProfileBtn"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>Mon profil</button>
+      </div>
       <div class="seg" role="group" aria-label="Liste">
         <button id="segF" aria-pressed="true">Mes amis</button>
         <button id="segA" aria-pressed="false">Tous les joueurs</button>
       </div>
       <div class="period" role="group" aria-label="Période">
-        <button id="perW" aria-pressed="false">Cette semaine</button>
+        <button id="perW" aria-pressed="false">Semaine</button>
+        <button id="perS" aria-pressed="false">Saison</button>
         <button id="perA" aria-pressed="true">Depuis toujours</button>
       </div>
       <p class="weeknote" id="weekNote" hidden>Classés à partir de 10 parties dans la semaine. Le podium gagne des couronnes et des objets exclusifs : <a href="boutique.html">voir les récompenses</a>.</p>
@@ -229,9 +266,14 @@ p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.5; max-width
         </form>
       </div>
       <div class="err" id="listErr" role="status"></div>
+      <p class="weeknote" id="seasonNote" hidden>Saison de ce mois-ci. 1 point par partie, plus 1 par tranche de 50 jetons gagnés. Rangs : Bronze, Fer, Argent, Platine, Diamant, Alexandrite, Top 100. <a href="boutique.html#saison">Voir les récompenses</a>.</p>
       <div class="board" id="board"></div>
+      <section class="live" aria-labelledby="liveTitle">
+        <div class="live-head"><h2 id="liveTitle"><span class="dot" aria-hidden="true"></span>En direct</h2><span class="hint" id="liveAgo"></span></div>
+        <div id="live" class="live-list"><div class="empty">Les beaux coups des dernières 24 h s'afficheront ici.</div></div>
+      </section>
       <p class="hint" style="text-align:center">Gains nets = total gagné − total misé, tous jeux confondus. Les recharges de solde ne comptent pas.</p>
-      <div class="foot"><button class="btn quiet" id="logoutBtn">Se déconnecter</button></div>
+
     </section>
   </div>
 </div>
@@ -312,18 +354,21 @@ p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.5; max-width
     if (cache[s + "|" + period]) renderBoard(cache[s + "|" + period]);
     loadBoard();
   }
-  let period = location.hash === "#semaine" ? "week" : "all";
+  let period = location.hash === "#semaine" ? "week" : location.hash === "#saison" ? "season" : "all";
   function setPeriod(p) {
     period = p;
     $("perW").setAttribute("aria-pressed", String(p === "week"));
+    $("perS").setAttribute("aria-pressed", String(p === "season"));
     $("perA").setAttribute("aria-pressed", String(p === "all"));
     $("weekNote").hidden = p !== "week";
+    $("seasonNote").hidden = p !== "season";
     meLine = null; paintMe();
     const c = cache[scope + "|" + period];
     if (c) renderBoard(c);
     loadBoard();
   }
   $("perW").onclick = () => setPeriod("week");
+  $("perS").onclick = () => setPeriod("season");
   $("perA").onclick = () => setPeriod("all");
   $("segF").onclick = () => setScope("friends");
   $("segA").onclick = () => setScope("all");
@@ -338,6 +383,11 @@ p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.5; max-width
       if (meLine.rank) sub = `${+meLine.rank === 1 ? "1ᵉʳ" : meLine.rank + "ᵉ"} sur ${total}${total >= 50 ? "+" : ""} joueur${total > 1 ? "s" : ""} · ${fmt(meLine.games)} partie${+meLine.games > 1 ? "s" : ""}`;
       else sub = period === "week" ? `${fmt(meLine.games)}/10 parties cette semaine` : "Joue une partie pour entrer au classement";
       right = `<span class="label" style="color:rgba(255,255,255,.75)">${period === "week" ? "Semaine" : "Gains nets"}</span><b style="display:block;font-size:22px" class="${net > 0 ? "plus" : net < 0 ? "minus" : ""}">${signed(net)}</b>`;
+      if (period === "season") {
+        const tot = (cache["all|season"] || []).filter(r => r.rank).length;
+        sub = meLine.rank ? `${UI.rankText(meLine.rank)} sur ${tot}${tot >= 50 ? "+" : ""} · ${fmt(meLine.points)} points` : "Joue une partie pour entrer dans la saison";
+        right = UI.tierBadge(meLine.tier);
+      }
     }
     $("meCard").innerHTML = UI.cardHTML({ name: s.username, banner: p.banner, frame: p.frame, title: p.title, sub, right });
   }
@@ -347,7 +397,8 @@ p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.5; max-width
     if (!cache[want]) $("board").innerHTML = `<div class="empty">Chargement…</div>`;
     try {
       await A.flush();
-      const [rows, all] = await Promise.all([A.leaderboard(sc, 50, per), sc === "all" ? null : A.leaderboard("all", 50, per)]);
+      const get = (s2) => per === "season" ? A.seasonBoard(s2, 50) : A.leaderboard(s2, 50, per);
+      const [rows, all] = await Promise.all([get(sc), sc === "all" ? null : get("all")]);
       cache[want] = rows;
       if (all) cache["all|" + per] = all;
       if (scope + "|" + period !== want) return;
@@ -356,7 +407,7 @@ p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.5; max-width
       renderBoard(rows);
     } catch (e) {
       if (scope + "|" + period !== want) return;
-      if (!cache[want]) $("board").innerHTML = `<div class="empty"><b>Classement indisponible</b>${esc(e.code === "network" ? "Il faut une connexion internet pour voir le classement." : e.message)}</div>`;
+      if (!cache[want]) $("board").innerHTML = `<div class="empty"><b>Classement indisponible</b>${esc(e.code === "network" ? "Il faut une connexion internet pour voir le classement." : /season_board/.test(e.raw || "") ? "Les saisons arrivent avec la mise à jour du serveur." : e.message)}</div>`;
     }
   }
 
@@ -379,11 +430,14 @@ p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.5; max-width
     const canDel = scope === "friends" && r.is_friend && !r.is_me;
     const ttl = UI.titleText(r.title), gold = A.ITEM[r.title] && A.ITEM[r.title].price === null;
     const games = `${fmt(r.games)}${period === "week" && !r.eligible ? "/10" : ""} partie${+r.games > 1 ? "s" : ""}`;
-    return `<div class="line rise bn-${esc(r.banner || "tapis")}${r.is_me ? " me" : ""}${gap ? " gap-before" : ""}" style="--i:${Math.min(i, 12)}">
+    const value = period === "season"
+      ? `<span class="right">${UI.tierBadge(r.tier)}<span class="pts">${fmt(r.points)} pts</span></span>`
+      : `<span class="val ${net > 0 ? "plus" : net < 0 ? "minus" : ""}">${signed(net)}</span>`;
+    return `<div class="line rise bn-${esc(r.banner || "tapis")}${r.is_me ? " me" : ""}${gap ? " gap-before" : ""}" style="--i:${Math.min(i, 12)}" data-user="${esc(r.username)}" role="button" tabindex="0">
       <span class="pos${rank && rank <= 3 ? " p" + rank : ""}">${rank || "–"}</span>
       ${UI.avatarHTML(r.username, r.frame, "md")}
-      <div class="name"><b>${esc(r.username)}${r.is_me ? " (toi)" : ""}</b>${ttl ? `<span class="ttl${gold ? " gold" : ""}">${esc(ttl)}</span>` : ""}<span>${games}${+r.best > 0 && period !== "week" ? " · record +" + fmt(r.best) : ""}</span></div>
-      <span class="val ${net > 0 ? "plus" : net < 0 ? "minus" : ""}">${signed(net)}</span>
+      <div class="name"><b>${esc(r.username)}${r.is_me ? " (toi)" : ""}</b>${ttl ? `<span class="ttl${gold ? " gold" : ""}">${esc(ttl)}</span>` : ""}<span>${games}${period === "season" ? ` · ${signed(net)}` : +r.best > 0 && period !== "week" ? " · record +" + fmt(r.best) : ""}</span></div>
+      ${value}
       ${canDel ? `<button class="del" data-del="${esc(r.username)}" aria-label="Retirer ${esc(r.username)} de mes amis">×</button>` : "<span></span>"}
     </div>`;
   }
@@ -568,14 +622,53 @@ p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.5; max-width
     if (b.dataset.armed !== "1") { b.dataset.armed = "1"; b.textContent = "?"; b.style.color = "var(--lose)"; setTimeout(() => { b.dataset.armed = ""; b.textContent = "×"; b.style.color = ""; }, 2500); return; }
     try { await A.removeFriend(b.dataset.del); loadBoard(); } catch (err) { $("listErr").textContent = err.message; }
   });
-  $("logoutBtn").onclick = () => { A.logout(); };
+  $("accountBtn").onclick = () => UI.openAccount();
+  $("myProfileBtn").onclick = () => A.session && UI.openProfile(A.session.username);
+  $("meCard").onclick = () => A.session && UI.openProfile(A.session.username);
+  const openRow = e => {
+    if (e.target.closest("[data-del]")) return;
+    const row = e.target.closest("[data-user]");
+    if (row && (e.type === "click" || e.key === "Enter")) UI.openProfile(row.dataset.user);
+  };
+  $("board").addEventListener("click", openRow);
+  $("board").addEventListener("keydown", openRow);
+  $("live").addEventListener("click", openRow);
+
+  // live activity: everyone's big plays, refreshed while the page is open
+  const GAME_VERB = { blackjack: "au blackjack", roulette: "à la roulette", holdem: "au Hold'em", videopoker: "au vidéo poker", online: "en ligne" };
+  let liveSeen = new Set(), liveTimer = null;
+  function ago(t) {
+    const m = Math.max(0, Math.round((Date.now() - new Date(t)) / 60000));
+    return m < 1 ? "à l'instant" : m < 60 ? `il y a ${m} min` : `il y a ${Math.floor(m / 60)} h`;
+  }
+  async function loadLive() {
+    if (!A.configured() || !A.session || document.visibilityState === "hidden") return;
+    try {
+      await A.botsTick();
+      const rows = await A.liveFeed(12);
+      if (!rows.length) { $("live").innerHTML = `<div class="empty">Pas encore de gros coup aujourd'hui. Le premier gain de 100 jetons ou plus apparaîtra ici.</div>`; return; }
+      const first = !liveSeen.size;
+      $("live").innerHTML = rows.map(r => {
+        const key = r.username + r.played_at + r.net, fresh = !first && !liveSeen.has(key);
+        liveSeen.add(key);
+        return `<div class="feed${fresh ? " new" : ""}" data-user="${esc(r.username)}" role="button" tabindex="0">${UI.avatarHTML(r.username, r.frame, "md")}
+          <div class="what"><b>${esc(r.username)}</b> gagne ${GAME_VERB[r.game] || ""}<span>${esc(r.detail || "")} · ${ago(r.played_at)}</span></div>
+          <span class="amt">+${fmt(r.net)}</span></div>`;
+      }).join("");
+      $("liveAgo").textContent = "mis à jour " + new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+    } catch (e) {
+      if (/live_feed/.test(e.raw || "")) $("live").innerHTML = `<div class="empty">L'activité en direct arrive avec la mise à jour du serveur.</div>`;
+    }
+  }
+  function startLive() { clearInterval(liveTimer); loadLive(); liveTimer = setInterval(() => { loadLive(); if (period !== "all") loadBoard(); }, 20000); }
 
   A.onChange(() => { show(); handleInvite(); });
   setMode("up");
-  setScope(location.hash === "#semaine" ? "all" : "friends");
+  setScope(/^#(semaine|saison)$/.test(location.hash) ? "all" : "friends");
   setPeriod(period);
   show();
-  if (A.configured() && A.session) A.loadProfile().then(paintMe).catch(() => {});
+  if (A.configured() && A.session) { A.loadProfile().then(paintMe).catch(() => {}); startLive(); }
+  A.onChange(() => { if (A.session) startLive(); else clearInterval(liveTimer); });
   handleInvite();
   if (A.session && location.hash === "#qr") showMyQr();
 })();
