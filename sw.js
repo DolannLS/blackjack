@@ -1,5 +1,5 @@
 // Offline cache: serve from cache, refresh in the background.
-const CACHE = "casino-v5";
+const CACHE = "casino-v6";
 const CORE = ["./", "index.html", "roulette.html", "poker.html", "online.html", "historique.html", "classement.html", "app.js", "manifest.webmanifest", "icon-180.png", "icon-192.png", "icon-512.png"];
 
 self.addEventListener("install", e => {
@@ -14,7 +14,7 @@ self.addEventListener("activate", e => {
 
 // only the app's own files, its fonts and the online-play library are cached;
 // matchmaking calls for online play must always go to the network
-const CACHEABLE = /^(fonts\.googleapis\.com|fonts\.gstatic\.com|unpkg\.com)$/;
+const CACHEABLE = /^(fonts\.googleapis\.com|fonts\.gstatic\.com|unpkg\.com|cdnjs\.cloudflare\.com|cdn\.jsdelivr\.net)$/;
 
 self.addEventListener("fetch", e => {
   if (e.request.method !== "GET") return;

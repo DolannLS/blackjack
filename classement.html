@@ -110,6 +110,37 @@ p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.5; max-width
 .empty { text-align: center; color: var(--muted); padding: 20px 10px; line-height: 1.5; }
 .empty b { display: block; color: var(--ink); font-family: var(--f-display); font-weight: 400; font-size: 20px; margin-bottom: 4px; }
 .foot { display: flex; justify-content: center; }
+
+/* invitations */
+.invite { display: flex; flex-direction: column; gap: 10px; padding: 16px; border-radius: 18px; background: linear-gradient(135deg, rgba(216,178,106,.25), rgba(4,22,17,.6)); border: 1px solid var(--brass); }
+.invite h2 { margin: 0; font-family: var(--f-display); font-weight: 400; font-size: 24px; text-wrap: balance; }
+.invite ol { margin: 0; padding-left: 20px; color: var(--ink); font-size: 15px; line-height: 1.55; }
+.invite .share-ico { display: inline-block; width: 16px; height: 16px; vertical-align: -2px; }
+.tools { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.tools .btn { gap: 8px; }
+.tools svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.scrim { position: fixed; inset: 0; background: rgba(0,0,0,.6); z-index: 30; display: flex; align-items: flex-end; justify-content: center; }
+.sheet {
+  width: 100%; max-width: 560px; box-sizing: border-box; max-height: 92%; overflow-y: auto;
+  background: #0a3328; border-top: 1px solid var(--felt-line); border-radius: 22px 22px 0 0;
+  padding-left: max(20px, env(safe-area-inset-left, 0px)); padding-right: max(20px, env(safe-area-inset-right, 0px));
+  padding-top: 18px; padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  display: flex; flex-direction: column; gap: 14px; align-items: stretch; animation: up .28s ease;
+}
+@keyframes up { from { transform: translateY(100%); } }
+.sheet > * { flex: none; }
+.sheet-head { display: flex; justify-content: space-between; align-items: center; }
+.sheet h2 { margin: 0; font-family: var(--f-display); font-weight: 400; font-size: 26px; }
+.x { width: 38px; height: 38px; border-radius: 50%; background: var(--glass); font-size: 20px; }
+.qrbox { align-self: center; width: min(72vw, 300px); aspect-ratio: 1; max-width: 100%; background: #fff; border-radius: 18px; padding: 14px; box-sizing: border-box; display: grid; place-items: center; box-shadow: 0 0 0 4px var(--brass); }
+.qrbox canvas { width: 100%; height: 100%; image-rendering: pixelated; }
+.qrname { text-align: center; }
+.qrname b { display: block; font-size: 20px; }
+.qrname span { font-size: 14px; color: var(--muted); letter-spacing: .2em; font-variant-numeric: tabular-nums; }
+.cam { position: relative; align-self: center; width: min(80vw, 340px); aspect-ratio: 1; max-width: 100%; border-radius: 18px; overflow: hidden; background: #000; }
+.cam video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.cam .frame { position: absolute; inset: 14%; border: 3px solid var(--brass); border-radius: 16px; box-shadow: 0 0 0 999px rgba(0,0,0,.35); }
+.center-text { text-align: center; }
 </style>
 </head>
 <body>
@@ -120,6 +151,18 @@ p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.5; max-width
   </header>
 
   <div class="scroll">
+    <!-- arrived through someone's QR code -->
+    <section class="invite" id="inviteCard" hidden>
+      <h2 id="inviteTitle">Invitation</h2>
+      <p id="inviteText"></p>
+      <ol id="installSteps" hidden>
+        <li>Crée ton compte juste en dessous (ou connecte-toi si tu en as déjà un) : vous devenez amis tout de suite.</li>
+        <li>Installe l'app : touche <b>Partager</b> <svg class="share-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 3v12M7 8l5-5 5 5M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg> en bas de Safari, puis <b>« Sur l'écran d'accueil »</b>.</li>
+        <li>Ouvre l'app depuis l'icône et connecte-toi avec le même pseudo.</li>
+      </ol>
+      <div class="err" id="inviteErr" role="alert"></div>
+    </section>
+
     <!-- accounts not set up yet -->
     <section id="noConfig" hidden>
       <div class="panel">
@@ -165,10 +208,16 @@ p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.5; max-width
         <button id="segF" aria-pressed="true">Mes amis</button>
         <button id="segA" aria-pressed="false">Tous les joueurs</button>
       </div>
-      <form class="add" id="addForm" novalidate>
-        <input id="friendIn" maxlength="16" autocapitalize="off" spellcheck="false" placeholder="Pseudo d'un ami" aria-label="Pseudo d'un ami">
-        <button class="btn primary" type="submit">Ajouter</button>
-      </form>
+      <div id="friendTools" style="display:flex;flex-direction:column;gap:8px">
+        <div class="tools">
+          <button class="btn primary" id="myQrBtn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h2v2h-2zM18 18h2v2h-2zM14 18h2M18 14h2"/></svg>Mon QR code</button>
+          <button class="btn" id="scanBtn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3M4 12h16"/></svg>Scanner</button>
+        </div>
+        <form class="add" id="addForm" novalidate>
+          <input id="friendIn" maxlength="16" autocapitalize="characters" spellcheck="false" placeholder="Code d'invitation ou pseudo" aria-label="Code d'invitation ou pseudo d'un ami">
+          <button class="btn" type="submit">Ajouter</button>
+        </form>
+      </div>
       <div class="err" id="listErr" role="status"></div>
       <div class="board" id="board"></div>
       <p class="hint" style="text-align:center">Gains nets = total gagné − total misé, tous jeux confondus. Les recharges de solde ne comptent pas.</p>
@@ -176,6 +225,26 @@ p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.5; max-width
     </section>
   </div>
 </div>
+<div class="scrim" id="qrSheet" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="qrTitle">
+    <div class="sheet-head"><h2 id="qrTitle">Mon QR code</h2><button class="x" data-close aria-label="Fermer">×</button></div>
+    <p class="center-text">Fais-le scanner par un ami avec l'appareil photo de son iPhone ou le bouton Scanner de l'app. Il pourra installer l'app et vous deviendrez amis.</p>
+    <div class="qrbox" id="qrBox"><span style="color:#333">Chargement…</span></div>
+    <div class="qrname"><b id="qrUser">—</b><span id="qrCode">········</span></div>
+    <button class="btn primary" id="shareBtn">Envoyer le lien</button>
+    <div class="err" id="qrErr" role="status"></div>
+    <button class="btn quiet" id="resetQr">Changer de QR code</button>
+  </div>
+</div>
+
+<div class="scrim" id="scanSheet" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="scanTitle">
+    <div class="sheet-head"><h2 id="scanTitle">Scanner un ami</h2><button class="x" data-close aria-label="Fermer">×</button></div>
+    <div class="cam"><video id="camVideo" playsinline muted></video><div class="frame"></div></div>
+    <p class="center-text" id="scanStatus">Vise le QR code de ton ami.</p>
+  </div>
+</div>
+
 <script src="app.js"></script>
 <script>
 (() => {
@@ -229,7 +298,7 @@ p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.5; max-width
     scope = s;
     $("segF").setAttribute("aria-pressed", String(s === "friends"));
     $("segA").setAttribute("aria-pressed", String(s === "all"));
-    $("addForm").hidden = s !== "friends";
+    $("friendTools").hidden = s !== "friends";
     $("listErr").textContent = "";
     if (cache[s]) renderBoard(cache[s]);
     loadBoard();
@@ -285,18 +354,181 @@ p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.5; max-width
     </div>`;
   }
 
+  function told(text, ok) { $("listErr").className = "err" + (ok ? " ok" : ""); $("listErr").textContent = text; }
   $("addForm").addEventListener("submit", async e => {
     e.preventDefault();
-    const name = $("friendIn").value.trim();
-    if (!name) return;
-    $("listErr").className = "err";
+    const v = $("friendIn").value.trim();
+    if (!v) return;
+    told("");
     try {
-      await A.addFriend(name);
+      const code = A.parseInvite(v);
+      let who = null, codeErr = null;
+      if (code) { try { who = await A.acceptInvite(code); } catch (err) { if (!A.NAME_RE.test(v)) throw err; codeErr = err; } }
+      if (!who) {
+        try { await A.addFriend(v); who = v; }
+        catch (err) { throw codeErr || err; }
+      }
       $("friendIn").value = "";
-      $("listErr").className = "err ok"; $("listErr").textContent = `${name} est dans tes amis.`;
+      told(`${who} est dans tes amis.`, true);
       loadBoard();
-    } catch (err) { $("listErr").textContent = err.message; }
+    } catch (err) { told(err.message); }
   });
+
+  // ----- invitation link / QR -----
+  const standalone = () => navigator.standalone === true || matchMedia("(display-mode: standalone)").matches;
+  async function handleInvite() {
+    const code = A.pendingInvite.get();
+    if (!code || !A.configured()) { $("inviteCard").hidden = true; return; }
+    $("inviteCard").hidden = false;
+    $("inviteErr").textContent = "";
+    let host = null;
+    try { host = await A.inviteInfo(code); } catch (e) {}
+    if (!host) {
+      $("inviteTitle").textContent = "Invitation expirée";
+      $("inviteText").textContent = "Ce QR code n'est plus valable. Demande à ton ami de te remontrer le sien.";
+      $("installSteps").hidden = true;
+      A.pendingInvite.clear();
+      return;
+    }
+    if (!A.session) {
+      $("inviteTitle").innerHTML = `${esc(host)} t'invite au Casino`;
+      $("inviteText").textContent = "Blackjack, roulette et poker entre amis, avec un classement commun.";
+      $("installSteps").hidden = standalone();
+      if (standalone()) $("inviteText").textContent += " Crée ton compte ou connecte-toi : vous serez amis automatiquement.";
+      return;
+    }
+    try {
+      const name = await A.acceptInvite(code);
+      A.pendingInvite.clear();
+      $("inviteTitle").innerHTML = `Toi et ${esc(name)} êtes amis`;
+      $("inviteText").textContent = standalone() ? "Retrouvez-vous dans la liste Mes amis ci-dessous." : "Pour jouer, installe l'app depuis Safari : Partager → « Sur l'écran d'accueil », puis connecte-toi avec ton pseudo.";
+      $("installSteps").hidden = true;
+      cache.friends = null;
+      setScope("friends");
+    } catch (err) {
+      A.pendingInvite.clear();
+      $("inviteTitle").textContent = "Invitation";
+      $("inviteText").textContent = "";
+      $("inviteErr").textContent = err.message;
+    }
+  }
+
+  const loaded = {};
+  function loadScript(src) {
+    return loaded[src] || (loaded[src] = new Promise((ok, ko) => {
+      const el = document.createElement("script");
+      el.src = src; el.onload = ok; el.onerror = () => { delete loaded[src]; ko(new Error("Pas de connexion internet.")); };
+      document.head.appendChild(el);
+    }));
+  }
+  const QR_LIB = "https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js";
+  const SCAN_LIB = "https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js";
+  let myCode = null;
+
+  function drawQr(text) {
+    const qr = qrcode(0, "M");
+    qr.addData(text); qr.make();
+    const n = qr.getModuleCount(), scale = 8, quiet = 2;
+    const cv = document.createElement("canvas");
+    cv.width = cv.height = (n + quiet * 2) * scale;
+    const g = cv.getContext("2d");
+    g.fillStyle = "#fff"; g.fillRect(0, 0, cv.width, cv.height);
+    g.fillStyle = "#0b1f19";
+    for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (qr.isDark(r, c)) g.fillRect((c + quiet) * scale, (r + quiet) * scale, scale, scale);
+    cv.setAttribute("role", "img"); cv.setAttribute("aria-label", "QR code d'invitation");
+    $("qrBox").replaceChildren(cv);
+  }
+  async function showMyQr() {
+    $("qrSheet").hidden = false;
+    $("qrUser").textContent = A.session.username;
+    $("qrErr").textContent = "";
+    try {
+      await loadScript(QR_LIB);
+      myCode = myCode || await A.myInvite();
+      if (!myCode) throw new Error("Code introuvable. Ajoute supabase/invitations.sql dans Supabase.");
+      $("qrCode").textContent = myCode;
+      drawQr(A.inviteUrl(myCode));
+    } catch (err) {
+      $("qrBox").innerHTML = `<span style="color:#333;text-align:center;font-size:14px">QR code indisponible</span>`;
+      $("qrErr").textContent = /my_invite|function/i.test(err.message) ? "Le serveur n'a pas encore la mise à jour des invitations." : err.message;
+    }
+  }
+  $("myQrBtn").onclick = showMyQr;
+  $("shareBtn").onclick = async () => {
+    if (!myCode) return;
+    const url = A.inviteUrl(myCode), text = `${A.session.username} t'invite au Casino : blackjack, roulette et poker entre amis.`;
+    try { if (navigator.share) { await navigator.share({ title: "Casino", text, url }); return; } } catch (e) { if (e && e.name === "AbortError") return; }
+    try { await navigator.clipboard.writeText(`${text}\n${url}`); $("qrErr").className = "err ok"; $("qrErr").textContent = "Lien copié."; }
+    catch (e) { $("qrErr").textContent = url; }
+  };
+  $("resetQr").onclick = async () => {
+    const b = $("resetQr");
+    if (b.dataset.armed !== "1") { b.dataset.armed = "1"; b.textContent = "Touche encore : l'ancien QR ne marchera plus"; setTimeout(() => { b.dataset.armed = ""; b.textContent = "Changer de QR code"; }, 3000); return; }
+    b.dataset.armed = ""; b.textContent = "Changer de QR code";
+    try { myCode = await A.resetInvite(); $("qrCode").textContent = myCode; drawQr(A.inviteUrl(myCode)); $("qrErr").className = "err ok"; $("qrErr").textContent = "Nouveau QR code prêt."; }
+    catch (err) { $("qrErr").className = "err"; $("qrErr").textContent = err.message; }
+  };
+
+  // in-app scanner
+  let stream = null, scanning = false;
+  const cv2 = document.createElement("canvas"), g2 = cv2.getContext("2d", { willReadFrequently: true });
+  async function openScanner() {
+    $("scanSheet").hidden = false;
+    $("scanStatus").textContent = "Ouverture de la caméra…";
+    try {
+      await loadScript(SCAN_LIB);
+      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } }, audio: false });
+      const v = $("camVideo");
+      v.srcObject = stream;
+      await v.play();
+      $("scanStatus").textContent = "Vise le QR code de ton ami.";
+      scanning = true;
+      requestAnimationFrame(scanFrame);
+    } catch (err) {
+      $("scanStatus").textContent = err && err.name === "NotAllowedError"
+        ? "Accès à la caméra refusé. Autorise-le dans Réglages → Safari → Caméra, ou tape le code d'invitation de ton ami."
+        : err && err.message === "Pas de connexion internet." ? "Il faut internet pour scanner." : "Caméra indisponible. Tape plutôt le code d'invitation de ton ami.";
+    }
+  }
+  function stopScanner() {
+    scanning = false;
+    if (stream) stream.getTracks().forEach(t => t.stop());
+    stream = null;
+    $("camVideo").srcObject = null;
+  }
+  async function scanFrame() {
+    if (!scanning) return;
+    const v = $("camVideo");
+    if (v.readyState >= 2 && v.videoWidth) {
+      const k = Math.min(1, 640 / v.videoWidth);
+      cv2.width = Math.round(v.videoWidth * k); cv2.height = Math.round(v.videoHeight * k);
+      g2.drawImage(v, 0, 0, cv2.width, cv2.height);
+      const img = g2.getImageData(0, 0, cv2.width, cv2.height);
+      const hit = jsQR(img.data, img.width, img.height, { inversionAttempts: "dontInvert" });
+      if (hit && hit.data) {
+        const code = A.parseInvite(hit.data);
+        if (!code) { $("scanStatus").textContent = "Ce QR code n'est pas une invitation Casino."; }
+        else {
+          scanning = false;
+          $("scanStatus").textContent = "QR code trouvé…";
+          try {
+            const who = await A.acceptInvite(code);
+            stopScanner(); $("scanSheet").hidden = true;
+            told(`Toi et ${who} êtes maintenant amis.`, true);
+            cache.friends = null; setScope("friends");
+          } catch (err) {
+            $("scanStatus").textContent = err.message;
+            setTimeout(() => { if (stream) { scanning = true; requestAnimationFrame(scanFrame); } }, 1800);
+          }
+          return;
+        }
+      }
+    }
+    requestAnimationFrame(scanFrame);
+  }
+  $("scanBtn").onclick = openScanner;
+  document.querySelectorAll("[data-close]").forEach(b => b.onclick = () => { stopScanner(); $("qrSheet").hidden = true; $("scanSheet").hidden = true; });
+  document.querySelectorAll(".scrim").forEach(s => s.addEventListener("click", e => { if (e.target === s) { stopScanner(); s.hidden = true; } }));
   $("board").addEventListener("click", async e => {
     const b = e.target.closest("[data-del]"); if (!b) return;
     if (b.dataset.armed !== "1") { b.dataset.armed = "1"; b.textContent = "?"; b.style.color = "var(--lose)"; setTimeout(() => { b.dataset.armed = ""; b.textContent = "×"; b.style.color = ""; }, 2500); return; }
@@ -304,10 +536,12 @@ p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.5; max-width
   });
   $("logoutBtn").onclick = () => { A.logout(); };
 
-  A.onChange(show);
+  A.onChange(() => { show(); handleInvite(); });
   setMode("up");
   setScope("friends");
   show();
+  handleInvite();
+  if (A.session && location.hash === "#qr") showMyQr();
 })();
 </script>
 <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});</script>

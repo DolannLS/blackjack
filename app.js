@@ -155,9 +155,34 @@
   }
   const removeFriend = name => api("/rest/v1/rpc/remove_friend", { method: "POST", body: { friend_name: name } });
 
+  // ---------- personal invitation (QR code) ----------
+  const INVITE = "casino.invite";
+  const myInvite = () => api("/rest/v1/rpc/my_invite", { method: "POST", body: {} });
+  const resetInvite = () => api("/rest/v1/rpc/reset_invite", { method: "POST", body: {} });
+  const inviteInfo = code => api("/rest/v1/rpc/invite_info", { method: "POST", auth: false, body: { code } });
+  async function acceptInvite(code) {
+    const r = await api("/rest/v1/rpc/accept_invite", { method: "POST", body: { code } });
+    if (r === "introuvable") throw new Error("Ce QR code n'est plus valable. Demande à ton ami de te remontrer le sien.");
+    if (r === "soi") throw new Error("C'est ton propre QR code !");
+    return r;
+  }
+  const inviteUrl = code => new URL("classement.html", location.href).href.split("#")[0] + "#invite=" + code;
+  // pull an invitation code out of a scanned text or link
+  const parseInvite = text => {
+    const m = String(text).match(/invite=([0-9A-Za-z]{6,12})/) || String(text).trim().match(/^([0-9A-Fa-f]{8})$/);
+    return m ? m[1].toUpperCase() : null;
+  };
+  const fromLink = parseInvite(location.hash);
+  if (fromLink) write(INVITE, fromLink);
+  const pendingInvite = {
+    get: () => read(INVITE, null),
+    clear: () => write(INVITE, null)
+  };
+
   window.CasinoAccount = {
     configured, GAMES, get session() { return session; },
     signUp, signIn, logout, record, flush, pending, history, leaderboard, addFriend, removeFriend,
+    myInvite, resetInvite, inviteInfo, acceptInvite, inviteUrl, parseInvite, pendingInvite, NAME_RE,
     localHistory: () => read(HISTORY, []),
     onChange: f => { listeners.add(f); return () => listeners.delete(f); }
   };
