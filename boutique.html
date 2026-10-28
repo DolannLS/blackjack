@@ -163,7 +163,7 @@ button:disabled { opacity: .5; cursor: default; }
       <div class="week-head"><h2 id="seasonTitle">Saison du mois</h2><span class="countdown" id="seasonEnd"></span></div>
       <div id="seasonMe"><div class="myweek">Crée un compte dans l'onglet Classement pour participer à la saison.</div></div>
       <div class="ladder" id="tiers"></div>
-      <p class="note">Une saison dure un mois. 1 point par partie, plus 1 point par tranche de 50 jetons gagnés ; perdre ne retire rien. À la fin du mois, chaque rang reçoit sa bannière, son cadre et son titre, numérotés et propres à cette saison : ils ne reviendront jamais. Top 100 : les 100 meilleurs, dès 2 000 points.</p>
+      <p class="note">Une saison dure un mois. 1 point par partie, plus 1 point par tranche de 50 jetons gagnés ; perdre ne retire rien. À la fin du mois, tu reçois la bannière, le cadre, le titre et les couronnes de ton rang, plus ceux de tous les rangs en dessous. Ils sont numérotés et propres à cette saison : ils ne reviendront jamais. Top 100 : les 100 meilleurs, dès 2 000 points.</p>
       <a href="classement.html#saison">Voir le classement de la saison</a>
     </section>
 
@@ -354,9 +354,15 @@ button:disabled { opacity: .5; cursor: default; }
     const name = A.session ? A.session.username : "Toi", photo = A.profile && A.profile.avatar_url;
     const row = (t, isChamp) => {
       const [b, f, ti] = A.seasonSet(n, t.id);
+      const idx = A.TIERS.indexOf(t);
+      const below = isChamp ? 0 : idx;
+      const total = isChamp ? t.crowns : A.TIERS.slice(0, idx + 1).reduce((x, y) => x + y.crowns, 0);
+      const extra = isChamp ? "en plus de tout ce que rapporte son rang"
+        : below ? `+ les ${below} rang${below > 1 ? "s" : ""} en dessous (${below * 3} objets de plus)` : "";
       return `<div class="step${!isChamp && t.id === mine ? " me" : ""}${isChamp ? " champ" : ""}" style="grid-template-columns:1fr">
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">${isChamp ? "<b>Champion de la saison</b>" : UI.tierBadge(t.id)}<span class="c">+${fmt(t.crowns)} ${UI.CROWN}</span></div>
-        <div class="tierprev">${UI.cardHTML({ name, banner: b, frame: f, title: ti, avatar: photo, sub: isChamp ? t.note : (t.note || `dès ${fmt(t.min)} points`) })}</div></div>`;
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">${isChamp ? "<b>Champion de la saison</b>" : UI.tierBadge(t.id)}<span class="c">+${fmt(total)} ${UI.CROWN}</span></div>
+        <div class="tierprev">${UI.cardHTML({ name, banner: b, frame: f, title: ti, avatar: photo, sub: isChamp ? t.note : (t.note || `dès ${fmt(t.min)} points`) })}</div>
+        ${extra ? `<small style="color:var(--muted);font-size:12.5px">${extra}</small>` : ""}</div>`;
     };
     $("tiers").innerHTML = row(A.CHAMPION, true) + A.TIERS.slice().reverse().map(t => row(t, false)).join("");
   }

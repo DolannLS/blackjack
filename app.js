@@ -230,6 +230,64 @@
     { id: "sang-froid", kind: "title", name: "Sang-froid", price: 450 },
     { id: "pro-du-split", kind: "title", name: "Pro du split", price: 350 },
     { id: "roi-roulette", kind: "title", name: "Roi de la roulette", price: 600 },
+    { id: "ocean-profond", kind: "banner", name: "Océan profond", price: 600 },
+    { id: "lagon", kind: "banner", name: "Lagon", price: 500 },
+    { id: "desert", kind: "banner", name: "Désert", price: 450 },
+    { id: "foret", kind: "banner", name: "Forêt", price: 450 },
+    { id: "volcan", kind: "banner", name: "Volcan", price: 900 },
+    { id: "cosmos", kind: "banner", name: "Cosmos", price: 1400 },
+    { id: "neige", kind: "banner", name: "Neige", price: 400 },
+    { id: "automne", kind: "banner", name: "Automne", price: 450 },
+    { id: "lavande", kind: "banner", name: "Lavande", price: 500 },
+    { id: "menthe", kind: "banner", name: "Menthe glaciale", price: 500 },
+    { id: "rubis-royal", kind: "banner", name: "Rubis royal", price: 1100 },
+    { id: "saphir-nuit", kind: "banner", name: "Saphir de nuit", price: 1100 },
+    { id: "emeraude-casino", kind: "banner", name: "Émeraude du casino", price: 1200 },
+    { id: "retro-80", kind: "banner", name: "Rétro 80", price: 900 },
+    { id: "synthwave", kind: "banner", name: "Synthwave", price: 1000 },
+    { id: "tartan", kind: "banner", name: "Tartan", price: 550 },
+    { id: "pied-de-poule", kind: "banner", name: "Pied-de-poule", price: 600 },
+    { id: "bayadere", kind: "banner", name: "Bayadère", price: 450 },
+    { id: "mosaique", kind: "banner", name: "Mosaïque", price: 700 },
+    { id: "ondes", kind: "banner", name: "Ondes", price: 550 },
+    { id: "eclair", kind: "banner", name: "Éclair", price: 800 },
+    { id: "roue", kind: "banner", name: "Roue de roulette", price: 1000 },
+    { id: "des", kind: "banner", name: "Coup de dés", price: 650 },
+    { id: "tapis-rouge", kind: "banner", name: "Tapis rouge", price: 1800 },
+    { id: "argent-poli", kind: "frame", name: "Argent poli", price: 300 },
+    { id: "bronze-antique", kind: "frame", name: "Bronze antique", price: 300 },
+    { id: "cuivre", kind: "frame", name: "Cuivre", price: 350 },
+    { id: "jade-imperial", kind: "frame", name: "Jade impérial", price: 600 },
+    { id: "amethyste", kind: "frame", name: "Améthyste", price: 600 },
+    { id: "grenat", kind: "frame", name: "Grenat", price: 550 },
+    { id: "citrine", kind: "frame", name: "Citrine", price: 550 },
+    { id: "opale", kind: "frame", name: "Opale", price: 1100 },
+    { id: "neon-rose", kind: "frame", name: "Néon rose", price: 800 },
+    { id: "neon-cyan", kind: "frame", name: "Néon cyan", price: 800 },
+    { id: "galaxie", kind: "frame", name: "Galaxie", price: 1400 },
+    { id: "arc-or", kind: "frame", name: "Arc doré", price: 700 },
+    { id: "pointilles", kind: "frame", name: "Pointillés", price: 300 },
+    { id: "electrique", kind: "frame", name: "Électrique", price: 1300 },
+    { id: "la-bankroll", kind: "title", name: "La Bankroll", price: 600 },
+    { id: "croupier-fou", kind: "title", name: "Croupier fou", price: 300 },
+    { id: "maitre-du-bluff", kind: "title", name: "Maître du bluff", price: 700 },
+    { id: "jamais-deux", kind: "title", name: "Jamais deux sans trois", price: 350 },
+    { id: "coup-de-poker", kind: "title", name: "Coup de poker", price: 300 },
+    { id: "coeur-de-pierre", kind: "title", name: "Cœur de pierre", price: 450 },
+    { id: "tapis-volant", kind: "title", name: "Tapis volant", price: 400 },
+    { id: "roi-de-coeur", kind: "title", name: "Roi de cœur", price: 500 },
+    { id: "reine-de-pique", kind: "title", name: "Reine de pique", price: 500 },
+    { id: "valet-de-carreau", kind: "title", name: "Valet de carreau", price: 400 },
+    { id: "as-de-trefle", kind: "title", name: "As de trèfle", price: 600 },
+    { id: "mains-d-argent", kind: "title", name: "Mains d'argent", price: 450 },
+    { id: "joueur-nocturne", kind: "title", name: "Joueur nocturne", price: 250 },
+    { id: "chasseur-jackpot", kind: "title", name: "Chasseur de jackpot", price: 800 },
+    { id: "rien-ne-va-plus", kind: "title", name: "Rien ne va plus", price: 350 },
+    { id: "faites-vos-jeux", kind: "title", name: "Faites vos jeux", price: 200 },
+    { id: "banco", kind: "title", name: "Banco", price: 300 },
+    { id: "double-ou-rien", kind: "title", name: "Double ou rien", price: 550 },
+    { id: "oeil-de-lynx", kind: "title", name: "Œil de lynx", price: 450 },
+    { id: "sans-peur", kind: "title", name: "Sans peur", price: 900 },
     { id: "champion", kind: "title", name: "Champion de la semaine", price: null, how: "1ᵉʳ de la semaine, tant que tu le restes" }
   ];
   const STATIC = Object.fromEntries(SHOP.map(x => [x.id, x]));
@@ -997,6 +1055,45 @@ body::before { content: ""; position: fixed; inset: 0; pointer-events: none; bac
 .fr-ambre::before { background: linear-gradient(135deg, #ffe0a3, #c46a00); } .fr-ambre { box-shadow: 0 0 10px rgba(196,106,0,.5); }
 .t-or { --tc: linear-gradient(135deg, #fff1b8, #e0a92a 60%, #b07b12); }
 
+/* catalogue additions */
+.bn-ocean-profond { background: radial-gradient(ellipse at 70% 0%, rgba(120,220,255,.35), transparent 55%), linear-gradient(180deg, #02121f, #053a5c 60%, #0a6d8f); }
+.bn-lagon { background: radial-gradient(circle at 25% 75%, rgba(170,255,240,.7), transparent 45%), linear-gradient(135deg, #087f8c, #3cc8be 60%, #a6f0e4); }
+.bn-desert { background: radial-gradient(ellipse at 30% 115%, #b5562a 0 35%, transparent 36%), radial-gradient(ellipse at 85% 120%, #8c3d1c 0 40%, transparent 41%), linear-gradient(175deg, #f7d08a, #e08a3e 70%); }
+.bn-foret { background: repeating-linear-gradient(100deg, rgba(0,0,0,.18) 0 4px, transparent 4px 19px), linear-gradient(160deg, #0d3a1c, #2e7d32 70%, #6fa83f); }
+.bn-volcan { background: radial-gradient(circle at 50% 125%, #ffb000 0 12%, #ff4d00 22%, transparent 52%), linear-gradient(#140604, #4a1206); }
+.bn-cosmos { background: radial-gradient(1.4px 1.4px at 15% 25%, #fff 50%, transparent), radial-gradient(1.2px 1.2px at 70% 15%, #fff 50%, transparent), radial-gradient(1.6px 1.6px at 45% 70%, #fff 50%, transparent), radial-gradient(1px 1px at 88% 60%, #fff 50%, transparent), radial-gradient(ellipse at 70% 60%, rgba(214,80,200,.55), transparent 50%), radial-gradient(ellipse at 25% 40%, rgba(80,90,255,.5), transparent 55%), #070019; }
+.bn-neige { background: radial-gradient(#fff 1.4px, transparent 2px) 0 0 / 18px 18px, radial-gradient(#fff 1px, transparent 1.6px) 9px 9px / 18px 18px, linear-gradient(170deg, #9fb6cc, #4f6d8f); }
+.bn-automne { background: radial-gradient(circle at 20% 30%, rgba(255,210,120,.45), transparent 40%), linear-gradient(135deg, #6b250b, #c4561a 50%, #e3a33b); }
+.bn-lavande { background: repeating-linear-gradient(80deg, rgba(255,255,255,.08) 0 3px, transparent 3px 14px), linear-gradient(135deg, #4b3c78, #9a82d0 60%, #d9ccff); }
+.bn-menthe { background: linear-gradient(120deg, transparent 40%, rgba(255,255,255,.3) 41%, transparent 44%), linear-gradient(135deg, #0b5444, #3fc196 60%, #c8ffe9); }
+.bn-rubis-royal { background: repeating-linear-gradient(60deg, rgba(255,255,255,.08) 0 2px, transparent 2px 12px), repeating-linear-gradient(-60deg, rgba(255,255,255,.08) 0 2px, transparent 2px 12px), linear-gradient(135deg, #3e000d, #a3122f); }
+.bn-saphir-nuit { background: repeating-linear-gradient(60deg, rgba(255,255,255,.07) 0 2px, transparent 2px 12px), repeating-linear-gradient(-60deg, rgba(255,255,255,.07) 0 2px, transparent 2px 12px), linear-gradient(135deg, #020b3a, #173ea3); }
+.bn-emeraude-casino { background: conic-gradient(from 45deg, rgba(216,178,106,.3) 25%, transparent 0 50%, rgba(216,178,106,.3) 0 75%, transparent 0) 0 0 / 30px 30px, linear-gradient(135deg, #03301f, #0c7a4f); }
+.bn-retro-80 { background: repeating-linear-gradient(0deg, rgba(255,40,200,.55) 0 2px, transparent 2px 14px) 0 100% / 100% 45% no-repeat, linear-gradient(180deg, #ff8a3d 0, #ff3d8b 45%, #2a0a4a 46%, #12002a); }
+.bn-synthwave { background: repeating-linear-gradient(180deg, transparent 0 7px, #1a0533 7px 10px) 88% 30% / 64px 64px no-repeat, radial-gradient(circle at 50% 50%, #ffe14d 0 40%, #ff5f8f 70%, transparent 71%) 88% 30% / 92px 92px no-repeat, linear-gradient(#1a0533, #3d0b6b); }
+.bn-tartan { background: repeating-linear-gradient(90deg, rgba(0,60,20,.6) 0 10px, transparent 10px 30px), repeating-linear-gradient(0deg, rgba(0,60,20,.6) 0 10px, transparent 10px 30px), repeating-linear-gradient(90deg, transparent 0 14px, rgba(255,220,120,.35) 14px 16px, transparent 16px 30px), #8f1020; }
+.bn-pied-de-poule { background: linear-gradient(90deg, rgba(5,10,8,.78) 0, rgba(5,10,8,.55) 45%, transparent 80%), conic-gradient(#1c1c1c 25%, #8d877b 0 50%, #1c1c1c 0 75%, #8d877b 0) 0 0 / 12px 12px, #1c1c1c; }
+.bn-bayadere { background: linear-gradient(90deg, rgba(5,10,8,.78) 0, rgba(5,10,8,.55) 45%, transparent 80%), repeating-linear-gradient(180deg, #e63946 0 8px, #f1a208 8px 16px, #2a9d8f 16px 24px, #264653 24px 32px, #e9c46a 32px 40px); }
+.bn-mosaique { background: linear-gradient(90deg, rgba(5,10,8,.78) 0, rgba(5,10,8,.55) 45%, transparent 80%), conic-gradient(#e76f51 0 25%, #2a9d8f 0 50%, #e9c46a 0 75%, #264653 0) 0 0 / 22px 22px; }
+.bn-ondes { background: repeating-radial-gradient(circle at 15% 50%, rgba(255,255,255,.14) 0 2px, transparent 2px 13px), linear-gradient(135deg, #0b2e4a, #1f6f8b); }
+.bn-eclair { background: linear-gradient(115deg, transparent 70%, #ffe14d 70% 72.5%, transparent 72.5% 77%, #ffe14d 77% 79.5%, transparent 79.5%), linear-gradient(135deg, #0a1030, #24306b); }
+.bn-roue { background: repeating-conic-gradient(from 0deg at 92% 50%, #b3262f 0 9.7deg, #17191d 0 19.4deg), #17191d; }
+.bn-des { background: linear-gradient(90deg, rgba(5,10,8,.78) 0, rgba(5,10,8,.55) 45%, transparent 80%), radial-gradient(rgba(255,255,255,.7) 2.4px, transparent 3px) 0 0 / 16px 16px, radial-gradient(rgba(255,255,255,.7) 2.4px, transparent 3px) 8px 8px / 16px 16px, linear-gradient(135deg, #8f0f1c, #d1263a); }
+.bn-tapis-rouge { background: linear-gradient(90deg, transparent 0 6px, #d8b26a 6px 8px, transparent 8px calc(100% - 8px), #d8b26a calc(100% - 8px) calc(100% - 6px), transparent 0), radial-gradient(ellipse at 50% 0%, rgba(255,255,255,.2), transparent 60%), linear-gradient(135deg, #4a0008, #9e0f1f 50%, #5a000c); }
+.fr-argent-poli::before { background: linear-gradient(135deg, #ffffff, #9aa3ad 50%, #e6eaee); }
+.fr-bronze-antique::before { background: linear-gradient(135deg, #f0b98a, #8a4f24 60%, #c98b5a); }
+.fr-cuivre::before { background: linear-gradient(135deg, #ffcfa8, #b5532a 60%, #e88a5a); }
+.fr-jade-imperial::before { background: linear-gradient(135deg, #c8ffe2, #1f8a5a 60%, #63d39b); } .fr-jade-imperial { box-shadow: 0 0 12px rgba(31,138,90,.55); }
+.fr-amethyste::before { background: linear-gradient(135deg, #f0d6ff, #7b2fbf 60%, #b77ae8); } .fr-amethyste { box-shadow: 0 0 12px rgba(123,47,191,.55); }
+.fr-grenat::before { background: linear-gradient(135deg, #ffb3c0, #7a0f24 60%, #c43a57); } .fr-grenat { box-shadow: 0 0 12px rgba(196,58,87,.5); }
+.fr-citrine::before { background: linear-gradient(135deg, #fff6c2, #d9a400 60%, #ffd84d); } .fr-citrine { box-shadow: 0 0 12px rgba(217,164,0,.5); }
+.fr-opale::before { background: conic-gradient(#ffe3f1, #d6f5ff, #e9ffd9, #fff4cc, #f0e1ff, #ffe3f1); animation: spin 4s linear infinite; } .fr-opale { box-shadow: 0 0 12px rgba(255,255,255,.5); }
+.fr-neon-rose::before { background: linear-gradient(135deg, #ff7ad9, #ff2fb9); } .fr-neon-rose { box-shadow: 0 0 12px rgba(255,47,185,.85); }
+.fr-neon-cyan::before { background: linear-gradient(135deg, #7af5ff, #00c8ff); } .fr-neon-cyan { box-shadow: 0 0 12px rgba(0,200,255,.85); }
+.fr-galaxie::before { background: conic-gradient(#2a0a5e, #7a3cff, #ff5fd2, #2a0a5e, #3cc8ff, #2a0a5e); animation: spin 4s linear infinite; } .fr-galaxie { box-shadow: 0 0 12px rgba(122,60,255,.6); }
+.fr-arc-or::before { background: repeating-conic-gradient(#ffe08a 0 12deg, #8a6420 12deg 18deg); } .fr-arc-or { box-shadow: 0 0 12px rgba(233,196,106,.45); }
+.fr-pointilles::before { background: repeating-conic-gradient(#f2eee3 0 8deg, transparent 8deg 16deg); }
+.fr-electrique::before { background: conic-gradient(#fff36b, #3b7bff, #fff36b, #3b7bff, #fff36b); animation: spin 4s linear infinite; } .fr-electrique { box-shadow: 0 0 12px rgba(80,140,255,.7); }
 /* season number sits above the banner art but under the player info */
 [class*="bn-s"] > * { position: relative; z-index: 1; }
 .sw[class*="bn-s"]::before { font-size: 2.4em; }
