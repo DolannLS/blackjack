@@ -577,6 +577,13 @@ body::before { content: ""; position: fixed; inset: 0; pointer-events: none; bac
 .fr-couronne::before { background: linear-gradient(135deg, #fff3c4, #e9c46a 40%, #8a6420); }
 .fr-couronne::after { content: "♛"; position: absolute; top: -.95em; left: 50%; transform: translateX(-50%); font-size: .8em; color: #f2cf6b; text-shadow: 0 1px 2px rgba(0,0,0,.6); }
 @keyframes spin { to { transform: rotate(360deg); } }
+.table-return { flex: none; position: relative; z-index: 5; display: flex; align-items: center; gap: 8px; margin: 2px 0 6px; padding: 6px 10px; border-radius: 12px; background: rgba(8,38,29,.9); border: 1px solid rgba(216,178,106,.45); color: var(--ink, #fff); text-decoration: none; font-size: 12.5px; animation: tr-in .35s cubic-bezier(.3,1.4,.5,1) both; }
+.table-return > span:nth-child(2) { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.table-return small { color: var(--muted, #aab); font-size: 11.5px; }
+.table-return .tr-go { color: var(--brass, #d8b26a); font-weight: 700; white-space: nowrap; }
+.table-return .tr-dot { width: 9px; height: 9px; flex: none; border-radius: 50%; background: #5fd38a; box-shadow: 0 0 0 0 rgba(95,211,138,.6); animation: tr-pulse 1.6s ease-out infinite; }
+@keyframes tr-in { from { opacity: 0; transform: translateY(-6px); } }
+@keyframes tr-pulse { to { box-shadow: 0 0 0 8px rgba(95,211,138,0); } }
 
 /* banners */
 .pcard { position: relative; isolation: isolate; overflow: hidden; display: grid; grid-template-columns: auto 1fr auto; gap: 14px; align-items: center; padding: 16px; border-radius: 18px; border: 1px solid rgba(255,255,255,.14); color: #fff; min-height: 64px; }
@@ -680,7 +687,24 @@ body::before { content: ""; position: fixed; inset: 0; pointer-events: none; bac
       `<a href="${href === "#jeux" ? lastGame() : href}"${href === "#jeux" ? ' data-games="1"' : ""}${re.test(page) ? ' aria-current="page"' : ""}><svg viewBox="0 0 24 24" aria-hidden="true">${ICONS[icon]}</svg>${label}</a>`).join("");
     nav.querySelector("[data-games]").addEventListener("click", e => { e.preventDefault(); openGames(); });
     app.appendChild(nav);
+    mountTableReturn(app);
     animateBank();
+  }
+
+  // an online poker seat is kept while browsing the other pages: a pill leads back to the table
+  function mountTableReturn(app) {
+    if (page === "online.html") return;
+    let t = null;
+    try { t = JSON.parse(localStorage.getItem("online.table") || "null"); } catch (e) {}
+    if (!t || !t.code || Date.now() - (t.at || 0) > 12 * 3600e3) return;
+    const a = document.createElement("a");
+    a.className = "table-return";
+    a.href = "online.html";
+    a.innerHTML = `<span class="tr-dot" aria-hidden="true"></span><span><b>Poker en ligne en cours</b> <small>· ${t.role === "host"
+      ? "ta table est en pause sans toi"
+      : "ta place est gardée"}</small></span><span class="tr-go">Revenir ›</span>`;
+    const bar = app.querySelector(".bar");
+    if (bar) bar.after(a); else app.prepend(a);
   }
 
   // the balance counts up or down instead of jumping
