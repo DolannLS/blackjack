@@ -321,11 +321,11 @@ button:disabled { opacity: .35; cursor: default; }
 .deckinfo i { width: 11px; height: 15px; border-radius: 2px; background: repeating-linear-gradient(45deg, transparent 0 2px, rgba(216,178,106,.45) 2px 3px), #7a1f2b; border: 1px solid var(--card); flex: none; }
 /* oval poker table: board in the middle, opponents around the rail, you below */
 .ptable { position: relative; flex: 1 1 auto; min-height: 230px; margin-top: 4px; }
-.ptable .oval { position: absolute; left: 4%; right: 4%; top: 15%; bottom: 13%; border-radius: 50% / 50%;
+.ptable .oval { position: absolute; left: 4%; right: 4%; top: 20%; bottom: 5%; border-radius: 50% / 50%;
   background: radial-gradient(ellipse at 50% 40%, #17785c 0%, #0f5a45 55%, #0a3f31 100%);
   box-shadow: 0 0 0 7px #4a2412, 0 0 0 9px #8a5a2b, 0 0 0 10px rgba(216,178,106,.55), 0 14px 30px rgba(0,0,0,.45), inset 0 0 40px rgba(0,0,0,.35); }
 .ptable .oval::after { content: ""; position: absolute; inset: 9%; border-radius: 50%; border: 1.5px solid rgba(216,178,106,.28); }
-.pcenter { position: absolute; left: 50%; top: 53%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 6px; z-index: 1; }
+.pcenter { position: absolute; left: 50%; top: 58%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 6px; z-index: 1; }
 .pcenter .board { gap: 4px; }
 .pcenter .board .card { --cw: min(11.5vw, 7.4dvh, 64px); }
 .pseat { position: absolute; z-index: 2; transform: translate(-50%, -50%); width: 96px; display: flex; flex-direction: column; align-items: center; gap: 3px; }
@@ -377,12 +377,12 @@ button:disabled { opacity: .35; cursor: default; }
   .pseat .ps-box { padding: 7px 4px 3px; border-radius: 10px; }
   .pseat .ps-box b { font-size: 12px; }
   .pseat .ps-box span, .pseat .ps-act { font-size: 11px; }
-  .pcenter { gap: 4px; top: 57%; }
+  .pcenter { gap: 4px; top: 55%; }
   .pseat:not(.faceup) .ps-cards { display: none; }
   .pcenter .deckinfo { display: none; }
   .pseat:not(.faceup) .ps-box { padding-top: 5px; }
   .pcenter .board .card { --cw: min(9.6vw, 6.2dvh, 56px); }
-  .ptable .oval { top: 12%; bottom: 10%; }
+  .ptable .oval { top: 17%; bottom: 4%; }
 }
 @media (min-width: 700px) and (min-height: 500px) { .pseat { width: 120px; } .pseat .ps-cards .card { --cw: 36px; } .pseat .ps-box b { font-size: 15px; } .pcenter .board .card { --cw: min(8vw, 9dvh, 92px); } }
 .board-wrap { display: flex; flex-direction: column; align-items: center; gap: 8px; }
@@ -1239,8 +1239,8 @@ button:disabled { opacity: .35; cursor: default; }
     const n = v.seats.length, others = [];
     for (let k = 1; k < n; k++) others.push((v.you + k) % n);
     const SPOTS = {
-      lb: [13, 75, "left"], lt: [13, 31, "left"], t: [50, 0, "top"], rt: [87, 31, "right"], rb: [87, 75, "right"],
-      tl: [28, 0, "top"], tr: [72, 0, "top"]
+      lb: [13, 79, "left"], lt: [13, 37, "left"], t: [50, 2, "top"], rt: [87, 37, "right"], rb: [87, 79, "right"],
+      tl: [28, 4, "top"], tr: [72, 4, "top"]
     };
     const LAYOUT = { 1: ["t"], 2: ["tl", "tr"], 3: ["lt", "t", "rt"], 4: ["lb", "lt", "rt", "rb"], 5: ["lb", "lt", "t", "rt", "rb"] };
     const spots = LAYOUT[others.length] || [];
