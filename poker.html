@@ -291,6 +291,55 @@ button:disabled { opacity: .35; cursor: default; }
   .game { gap: 4px; }
   .app { gap: 6px; }
 }
+/* oval poker table: board in the middle, opponents around the rail, you below */
+.ptable { position: relative; flex: 1 1 auto; min-height: 230px; margin-top: 4px; }
+.ptable .oval { position: absolute; left: 4%; right: 4%; top: 20%; bottom: 5%; border-radius: 50% / 50%;
+  background: radial-gradient(ellipse at 50% 40%, #17785c 0%, #0f5a45 55%, #0a3f31 100%);
+  box-shadow: 0 0 0 7px #4a2412, 0 0 0 9px #8a5a2b, 0 0 0 10px rgba(216,178,106,.55), 0 14px 30px rgba(0,0,0,.45), inset 0 0 40px rgba(0,0,0,.35); }
+.ptable .oval::after { content: ""; position: absolute; inset: 9%; border-radius: 50%; border: 1.5px solid rgba(216,178,106,.28); }
+.pcenter { position: absolute; left: 50%; top: 58%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 6px; z-index: 1; }
+.pcenter .board { gap: 4px; }
+.pcenter .board .card { --cw: min(11.5vw, 7.4dvh, 64px); }
+.pseat { position: absolute; z-index: 2; transform: translate(-50%, -50%); width: 96px; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.pseat .ps-cards { display: flex; height: calc(var(--cw) * 1.4); --cw: 26px; margin-bottom: -10px; z-index: 1; }
+.pseat .ps-cards .card { --cw: 26px; }
+.pseat .ps-cards .card + .card { margin-left: -9px; transform: rotate(7deg); }
+.pseat .ps-cards .card:first-child { transform: rotate(-7deg); }
+.pseat .ps-box { width: 100%; box-sizing: border-box; padding: 9px 6px 5px; border-radius: 12px; background: rgba(4,22,17,.88); border: 1.5px solid rgba(216,178,106,.25); text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,.4); }
+.pseat .ps-box b { display: block; font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pseat .ps-box span { display: block; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.pseat .ps-act { font-size: 11.5px; font-weight: 700; color: var(--brass); min-height: 14px; max-width: 110px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pseat .ps-act.hn { color: var(--ink); }
+.pseat .ps-off { font-size: 10.5px; color: var(--lose); font-weight: 700; }
+.pseat.active .ps-box { border-color: var(--brass); box-shadow: 0 0 0 2px rgba(216,178,106,.35), 0 4px 12px rgba(0,0,0,.4); }
+.pseat.active .ps-box b::after { content: ""; display: inline-block; width: 6px; height: 6px; margin-left: 4px; border-radius: 50%; background: var(--brass); vertical-align: middle; animation: blink 1s infinite; }
+.pseat.out { opacity: .45; }
+.pseat.winner .ps-box { border-color: var(--win); box-shadow: 0 0 16px rgba(127,217,154,.45); }
+.pseat .dbtn { top: auto; bottom: 8px; right: -8px; }
+.pseat .betchip { position: absolute; left: 50%; transform: translateX(-50%); white-space: nowrap; background: rgba(3,16,12,.9); box-shadow: 0 2px 6px rgba(0,0,0,.4); }
+.pseat[data-at="top"] { transform: translate(-50%, 0); }
+.pseat[data-at="top"] .betchip { top: calc(100% + 4px); }
+.pseat[data-at="bottom"] .betchip { bottom: calc(100% + 2px); }
+.pseat[data-at="left"] .betchip { left: calc(100% + 4px); transform: none; top: 50%; }
+.pseat[data-at="right"] .betchip { left: auto; right: calc(100% + 4px); transform: none; top: 50%; }
+.pseat .betchip:empty { display: none; }
+@media (max-height: 760px) { .pseat { width: 86px; } .pseat .ps-cards .card { --cw: 22px; } .pseat .ps-box { padding: 8px 5px 4px; } .pcenter .board .card { --cw: min(10.5vw, 6.6dvh, 60px); } }
+@media (max-height: 700px) {
+  .pseat { width: 80px; gap: 1px; }
+  .pseat .ps-cards .card { --cw: 17px; }
+  .pseat .ps-cards { margin-bottom: -7px; }
+  .pseat .ps-cards .card + .card { margin-left: -6px; }
+  .pseat .ps-box { padding: 7px 4px 3px; border-radius: 10px; }
+  .pseat .ps-box b { font-size: 12px; }
+  .pseat .ps-box span, .pseat .ps-act { font-size: 11px; }
+  .pcenter { gap: 4px; top: 55%; }
+  .pseat:not(.faceup) .ps-cards { display: none; }
+  .pcenter .deckinfo { display: none; }
+  .pseat:not(.faceup) .ps-box { padding-top: 5px; }
+  .pcenter .board .card { --cw: min(9.6vw, 6.2dvh, 56px); }
+  .ptable .oval { top: 17%; bottom: 4%; }
+}
+@media (min-width: 700px) and (min-height: 500px) { .pseat { width: 120px; } .pseat .ps-cards .card { --cw: 36px; } .pseat .ps-box b { font-size: 15px; } .pcenter .board .card { --cw: min(8vw, 9dvh, 92px); } }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; }
 }
@@ -332,10 +381,14 @@ button:disabled { opacity: .35; cursor: default; }
 
   <!-- Texas Hold'em -->
   <section class="game" id="holdem">
-    <div class="bots" id="bots"></div>
-    <div class="center">
-      <div class="potrow"><div class="pot">Pot<b id="pot">0</b></div><div class="deckinfo" id="deckInfo"></div></div>
-      <div class="board" id="board"></div>
+    <div class="ptable">
+      <div class="oval" aria-hidden="true"></div>
+      <div class="pcenter">
+        <div class="pot">Pot<b id="pot">0</b></div>
+        <div class="board" id="board"></div>
+        <div class="deckinfo" id="deckInfo"></div>
+      </div>
+      <div id="bots"></div>
     </div>
     <div class="msg-wrap"><div class="msg" id="hMsg" role="status" aria-live="polite"></div></div>
     <div class="me" id="me"></div>
@@ -780,16 +833,17 @@ button:disabled { opacity: .35; cursor: default; }
   function renderHoldem() {
     const reveal = H.phase === "done" || H.phase === "showdown";
     const winners = new Set(H.players.filter(p => reveal && p.win > 0));
+    // the three bots sit around the oval table, left, across and right
+    const SPOTS = [[13, 37, "left"], [50, 2, "top"], [87, 37, "right"]];
     $("bots").innerHTML = H.players.slice(1).map((p, k) => {
-      const i = k + 1;
+      const i = k + 1, [x, y, at] = SPOTS[k];
       const showFace = p.shown;
       const cards = p.hole.length ? p.hole.map(c => cardHTML(c, { hidden: !showFace, cls: showFace && p.eval && !p.eval.cards.includes(c) ? "dim" : "" })).join("") : `<div class="card slot"></div><div class="card slot"></div>`;
-      const act = showFace && p.eval ? `<div class="act hn">${handName(p.eval)}</div>` : `<div class="act">${p.win && reveal ? "+" + fmt(p.win) : p.last}</div>`;
-      const cls = ["seat", H.active === i ? "active" : "", p.folded ? "out" : "", winners.has(p) ? "winner" : ""].join(" ");
-      return `<div class="${cls}">${H.button === i && H.phase !== "idle" ? `<span class="dbtn">D</span>` : ""}
-        <div class="name">${p.name}</div>
-        <div class="mini">${cards}</div>
-        <div class="stack">${fmt(p.stack)}</div>
+      const act = showFace && p.eval ? `<div class="ps-act hn">${handName(p.eval)}</div>` : H.active === i ? `<div class="ps-act">…</div>` : `<div class="ps-act">${p.win && reveal ? "+" + fmt(p.win) : p.last}</div>`;
+      const cls = ["pseat", showFace ? "faceup" : "", H.active === i ? "active" : "", p.folded ? "out" : "", winners.has(p) ? "winner" : ""].join(" ");
+      return `<div class="${cls}" data-at="${at}" style="left:${x}%;top:${y}%">
+        <div class="ps-cards">${cards}</div>
+        <div class="ps-box">${H.button === i && H.phase !== "idle" ? `<span class="dbtn">D</span>` : ""}<b>${p.name}</b><span>${fmt(p.stack)}</span></div>
         ${act}
         <div class="betchip">${p.bet ? fmt(p.bet) : ""}</div></div>`;
     }).join("");
