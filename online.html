@@ -531,9 +531,10 @@ button:disabled { opacity: .35; cursor: default; }
   const RANK_PL = { 14: "As", 13: "Rois", 12: "Dames", 11: "Valets" };
   const rankTxt = r => RANK_TXT[r] || String(r);
   const rankPl = r => RANK_PL[r] || String(r);
+  // uniform random integer in [0, n): values that would favour some results are drawn again
   function rand(n) {
-    const a = new Uint32Array(1);
-    if (window.crypto && crypto.getRandomValues) crypto.getRandomValues(a); else a[0] = Math.random() * 2 ** 32;
+    const a = new Uint32Array(1), lim = Math.floor(2 ** 32 / n) * n;
+    do { if (window.crypto && crypto.getRandomValues) crypto.getRandomValues(a); else a[0] = Math.random() * 2 ** 32; } while (a[0] >= lim);
     return a[0] % n;
   }
   let uid = 0;

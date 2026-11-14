@@ -104,6 +104,7 @@ button:disabled { opacity: .35; cursor: default; }
 .toggle { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px; border-radius: 12px; background: var(--glass); font-size: 14.5px; }
 .toggle small { display: block; color: var(--muted); font-size: 12.5px; margin-top: 2px; }
 .toggle input { width: 46px; height: 28px; accent-color: var(--brass); flex: none; }
+.toggle select { flex: none; height: 36px; padding: 0 10px; border-radius: 10px; border: 1px solid var(--felt-line); background: rgba(0,0,0,.25); color: var(--ink); font: inherit; font-size: 14px; }
 .zone-head { display: flex; align-items: center; gap: 8px; min-height: 26px; }
 .total {
   min-width: 34px; height: 26px; padding: 0 9px; box-sizing: border-box;
@@ -350,9 +351,12 @@ button:disabled { opacity: .35; cursor: default; }
       </button>
     </div>
     <div class="stats" id="stats"></div>
-    <label class="toggle"><span>Aide au comptage (Hi-Lo)<small>Affiche le compte des cartes sorties pour savoir quand miser plus.</small></span><input type="checkbox" id="countToggle"></label>
+    <label class="toggle"><span>Aide au comptage<small>Affiche le compte des cartes sorties pour savoir quand miser plus.</small></span><input type="checkbox" id="countToggle"></label>
+    <div class="toggle count-sys"><span>Méthode de comptage<small id="countSysText"></small></span>
+      <select id="countSys" aria-label="Méthode de comptage"><option value="perso">+1 / 0 / −1</option><option value="hilo">Hi-Lo</option></select></div>
     <ul class="rules">
-      <li>Sabot de 6 jeux (312 cartes), remélangé quand il reste un quart des cartes : le repère rouge sur la jauge.</li>
+      <li>Sabot de 6 jeux (312 cartes), remélangé quand il reste un quart des cartes : le repère rouge sur la jauge. La première carte après le mélange est brûlée.</li>
+      <li>Le sabot est gardé quand tu changes de page ou fermes l'app : le compte continue, et une main commencée reprend là où elle s'est arrêtée.</li>
       <li>Blackjack payé 3 pour 2, le croupier reste sur 17.</li>
       <li>Doubler sur deux cartes, séparer jusqu'à 4 mains. As séparés : une carte chacun.</li>
     </ul>
@@ -375,38 +379,65 @@ button:disabled { opacity: .35; cursor: default; }
     dealer: [], hole: true, hands: [], active: 0, busy: false,
     stats: { played: 0, won: 0, lost: 0, push: 0, bj: 0, best: START }
   };
+  let savedHand = null;
   try {
     const saved = JSON.parse(localStorage.getItem(KEY) || "null");
-    if (saved) { S.bankroll = saved.bankroll; S.lastBet = saved.lastBet || 0; Object.assign(S.stats, saved.stats); }
+    if (saved) { S.bankroll = saved.bankroll; S.lastBet = saved.lastBet || 0; Object.assign(S.stats, saved.stats); savedHand = saved.hand; }
   } catch (e) {}
-  const save = () => { try { localStorage.setItem(KEY, JSON.stringify({ bankroll: S.bankroll, lastBet: S.lastBet, stats: S.stats })); } catch (e) {} };
+  // the table is saved after every card, so leaving the page never undoes a hand nor reshuffles the shoe
+  const SHOE_KEY = "bj.shoe.v1";
+  const save = () => {
+    const live = S.phase === "play" || S.phase === "dealer";
+    try {
+      localStorage.setItem(KEY, JSON.stringify({ bankroll: S.bankroll, lastBet: S.lastBet, stats: S.stats,
+        hand: live ? { phase: S.phase, dealer: S.dealer, hole: S.hole, hands: S.hands, active: S.active } : null }));
+      localStorage.setItem(SHOE_KEY, JSON.stringify({ shoe, cut, uid, out, counted: [...counted] }));
+    } catch (e) {}
+  };
 
   // shoe
   let shoe = [], cut = 0, uid = 0;
-  // Hi-Lo: 2 to 6 count +1, 7 to 9 count 0, tens and aces count -1
-  let running = 0;
+  // card counting: 2 to 6 count +1 and court cards and aces count -1.
+  // « perso »: 7 to 10 count 0 (the player's own method); « hilo »: 7 to 9 count 0 and tens count -1.
+  let running = 0, seenN = 0, out = []; // out: ranks of the cards counted since the shuffle
   const counted = new Set();
-  const hilo = c => ("23456".includes(c.r) ? 1 : c.r === "10" || "JQKA".includes(c.r) ? -1 : 0);
+  const COUNTS = {
+    perso: { name: "+1 / 0 / −1", text: "2 à 6 : +1 · 7 à 10 : 0 · Valet à As : −1", drift: 4 / 52 },
+    hilo: { name: "Hi-Lo", text: "2 à 6 : +1 · 7 à 9 : 0 · 10 à As : −1", drift: 0 }
+  };
+  let countSys = "perso";
+  try { if (COUNTS[localStorage.getItem("bj.countSys")]) countSys = localStorage.getItem("bj.countSys"); } catch (e) {}
+  const tag = c => "23456".includes(c.r) ? 1 : "JQKA".includes(c.r) || (c.r === "10" && countSys === "hilo") ? -1 : 0;
   let showCount = false;
   try { showCount = localStorage.getItem("bj.count") === "1"; } catch (e) {}
+  // uniform random integer in [0, n): values that would favour some results are drawn again
   function rand(n) {
-    const a = new Uint32Array(1);
-    (window.crypto || {}).getRandomValues ? crypto.getRandomValues(a) : (a[0] = Math.random() * 2 ** 32);
+    const a = new Uint32Array(1), lim = Math.floor(2 ** 32 / n) * n;
+    do { (window.crypto || {}).getRandomValues ? crypto.getRandomValues(a) : (a[0] = Math.random() * 2 ** 32); } while (a[0] >= lim);
     return a[0] % n;
   }
+  function recount() { running = out.reduce((a, r) => a + tag({ r }), 0); seenN = out.length; }
   function newShoe() {
-    running = 0; counted.clear();
+    running = 0; seenN = 0; out = []; counted.clear();
     shoe = [];
     for (let d = 0; d < DECKS; d++) for (const s of SUITS) for (const r of RANKS) shoe.push({ r, s });
     for (let i = shoe.length - 1; i > 0; i--) { const j = rand(i + 1); [shoe[i], shoe[j]] = [shoe[j], shoe[i]]; }
     cut = Math.floor(shoe.length * 0.25);
+    shoe.pop(); // like in a casino, the first card after the shuffle is burnt face down
   }
   let reshuffled = false;
   function draw() {
     if (shoe.length <= cut) { newShoe(); reshuffled = true; }
     return { ...shoe.pop(), id: ++uid };
   }
-  newShoe();
+  try {
+    const sv = JSON.parse(localStorage.getItem(SHOE_KEY) || "null");
+    if (sv && Array.isArray(sv.shoe) && sv.shoe.length > sv.cut && sv.shoe.length <= DECKS * 52) {
+      shoe = sv.shoe; cut = sv.cut; uid = sv.uid || 0; out = Array.isArray(sv.out) ? sv.out : [];
+      (sv.counted || []).forEach(id => counted.add(id));
+      recount();
+    } else newShoe();
+  } catch (e) { newShoe(); }
 
   const rv = c => c.r === "A" ? 11 : "JQK".includes(c.r) ? 10 : +c.r;
   function value(cards) {
@@ -440,18 +471,20 @@ button:disabled { opacity: .35; cursor: default; }
   function renderShoe() {
     // count every card that is face up on the table
     const up = S.dealer.filter((c, i) => !(i === 1 && S.hole)).concat(...S.hands.map(h => h.cards));
-    up.forEach(c => { if (!counted.has(c.id)) { counted.add(c.id); running += hilo(c); } });
+    up.forEach(c => { if (!counted.has(c.id)) { counted.add(c.id); running += tag(c); seenN++; out.push(c.r); } });
     const total = DECKS * 52, left = shoe.length, beforeShuffle = Math.max(0, left - cut);
     const decksLeft = Math.max(.25, left / 52);
     const trueCount = running / decksLeft;
+    // with tens counted 0, the count climbs by about 4 per deck on its own: advice uses the count minus that drift
+    const edge = (running - seenN * COUNTS[countSys].drift) / decksLeft;
     const tc = (Math.round(trueCount * 10) / 10).toLocaleString("fr-FR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
     $("shoebar").innerHTML = `<div class="shoe" title="Sabot de ${DECKS} jeux">
         <span class="shoe-ico" aria-hidden="true"><i></i><i></i><i></i></span>
         <span><b>${left}</b> cartes · mélange dans <b>${beforeShuffle}</b></span>
         <span class="shoe-meter" aria-hidden="true"><i style="width:${left / total * 100}%"></i><u style="left:${cut / total * 100}%"></u></span>
       </div>
-      ${showCount ? `<div class="count" aria-label="Comptage Hi-Lo"><span class="${running > 0 ? "hot" : running < 0 ? "cold" : ""}">Compte ${running > 0 ? "+" : ""}${running}</span><span class="${trueCount >= 2 ? "hot" : trueCount <= -1 ? "cold" : ""}" title="Compte divisé par les jeux restants (${(Math.round(decksLeft * 10) / 10).toLocaleString("fr-FR")})">Réel ${trueCount > 0 ? "+" : ""}${tc}</span></div>` : ""}`;
-    $("shoebar").title = showCount ? (trueCount >= 2 ? "Compte réel élevé : il reste beaucoup de 10 et d'As, c'est le moment de miser plus." : trueCount <= -1 ? "Compte réel négatif : il reste surtout des petites cartes, mise le minimum." : "Compte neutre.") : "";
+      ${showCount ? `<div class="count" aria-label="Comptage ${COUNTS[countSys].name}"><span class="${edge >= 1 ? "hot" : edge <= -1 ? "cold" : ""}">Compte ${running > 0 ? "+" : ""}${running}</span><span class="${edge >= 2 ? "hot" : edge <= -1 ? "cold" : ""}" title="Compte divisé par les jeux restants (${(Math.round(decksLeft * 10) / 10).toLocaleString("fr-FR")})">Réel ${trueCount > 0 ? "+" : ""}${tc}</span></div>` : ""}`;
+    $("shoebar").title = showCount ? (edge >= 2 ? "Compte élevé : il reste beaucoup de figures et d'As, c'est le moment de miser plus." : edge <= -1 ? "Compte réel négatif : il reste surtout des petites cartes, mise le minimum." : "Compte neutre.") : "";
   }
 
   let lastBank = S.bankroll;
@@ -543,8 +576,8 @@ button:disabled { opacity: .35; cursor: default; }
     const p = $("pile"); if (p) p.classList.add("drop");
   }
 
-  async function give(h) { h.cards.push(draw()); render(); await sleep(T); }
-  async function giveD() { S.dealer.push(draw()); render(); await sleep(T); }
+  async function give(h) { h.cards.push(draw()); render(); save(); await sleep(T); }
+  async function giveD() { S.dealer.push(draw()); render(); save(); await sleep(T); }
 
   async function deal() {
     if (S.busy) return;
@@ -561,11 +594,18 @@ button:disabled { opacity: .35; cursor: default; }
     S.bankroll -= S.bet;
     S.hands = [{ cards: [], bet: S.bet, split: false, result: null }];
     S.bet = 0; S.dealer = []; S.hole = true; S.active = 0; S.phase = "play";
+    save();
     reshuffled = false;
     say("");
     render();
+    await dealRest();
+  }
+  // deals the starting cards still missing (player, dealer, player, dealer), then checks for blackjacks
+  async function dealRest() {
     const h = S.hands[0];
-    await give(h); await giveD(); await give(h); await giveD();
+    while (h.cards.length < 2 || S.dealer.length < 2) {
+      if (h.cards.length <= S.dealer.length) await give(h); else await giveD();
+    }
     if (reshuffled) say(showCount ? "Nouveau sabot mélangé · le compte repart à 0" : "Nouveau sabot mélangé");
     const dBJ = value(S.dealer).t === 21;
     if (isBJ(h) || dBJ) { await reveal(); settle(); return; }
@@ -592,6 +632,7 @@ button:disabled { opacity: .35; cursor: default; }
     if (S.busy || S.phase !== "play" || h.cards.length !== 2 || S.bankroll < h.bet) return;
     S.busy = true;
     S.bankroll -= h.bet; h.bet *= 2; h.doubled = true;
+    save();
     await give(h);
     await next();
   }
@@ -603,6 +644,7 @@ button:disabled { opacity: .35; cursor: default; }
     const moved = h.cards.pop();
     h.split = true; h.aces = h.cards[0].r === "A";
     S.hands.splice(S.active + 1, 0, { cards: [moved], bet: h.bet, split: true, aces: moved.r === "A", result: null });
+    save();
     render();
     await sleep(T);
     await give(h);
@@ -621,6 +663,10 @@ button:disabled { opacity: .35; cursor: default; }
       S.busy = false; render(); return;
     }
     S.phase = "dealer";
+    save();
+    await dealerPlays();
+  }
+  async function dealerPlays() {
     await reveal();
     if (S.hands.some(h => value(h.cards).t <= 21 && !isBJ(h))) {
       while (value(S.dealer).t < 17) await giveD();
@@ -677,6 +723,16 @@ button:disabled { opacity: .35; cursor: default; }
   $("menuBtn").onclick = () => { renderStats(); $("menu").hidden = false; };
   $("closeMenu").onclick = () => { $("menu").hidden = true; };
   $("menu").onclick = e => { if (e.target.id === "menu") $("menu").hidden = true; };
+  $("countSys").value = countSys;
+  $("countSysText").textContent = COUNTS[countSys].text;
+  $("countSys").onchange = e => {
+    // switching method recounts every card already out of this shoe
+    countSys = e.target.value;
+    try { localStorage.setItem("bj.countSys", countSys); } catch (err) {}
+    $("countSysText").textContent = COUNTS[countSys].text;
+    recount();
+    render();
+  };
   $("countToggle").checked = showCount;
   $("countToggle").onchange = e => {
     showCount = e.target.checked;
@@ -727,7 +783,20 @@ button:disabled { opacity: .35; cursor: default; }
   window.addEventListener("pageshow", e => { if (e.persisted) location.reload(); });
 
   say(S.bankroll < 5 ? "Plus de jetons. Rechargez pour rejouer." : "Faites vos jeux");
-  render();
+  // a hand left unfinished on another page picks up where it stopped
+  if (savedHand && Array.isArray(savedHand.hands) && savedHand.hands.length) {
+    Object.assign(S, { phase: savedHand.phase, dealer: savedHand.dealer || [], hole: savedHand.hole !== false,
+      hands: savedHand.hands, active: savedHand.active || 0, busy: false });
+    say("Main en cours reprise");
+    if (S.phase === "dealer") { S.busy = true; render(); dealerPlays(); }
+    else if (S.dealer.length < 2) { S.busy = true; render(); dealRest(); }
+    else {
+      const h = cur();
+      if (!h) { S.phase = "dealer"; S.busy = true; render(); dealerPlays(); }
+      else if (h.cards.length < 2 || h.aces && h.cards.length >= 2 || value(h.cards).t >= 21) { S.busy = true; S.active--; render(); next(); }
+      else render();
+    }
+  } else render();
 })();
 </script>
 <script src="app.js"></script>

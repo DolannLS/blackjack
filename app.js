@@ -1477,12 +1477,12 @@ body::before { content: ""; position: fixed; inset: 0; pointer-events: none; bac
           <tr><td>Égalité</td><td>mise rendue</td><td>0</td></tr>
           <tr><td>Tu sautes ou tu perds</td><td>mise perdue</td><td>−20</td></tr></table>`],
         ["Le sabot et le comptage des cartes", `<p>Les cartes viennent d'un sabot de 6 jeux (312 cartes). La barre en haut de la table montre les cartes restantes et combien avant le mélange : le sabot est remélangé quand il n'en reste qu'un quart (repère rouge).</p>
-          <p>Les cartes déjà sorties ne reviennent pas avant le mélange : compter les cartes permet de savoir ce qu'il reste. Avec la méthode <b>Hi-Lo</b> :</p>
-          <table class="hpay"><tr><td>${cards("2♠ 3♥ 4♦ 5♣ 6♠")}</td><td>+1</td></tr><tr><td>${cards("7♥ 8♣ 9♦")}</td><td>0</td></tr><tr><td>${cards("10♠ V♥ D♦ R♣ A♠")}</td><td>−1</td></tr></table>
+          <p>Les cartes déjà sorties ne reviennent pas avant le mélange, et le sabot est gardé quand tu changes de page : compter les cartes permet de savoir ce qu'il reste. Méthode <b>+1 / 0 / −1</b> (par défaut) :</p>
+          <table class="hpay"><tr><td>${cards("2♠ 3♥ 4♦ 5♣ 6♠")}</td><td>+1</td></tr><tr><td>${cards("7♥ 8♣ 9♦ 10♠")}</td><td>0</td></tr><tr><td>${cards("V♥ D♦ R♣ A♠")}</td><td>−1</td></tr></table>
           <ul><li>Additionne les valeurs de toutes les cartes vues : c'est le <b>compte</b>.</li>
           <li>Divise par le nombre de jeux restants : c'est le <b>compte réel</b>.</li>
-          <li>Compte réel de +2 ou plus : il reste beaucoup de 10 et d'As, les blackjacks sont plus fréquents. Mise plus gros.</li>
-          <li>Compte réel négatif : mise le minimum.</li></ul>
+          <li>Avec cette méthode, les 10 comptent 0 : il y a plus de cartes à +1 qu'à −1, donc le compte monte d'environ 4 par jeu même quand rien de spécial ne se passe. L'aide en tient compte pour colorer le compte : en vert, il reste plus de figures et d'As que d'habitude, mise plus gros ; en rouge, mise le minimum.</li>
+          <li>Tu peux aussi choisir la méthode <b>Hi-Lo</b> dans le menu ☰ : les 10 comptent alors −1, comme les figures.</li></ul>
           <p>Pour t'entraîner, active <b>Aide au comptage</b> dans le menu ☰ : le compte s'affiche en direct.</p>`],
         ["Astuces de base", `<ul>
           <li>Reste toujours à 17 ou plus.</li>
