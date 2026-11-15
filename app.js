@@ -359,6 +359,24 @@
     { id: "loup-du-tapis", kind: "title", name: "Loup du tapis", price: 800 },
     { id: "maitre-zen", kind: "title", name: "Maître zen", price: 350 },
     { id: "nuit-blanche", kind: "title", name: "Nuit blanche", price: 300 },
+    { id: "ft-vert", kind: "felt", name: "Feutre vert", price: 0 },
+    { id: "ft-bleu-nuit", kind: "felt", name: "Feutre bleu nuit", price: 400 },
+    { id: "ft-bordeaux", kind: "felt", name: "Feutre bordeaux", price: 400 },
+    { id: "ft-noir", kind: "felt", name: "Feutre noir", price: 500 },
+    { id: "ft-violet", kind: "felt", name: "Feutre violet", price: 450 },
+    { id: "ft-turquoise", kind: "felt", name: "Feutre turquoise", price: 450 },
+    { id: "ft-sable", kind: "felt", name: "Feutre sable", price: 350 },
+    { id: "ft-anthracite", kind: "felt", name: "Feutre anthracite", price: 400 },
+    { id: "ft-rose", kind: "felt", name: "Feutre rose", price: 350 },
+    { id: "ft-vegas", kind: "felt", name: "Néons de Las Vegas", price: 1200 },
+    { id: "ft-monaco", kind: "felt", name: "Salon de Monaco", price: 1500 },
+    { id: "ft-carbone", kind: "felt", name: "Fibre de carbone", price: 900 },
+    { id: "ft-marbre", kind: "felt", name: "Marbre et or", price: 1400 },
+    { id: "ft-large", kind: "felt", name: "Grand large", price: 800 },
+    { id: "ft-voie-lactee", kind: "felt", name: "Voie lactée", price: 1600 },
+    { id: "ft-damier", kind: "felt", name: "Damier royal", price: 700 },
+    { id: "ft-cuir", kind: "felt", name: "Cuir capitonné", price: 1000 },
+    { id: "ft-chene", kind: "felt", name: "Table en chêne", price: 600 },
     { id: "champion", kind: "title", name: "Champion de la semaine", price: null, how: "1ᵉʳ de la semaine, tant que tu le restes" }
   ];
   const STATIC = Object.fromEntries(SHOP.map(x => [x.id, x]));
@@ -502,6 +520,16 @@
     const src = safeUrl(photo);
     return `<span class="av ${size} fr-${escHTML(frame || "aucun")}${src ? " has-photo" : ""}">${src ? `<img src="${src}" alt="" loading="lazy" decoding="async">` : escHTML((name || "?")[0].toUpperCase())}</span>`;
   }
+  // the felt equipped by the player (kept offline in the cached profile)
+  const feltId = () => { const f = profile && profile.felt; return f && STATIC[f] && STATIC[f].kind === "felt" ? f : "ft-vert"; };
+  const feltHTML = id => `<div class="mini-felt ${escHTML(id || "ft-vert")}"><i>A<b>♠︎</b></i><i class="r">R<b>♥︎</b></i><i class="r">10<b>♦︎</b></i></div>`;
+  function applyFelt() {
+    const f = feltId();
+    document.querySelectorAll(".ptable .oval").forEach(el => {
+      [...el.classList].filter(c => c.startsWith("ft-")).forEach(c => el.classList.remove(c));
+      el.classList.add(f);
+    });
+  }
   function titleText(id) {
     const t = itemInfo(id);
     return t && t.kind === "title" && t.id !== "sans-titre" ? t.name : "";
@@ -559,7 +587,9 @@
     localHistory: () => read(HISTORY, []),
     onChange: f => { listeners.add(f); return () => listeners.delete(f); }
   };
-  window.CasinoUI = { cardHTML, avatarHTML, titleText, esc: escHTML };
+  window.CasinoUI = { cardHTML, avatarHTML, titleText, esc: escHTML, feltHTML, feltId, applyFelt };
+  listeners.add(() => applyFelt());
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", applyFelt); else applyFelt();
   window.addEventListener("online", flush);
   document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") flush(); });
   setTimeout(flush, 800);
@@ -1263,6 +1293,39 @@ body::before { content: ""; position: fixed; inset: 0; pointer-events: none; bac
 .fr-jeton::before { background: repeating-conic-gradient(#b3262f 0 20deg, #f2eee3 20deg 30deg); }
 .fr-fleur-cerisier::before { background: conic-gradient(#ffd1e0, #ff8fb4, #ffe8f0, #ff8fb4, #ffd1e0); } .fr-fleur-cerisier { box-shadow: 0 0 10px rgba(255,143,180,.5); }
 .fr-toxique::before { background: linear-gradient(135deg, #e4ff4d, #3cff2e); } .fr-toxique { box-shadow: 0 0 12px rgba(120,255,46,.75); }
+/* poker felts: the colour of the oval table in Texas Hold'em and online poker */
+.ft-vert { --ft: radial-gradient(ellipse at 50% 40%, #17785c 0%, #0f5a45 55%, #0a3f31 100%); }
+.ft-bleu-nuit { --ft: radial-gradient(ellipse at 50% 40%, #2a5ea6 0%, #183f78 55%, #0b2348 100%); }
+.ft-bordeaux { --ft: radial-gradient(ellipse at 50% 40%, #9a2840 0%, #6a1426 55%, #3e0914 100%); }
+.ft-noir { --ft: radial-gradient(ellipse at 50% 40%, #33363b 0%, #1c1e21 55%, #0b0c0d 100%); }
+.ft-violet { --ft: radial-gradient(ellipse at 50% 40%, #7447ad 0%, #4e2c7a 55%, #2c1747 100%); }
+.ft-turquoise { --ft: radial-gradient(ellipse at 50% 40%, #1fb0ac 0%, #117a78 55%, #08514f 100%); }
+.ft-sable { --ft: radial-gradient(ellipse at 50% 40%, #b8925c 0%, #8f6d40 55%, #5e4424 100%); }
+.ft-anthracite { --ft: radial-gradient(ellipse at 50% 40%, #555a62 0%, #373b41 55%, #1f2226 100%); }
+.ft-rose { --ft: radial-gradient(ellipse at 50% 40%, #cf6f97 0%, #a34d72 55%, #6b2a48 100%); }
+.ft-vegas { --ft: radial-gradient(circle, rgba(255,70,210,.45) 0 1.5px, transparent 2.5px) 0 0 / 20px 20px, radial-gradient(circle, rgba(70,220,255,.35) 0 1.5px, transparent 2.5px) 10px 10px / 20px 20px, radial-gradient(ellipse at 50% 40%, #4a1478 0%, #260a42 55%, #12031f 100%); }
+.ft-monaco { --ft: repeating-linear-gradient(45deg, rgba(216,178,106,.14) 0 1.5px, transparent 1.5px 18px), repeating-linear-gradient(-45deg, rgba(216,178,106,.14) 0 1.5px, transparent 1.5px 18px), radial-gradient(ellipse at 50% 40%, #0e7457 0%, #08483a 55%, #042a22 100%); }
+.ft-carbone { --ft: radial-gradient(ellipse at 50% 35%, rgba(255,255,255,.12), transparent 60%), repeating-linear-gradient(45deg, #1a1c1f 0 4px, #262a2e 4px 8px); }
+.ft-marbre { --ft: linear-gradient(125deg, transparent 28%, rgba(216,178,106,.55) 29%, transparent 30.5%, transparent 61%, rgba(255,255,255,.2) 62%, transparent 63%), linear-gradient(160deg, transparent 45%, rgba(216,178,106,.3) 46%, transparent 47%), radial-gradient(ellipse at 50% 40%, #2a2a2e 0%, #161618 55%, #08080a 100%); }
+.ft-large { --ft: repeating-radial-gradient(ellipse at 50% 120%, rgba(255,255,255,.05) 0 3px, transparent 3px 16px), radial-gradient(ellipse at 50% 40%, #1f8ab3 0%, #0f5a7a 55%, #062c40 100%); }
+.ft-voie-lactee { --ft: radial-gradient(1.2px 1.2px at 20% 30%, #fff 50%, transparent), radial-gradient(1px 1px at 70% 20%, #fff 50%, transparent), radial-gradient(1.4px 1.4px at 45% 75%, #fff 50%, transparent), radial-gradient(1px 1px at 85% 65%, #fff 50%, transparent), radial-gradient(1px 1px at 30% 60%, #fff 50%, transparent), radial-gradient(ellipse at 65% 45%, rgba(214,80,200,.45), transparent 50%), radial-gradient(ellipse at 30% 55%, rgba(80,110,255,.45), transparent 55%), #090320; }
+.ft-damier { --ft: conic-gradient(rgba(0,0,0,.2) 25%, transparent 0 50%, rgba(0,0,0,.2) 0 75%, transparent 0) 0 0 / 30px 30px, radial-gradient(ellipse at 50% 40%, #17785c 0%, #0f5a45 55%, #0a3f31 100%); }
+.ft-cuir { --ft: radial-gradient(circle, rgba(0,0,0,.5) 0 2px, rgba(255,255,255,.08) 3px, transparent 4px) 0 0 / 28px 28px, radial-gradient(ellipse at 50% 40%, #80502e 0%, #5a341c 55%, #36200f 100%); }
+.ft-chene { --ft: radial-gradient(ellipse at 50% 35%, rgba(255,255,255,.12), transparent 60%), repeating-linear-gradient(92deg, rgba(0,0,0,.14) 0 2px, transparent 2px 11px), linear-gradient(90deg, #7a4e26, #a46e3c 50%, #7a4e26); }
+.ptable .oval[class*="ft-"] { background: var(--ft); }
+.felt-sw { display: grid; place-items: center; }
+.sw.felt-sw { background: radial-gradient(circle at 50% 40%, #1d2c26, #07120e); }
+.sw.felt-sw .mini-felt { width: auto; height: 64%; }
+.mini-felt { container-type: inline-size; position: relative; width: 78%; aspect-ratio: 2 / 1.15; border-radius: 50%; background: var(--ft);
+  box-shadow: 0 0 0 4px #4a2412, 0 0 0 5px #8a5a2b, 0 0 0 6px rgba(216,178,106,.5), 0 6px 14px rgba(0,0,0,.45), inset 0 0 18px rgba(0,0,0,.35); }
+.mini-felt::after { content: ""; position: absolute; inset: 12%; border-radius: 50%; border: 1px solid rgba(216,178,106,.3); }
+.mini-felt i { position: absolute; top: 50%; width: 13%; aspect-ratio: 5 / 7; border-radius: 2px; background: #f7f3ea; box-shadow: 0 1px 3px rgba(0,0,0,.4); transform: translate(-50%, -50%);
+  font: 700 4.6cqw/1 var(--f-ui, sans-serif); font-style: normal; color: #1d1d1f; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .1em; }
+.mini-felt i b { font-size: 1.15em; }
+.mini-felt i.r { color: #c8283b; }
+.mini-felt i:nth-child(1) { left: 36%; } .mini-felt i:nth-child(2) { left: 50%; } .mini-felt i:nth-child(3) { left: 64%; }
+.felt-preview { display: grid; place-items: center; min-height: 84px; padding: 10px; border-radius: 18px; background: rgba(0,0,0,.2); border: 1px solid var(--felt-line); }
+.felt-preview .mini-felt { width: min(300px, 80%); }
 /* season number sits above the banner art but under the player info */
 [class*="bn-s"] > * { position: relative; z-index: 1; }
 .sw[class*="bn-s"]::before { font-size: 2.4em; }
@@ -1476,14 +1539,9 @@ body::before { content: ""; position: fixed; inset: 0; pointer-events: none; bac
           <tr><td>Main gagnante</td><td>1 pour 1</td><td>mise 20 → +20</td></tr>
           <tr><td>Égalité</td><td>mise rendue</td><td>0</td></tr>
           <tr><td>Tu sautes ou tu perds</td><td>mise perdue</td><td>−20</td></tr></table>`],
-        ["Le sabot et le comptage des cartes", `<p>Les cartes viennent d'un sabot de 6 jeux (312 cartes). La barre en haut de la table montre les cartes restantes et combien avant le mélange : le sabot est remélangé quand il n'en reste qu'un quart (repère rouge).</p>
-          <p>Les cartes déjà sorties ne reviennent pas avant le mélange, et le sabot est gardé quand tu changes de page : compter les cartes permet de savoir ce qu'il reste. Méthode <b>+1 / 0 / −1</b> (par défaut) :</p>
-          <table class="hpay"><tr><td>${cards("2♠ 3♥ 4♦ 5♣ 6♠")}</td><td>+1</td></tr><tr><td>${cards("7♥ 8♣ 9♦ 10♠")}</td><td>0</td></tr><tr><td>${cards("V♥ D♦ R♣ A♠")}</td><td>−1</td></tr></table>
-          <ul><li>Additionne les valeurs de toutes les cartes vues : c'est le <b>compte</b>.</li>
-          <li>Divise par le nombre de jeux restants : c'est le <b>compte réel</b>.</li>
-          <li>Avec cette méthode, les 10 comptent 0 : il y a plus de cartes à +1 qu'à −1, donc le compte monte d'environ 4 par jeu même quand rien de spécial ne se passe. L'aide en tient compte pour colorer le compte : en vert, il reste plus de figures et d'As que d'habitude, mise plus gros ; en rouge, mise le minimum.</li>
-          <li>Tu peux aussi choisir la méthode <b>Hi-Lo</b> dans le menu ☰ : les 10 comptent alors −1, comme les figures.</li></ul>
-          <p>Pour t'entraîner, active <b>Aide au comptage</b> dans le menu ☰ : le compte s'affiche en direct.</p>`],
+        ["Le sabot et la défausse", `<p>Les cartes viennent d'un sabot de 6 jeux (312 cartes), posé à droite du croupier comme au casino : on voit chaque carte en sortir. Sous le sabot : le nombre de cartes restantes, et l'étiquette <b>Sabot neuf</b> ou <b>Entamé</b>.</p>
+          <p>À gauche, la défausse montre combien de cartes sont déjà sorties. Elles ne reviennent pas avant le mélange : si tu comptes les cartes, c'est ce qui te permet de savoir ce qu'il reste.</p>
+          <p>Le trait rouge sur le sabot marque le mélange : quand il ne reste plus qu'un quart des cartes, le sabot est remélangé et la première carte est brûlée. Le sabot est gardé quand tu changes de page ou fermes l'app.</p>`],
         ["Astuces de base", `<ul>
           <li>Reste toujours à 17 ou plus.</li>
           <li>Tire toujours à 11 ou moins : tu ne peux pas sauter.</li>
@@ -1617,7 +1675,7 @@ body::before { content: ""; position: fixed; inset: 0; pointer-events: none; bac
           <li>Chaque fin de mois, selon ton rang de saison.</li>
           <li>Chaque jour : 3 défis (bonus de 50 si tu fais les 3) et la connexion quotidienne (5, 5, 5, 20, 20, 20 puis 50 couronnes le 7ᵉ jour d'affilée).</li></ul>`],
         ["La boutique", `<ul>
-          <li>Une sélection différente chaque lundi : 8 bannières, 5 cadres et 7 titres.</li>
+          <li>Une sélection différente chaque lundi : 8 bannières, 5 cadres, 7 titres et 3 tapis de poker.</li>
           <li>Touche un objet pour l'essayer en aperçu, puis Acheter. Il rejoint ton casier.</li>
           <li>La rareté indique combien de joueurs l'ont : Commun, Rare, Épique, Légendaire.</li></ul>`],
         ["Le casier", `<ul>

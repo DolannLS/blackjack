@@ -73,7 +73,7 @@ button:disabled { opacity: .5; cursor: default; }
 .msg { min-height: 18px; font-size: 14px; color: var(--lose); }
 .msg.ok { color: var(--win); }
 
-.seg { display: grid; grid-template-columns: repeat(3, 1fr); padding: 3px; border-radius: 12px; background: rgba(0,0,0,.25); border: 1px solid var(--felt-line); flex: none; }
+.seg { display: grid; grid-template-columns: repeat(4, 1fr); padding: 3px; border-radius: 12px; background: rgba(0,0,0,.25); border: 1px solid var(--felt-line); flex: none; }
 .seg button { height: 34px; border-radius: 9px; font-weight: 600; font-size: 14.5px; color: var(--muted); }
 .seg button[aria-pressed="true"] { background: var(--brass); color: var(--brass-ink); }
 
@@ -165,6 +165,7 @@ button:disabled { opacity: .5; cursor: default; }
     <button data-k="banner" aria-pressed="true">Bannières</button>
     <button data-k="frame" aria-pressed="false">Cadres</button>
     <button data-k="title" aria-pressed="false">Titres</button>
+    <button data-k="felt" aria-pressed="false">Tapis</button>
   </div>
 
   <div class="scroll">
@@ -194,6 +195,12 @@ button:disabled { opacity: .5; cursor: default; }
     const look = { banner: p.banner, frame: p.frame, title: p.title };
     if (s) look[s.kind] = s.id;
     const name = A.session ? A.session.username : "Toi";
+    // a poker felt is tried on a small table instead of the player banner
+    if (s && s.kind === "felt") {
+      $("card").innerHTML = `<div class="felt-preview">${UI.feltHTML(s.id)}</div>`;
+      if (animate) $("card").firstElementChild.classList.add("swap");
+      return;
+    }
     $("card").innerHTML = UI.cardHTML({ name, ...look, avatar: A.profile && A.profile.avatar_url, sub: s ? "Aperçu" : A.session ? "Ta bannière actuelle" : "Connecte-toi pour personnaliser" });
     if (animate) { const c = $("card").firstElementChild; c.classList.add("swap"); }
   }
@@ -226,6 +233,7 @@ button:disabled { opacity: .5; cursor: default; }
     const photo = A.profile && A.profile.avatar_url;
     if (it.kind === "banner") return `<div class="sw bn-${it.id}">${UI.avatarHTML(name, p.frame, "md", photo)}</div>`;
     if (it.kind === "frame") return `<div class="sw frame-sw">${UI.avatarHTML(name, it.id, "md", photo)}</div>`;
+    if (it.kind === "felt") return `<div class="sw felt-sw">${UI.feltHTML(it.id)}</div>`;
     return `<div class="sw title-sw"><span class="ttl${it.price === null ? " gold" : ""}">${it.id === "sans-titre" ? "—" : UI.esc(it.name)}</span></div>`;
   }
   function status(it) {

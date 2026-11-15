@@ -120,7 +120,8 @@ button:disabled { opacity: .5; cursor: default; }
 .step .tier { height: 22px; font-size: 11.5px; }
 .step.champ { background: linear-gradient(90deg, rgba(233,196,106,.25), rgba(0,0,0,.2)); }
 #seasonMe .ps-box { background: rgba(0,0,0,.22); }
-.seg { grid-template-columns: repeat(4, 1fr); }
+.seg { grid-template-columns: repeat(5, 1fr); }
+.seg button { font-size: 13px; padding-inline: 2px; }
 .tools { flex: none; display: flex; flex-direction: column; gap: 8px; }
 .find { position: relative; }
 .find input { height: 44px; width: 100%; box-sizing: border-box; border-radius: 12px; border: 1px solid var(--felt-line); background: rgba(0,0,0,.25); color: var(--ink); font: 600 16px var(--f-ui); padding: 0 14px 0 40px; }
@@ -169,6 +170,7 @@ button:disabled { opacity: .5; cursor: default; }
     <button data-k="banner" aria-pressed="false">Bannières</button>
     <button data-k="frame" aria-pressed="false">Cadres</button>
     <button data-k="title" aria-pressed="false">Titres</button>
+    <button data-k="felt" aria-pressed="false">Tapis</button>
   </div>
 
   <div class="tools">
@@ -187,7 +189,7 @@ button:disabled { opacity: .5; cursor: default; }
   const A = window.CasinoAccount, UI = window.CasinoUI;
   const $ = id => document.getElementById(id);
   const fmt = n => Number(n).toLocaleString("fr-FR", { maximumFractionDigits: 0 });
-  const KIND = { banner: "Bannière", frame: "Cadre", title: "Titre" };
+  const KIND = { banner: "Bannière", frame: "Cadre", title: "Titre", felt: "Tapis" };
   const norm = s => String(s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 
   let kind = "all", selected = null, busy = false, items = null, players = 0;
@@ -215,7 +217,8 @@ button:disabled { opacity: .5; cursor: default; }
     const look = { banner: p.banner, frame: p.frame, title: p.title };
     if (s) look[s.kind] = s.id;
     const name = A.session ? A.session.username : "Toi";
-    $("card").innerHTML = UI.cardHTML({ name, ...look, avatar: p.avatar_url, sub: s ? "Aperçu" : A.session ? "Ta tenue actuelle" : "Connecte-toi pour ouvrir ton casier" });
+    $("card").innerHTML = s && s.kind === "felt" ? `<div class="felt-preview">${UI.feltHTML(s.id)}</div>`
+      : UI.cardHTML({ name, ...look, avatar: p.avatar_url, sub: s ? "Aperçu" : A.session ? "Ta tenue actuelle" : "Connecte-toi pour ouvrir ton casier" });
     if (animate) $("card").firstElementChild.classList.add("swap");
     $("photoDel").hidden = !p.avatar_url;
     $("photoLabel").style.gridColumn = p.avatar_url ? "" : "1 / -1";
@@ -236,6 +239,7 @@ button:disabled { opacity: .5; cursor: default; }
     const p = P(), name = A.session ? A.session.username : "Toi";
     if (it.kind === "banner") return `<div class="sw bn-${UI.esc(it.id)}">${UI.avatarHTML(name, p.frame, "md", p.avatar_url)}</div>`;
     if (it.kind === "frame") return `<div class="sw frame-sw">${UI.avatarHTML(name, it.id, "md", p.avatar_url)}</div>`;
+    if (it.kind === "felt") return `<div class="sw felt-sw">${UI.feltHTML(it.id)}</div>`;
     return `<div class="sw title-sw"><span class="ttl${it.price === null ? " gold" : ""}">${it.id === "sans-titre" ? "—" : UI.esc(it.name)}</span></div>`;
   }
   function rarityLine(it) {
