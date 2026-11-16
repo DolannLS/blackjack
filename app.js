@@ -434,8 +434,53 @@
   }
   async function loadProfile() {
     const p = await api("/rest/v1/rpc/my_profile", { method: "POST", body: {} });
-    if (p) keepProfile(p);
+    if (p) { keepProfile(p); syncChips(p).catch(() => {}); }
     return p;
+  }
+
+  // ---------- play balance, kept on the account ----------
+  // The server follows the balance through the games it receives; this phone shows that balance
+  // plus the games still waiting to be sent.
+  const WALLET = "bj.table.v1";
+  const pendingNet = () => pending().filter(x => x.game !== "online").reduce((a, x) => a + x.payout - x.stake, 0);
+  const localChips = () => { const w = read(WALLET, {}) || {}; return typeof w.bankroll === "number" ? w.bankroll : 1000; };
+  function setChips(n) {
+    n = Math.max(0, Math.round(n * 100) / 100);
+    if (typeof window.CasinoWallet === "function") { window.CasinoWallet(n); return; } // a game page applies it between hands
+    const w = read(WALLET, {}) || {}; w.bankroll = n; write(WALLET, w);
+  }
+  async function syncChips(p) {
+    if (!p || !session || flushing || !("chips" in p)) return;
+    let chips = p.chips;
+    if (chips == null) {
+      // first time on the new system: the balance this phone had becomes the account's
+      chips = await api("/rest/v1/rpc/init_chips", { method: "POST", body: { amount: localChips() - pendingNet() } });
+      if (profile) keepProfile({ ...profile, chips });
+    }
+    if (flushing) return;
+    setChips(+chips + pendingNet());
+  }
+  // one free refill a day, only when the balance is (almost) empty
+  async function refillChips() {
+    const localOnce = () => {
+      const day = wheelDay();
+      if (read("refill.day", "") === day) throw new Error("Recharge gratuite déjà utilisée aujourd'hui. Elle revient à minuit.");
+      write("refill.day", day);
+      return 1000;
+    };
+    if (!configured() || !session) return localOnce();
+    await flush();
+    if (pending().length) throw new Error(navigator.onLine === false ? "Il faut internet pour recharger." : "Tes dernières parties sont en cours d'envoi, réessaie dans un instant.");
+    try {
+      const n = await api("/rest/v1/rpc/refill_chips", { method: "POST", body: {} });
+      if (profile) keepProfile({ ...profile, chips: n, refilled_today: true });
+      return +n;
+    } catch (e) {
+      if (/refill_chips|function/.test(e.raw || "")) return localOnce(); // server not updated yet
+      throw new Error(e.raw === "deja_recharge" ? "Tu as déjà utilisé ta recharge gratuite aujourd'hui. Elle revient à minuit. Tente aussi ta chance à la roue du jour (onglet Défis)."
+        : e.raw === "pas_a_sec" ? "Ton solde n'est pas vide sur ton compte : recharge la page."
+        : e.code === "network" ? "Il faut internet pour recharger." : e.message);
+    }
   }
   const SHOP_ERR = {
     solde: "Pas assez de couronnes pour l'instant.", exclusif: "Cet objet se gagne uniquement en récompense.",
@@ -474,11 +519,8 @@
     let r;
     try { r = await api("/rest/v1/rpc/spin_wheel", { method: "POST", body: {} }); }
     catch (e) { throw new Error(e.raw === "deja_tourne" ? "Tu as déjà tourné la roue aujourd'hui. Reviens demain !" : /spin_wheel|function/.test(e.raw || "") ? "La roue arrive avec la mise à jour du serveur." : e.message); }
-    if (r.chips) {
-      const w = read("bj.table.v1", {}) || {};
-      w.bankroll = (typeof w.bankroll === "number" ? w.bankroll : 1000) + r.chips;
-      write("bj.table.v1", w);
-    }
+    if (r.total_chips != null) setChips(+r.total_chips + pendingNet());
+    else if (r.chips) setChips(localChips() + r.chips);
     write("wheel.day", wheelDay());
     if (profile) keepProfile({ ...profile, crowns: r.total_crowns, owned: r.item ? [...new Set([...(profile.owned || []), r.item])] : profile.owned });
     return r;
@@ -600,7 +642,7 @@
     signUp, signIn, logout, record, flush, pending, history, leaderboard: leaderboardBy, addFriend, removeFriend,
     myInvite, resetInvite, inviteInfo, acceptInvite, inviteUrl, parseInvite, pendingInvite, NAME_RE,
     SHOP, ITEM, itemInfo, PRIZES, TIERS, TIER, CHAMPION, seasonNumber, seasonSet, rarity, loadProfile, buy, equip, markRewardsSeen,
-    shopWeek, itemStats, locker, searchPlayers, uploadAvatar, removeAvatar, wheelStatus, spinWheel, wheelDay,
+    shopWeek, itemStats, locker, searchPlayers, uploadAvatar, removeAvatar, wheelStatus, spinWheel, wheelDay, refillChips,
     seasonBoard, publicProfile, liveFeed, botsTick, renameAccount, changePassword, deleteAccount,
     localHistory: () => read(HISTORY, []),
     onChange: f => { listeners.add(f); return () => listeners.delete(f); }
@@ -1349,6 +1391,8 @@ body::before { content: ""; position: fixed; inset: 0; pointer-events: none; bac
 .mini-felt i:nth-child(1) { left: 36%; } .mini-felt i:nth-child(2) { left: 50%; } .mini-felt i:nth-child(3) { left: 64%; }
 .felt-preview { display: grid; place-items: center; min-height: 84px; padding: 10px; border-radius: 18px; background: rgba(0,0,0,.2); border: 1px solid var(--felt-line); }
 .felt-preview .mini-felt { width: min(300px, 80%); }
+.guide-link { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 42px; padding: 8px 12px; border-radius: 12px; border: 1px solid var(--felt-line, rgba(216,178,106,.32)); background: rgba(216,178,106,.1); color: var(--brass, #d8b26a); font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
+.guide-link::before { content: "?"; display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: var(--brass, #d8b26a); color: #2a1f0c; font-size: 13px; flex: none; }
 /* exclusive banner from the daily wheel */
 .bn-roue-fortune { background: radial-gradient(circle at 88% 50%, #ffd76a 0 7%, transparent 7.5%), repeating-conic-gradient(from 0deg at 88% 50%, #b3262f 0 15deg, #f2eee3 15deg 30deg, #1f7a4c 30deg 45deg, #f2eee3 45deg 60deg), #3a0a12; }
 .bn-roue-fortune::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(5,10,8,.85) 0, rgba(5,10,8,.6) 45%, transparent 75%); z-index: 0; }
@@ -1699,14 +1743,40 @@ body::before { content: ""; position: fixed; inset: 0; pointer-events: none; bac
           <li>Au bureau, si la connexion ne passe pas, essaie en 4G/5G.</li></ul>`]
       ]
     },
+    guide: {
+      title: "Comment ça marche",
+      intro: "Quatre choses à connaître : ton solde pour jouer, le classement, les points de saison et les couronnes.",
+      sections: [
+        ["Le solde de jetons", `<ul>
+          <li>C'est l'argent pour jouer au blackjack, à la roulette, au poker contre les bots, au vidéo poker et à la machine à sous. Tu commences à 1 000.</li>
+          <li>Il est gardé <b>sur ton compte</b> : le même sur tous tes appareils. Sans compte, il reste sur ce téléphone.</li>
+          <li>Quand il te reste moins de 5 jetons : <b>une recharge gratuite de 1 000 par jour</b>. Elle revient à minuit (heure de Paris).</li>
+          <li>La roue du jour (onglet Défis) peut aussi te donner des jetons.</li>
+          <li>Le poker en ligne utilise ses propres jetons de table (1 000 par joueur), séparés de ton solde.</li></ul>`],
+        ["Le classement", `<dl>
+          <dt>Semaine</dt><dd>Tes gains nets du lundi au dimanche (ce que tu as gagné moins ce que tu as misé). Classé à partir de 10 parties. Chaque lundi, les mieux placés reçoivent des couronnes.</dd>
+          <dt>Depuis toujours</dt><dd>Tes gains nets depuis la création du compte.</dd></dl>
+          <p>Les recharges et les jetons de la roue ne comptent jamais dans le classement : seules tes parties comptent.</p>`],
+        ["Les points de saison et les rangs", `<p>Une saison dure un mois. Chaque jour (heure de Paris) :</p>
+          <ul><li><b>1 point par partie</b>, 30 au plus par jour ;</li>
+          <li><b>+1 point par tranche de 50 jetons de gain net de la journée</b> (gains moins pertes du jour).</li></ul>
+          <p>Exemple : 40 parties dans la journée et 500 jetons de gain net, ça fait 30 + 10 = 40 points. Une journée perdante ne rapporte que les points de participation.</p>
+          <p>Rangs : Bronze (50 pts), Fer (250), Argent (600), Or (1 000), Platine (1 600), Diamant (2 500), Alexandrite (4 000), Top 100 (les 100 meilleurs dès 4 000). En fin de mois, tu reçois les récompenses de ton rang <b>et de tous les rangs en dessous</b>, puis les rangs repartent à zéro.</p>`],
+        ["Les couronnes", `<ul>
+          <li>Elles servent à acheter bannières, cadres, titres et tapis de poker dans la Boutique.</li>
+          <li>Tu en gagnes avec le classement de la semaine, ton rang de saison, les défis du jour, la connexion quotidienne et la roue du jour.</li>
+          <li>Elles ne s'achètent pas et ne se transforment pas en jetons.</li></ul>`]
+      ]
+    },
     classement: {
       title: "Classement, semaines et saisons",
       intro: "Tout ce que tu joues compte pour trois classements, et rapporte des couronnes à dépenser en boutique.",
       sections: [
         ["Les trois classements", `<dl>
           <dt>Semaine</dt><dd>Gains nets du lundi au dimanche. Classé à partir de 10 parties. Récompenses chaque lundi.</dd>
-          <dt>Saison</dt><dd>Un mois. 1 point par partie, plus 1 point par tranche de 50 jetons gagnés. Perdre ne retire rien.</dd>
-          <dt>Depuis toujours</dt><dd>Total gagné moins total misé. Les recharges de solde ne comptent pas.</dd></dl>`],
+          <dt>Saison</dt><dd>Un mois. Chaque jour : 1 point par partie (30 au plus), plus 1 point par tranche de 50 jetons de gain net de la journée.</dd>
+          <dt>Depuis toujours</dt><dd>Total gagné moins total misé. Les recharges de solde ne comptent pas.</dd></dl>
+          <p>Tout est résumé dans <b>Comment ça marche</b>, depuis les pages Rangs et Classement.</p>`],
         ["Récompenses de la semaine", `<ul>
           <li>1ᵉʳ : 1 000 couronnes, plus le cadre Couronne et le titre Champion de la semaine, gardés tant que tu restes 1ᵉʳ.</li>
           <li>2ᵉ : 600, 3ᵉ : 400, 4ᵉ à 10ᵉ : 200, tous les autres classés : 50.</li></ul>`],
@@ -1834,6 +1904,8 @@ body::before { content: ""; position: fixed; inset: 0; pointer-events: none; bac
   }
 
   Object.assign(window.CasinoUI, { openSearch, rarity, openHelp });
+  // « Comment ça marche » buttons on the Rangs and Classement pages
+  document.addEventListener("click", e => { if (e.target.closest("[data-guide]")) openHelp("guide"); });
   // ---------- iPhone: full height, safe areas, portrait only ----------
   // iOS ignores the manifest orientation for web apps, so on phones held sideways the
   // whole page is turned back upright; the app height is measured instead of trusting 100%.

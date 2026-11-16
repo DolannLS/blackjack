@@ -974,12 +974,22 @@ button:disabled { opacity: .35; cursor: default; }
   $("modeH").onclick = () => setMode("holdem");
   $("modeV").onclick = () => setMode("video");
 
-  function refill() {
-    if (inHand() || VP.phase === "draw" || VP.phase === "busy") return;
-    W = START; save();
-    hSay("Solde rechargé", "win"); vSay("Solde rechargé", "win");
+  let refilling = false;
+  async function refill() {
+    if (refilling || inHand() || VP.phase === "draw" || VP.phase === "busy") return;
+    refilling = true;
+    try {
+      W = window.CasinoAccount ? await window.CasinoAccount.refillChips() : START; save();
+      hSay("Solde rechargé", "win"); vSay("Solde rechargé", "win");
+    } catch (e) { hSay(e.message, "lose"); vSay(e.message, "lose"); }
+    refilling = false;
     render(); renderStats();
   }
+  // balance from the account, applied between hands
+  window.CasinoWallet = n => {
+    if (inHand() || H.phase === "showdown" || VP.phase === "draw" || VP.phase === "busy") return;
+    W = n; save(); render();
+  };
   function renderStats() {
     const items = [["Mains", stats.hands], ["Gagnées", stats.handsWon], ["Plus gros pot", fmt(stats.bestPot)], ["Vidéo poker", stats.vpHands], ["Meilleur gain", fmt(stats.vpBest)], ["Solde", fmt(W)]];
     let html = items.map(([k, v]) => `<div class="stat"><span class="label">${k}</span><b>${v}</b></div>`).join("");

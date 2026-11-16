@@ -365,7 +365,7 @@ button:disabled { opacity: .35; cursor: default; }
       <li>Blackjack payé 3 pour 2, le croupier reste sur 17.</li>
       <li>Doubler sur deux cartes, séparer jusqu'à 4 mains. As séparés : une carte chacun.</li>
     </ul>
-    <button class="btn danger" id="resetBtn">Remettre le solde à 1 000</button>
+    <button class="btn danger" id="resetBtn">Remettre les statistiques à zéro</button>
   </div>
 </div>
 
@@ -576,7 +576,13 @@ button:disabled { opacity: .35; cursor: default; }
   async function deal() {
     if (S.busy) return;
     if (S.bankroll < 5 && S.bet === 0 && (S.phase === "bet" || S.phase === "done")) {
-      clearTable(); S.bankroll = START; S.lastBet = 0; save(); say("Solde rechargé", "win"); render(); return;
+      // one free refill a day (see app.js)
+      S.busy = true;
+      try {
+        const n = window.CasinoAccount ? await window.CasinoAccount.refillChips() : START;
+        clearTable(); S.bankroll = n; S.lastBet = 0; save(); say("Solde rechargé", "win");
+      } catch (e) { say(e.message, "lose"); }
+      S.busy = false; render(); return;
     }
     if (S.bet === 0) {
       if (!(S.lastBet > 0 && S.lastBet <= S.bankroll)) return;
@@ -722,15 +728,19 @@ button:disabled { opacity: .35; cursor: default; }
     if (!b.classList.contains("armed")) {
       b.classList.add("armed"); b.textContent = "Touchez encore pour confirmer";
       clearTimeout(armTimer);
-      armTimer = setTimeout(() => { b.classList.remove("armed"); b.textContent = "Remettre le solde à 1 000"; }, 3000);
+      armTimer = setTimeout(() => { b.classList.remove("armed"); b.textContent = "Remettre les statistiques à zéro"; }, 3000);
       return;
     }
-    if (S.busy || S.phase === "play" || S.phase === "dealer") { b.textContent = "Terminez la main en cours"; return; }
-    S.bankroll = START; S.bet = 0; S.lastBet = 0;
-    S.stats = { played: 0, won: 0, lost: 0, push: 0, bj: 0, best: START };
-    if (S.phase === "done") clearTable();
+    // the balance is not reset here any more: it lives on the account, with one free refill a day
+    S.stats = { played: 0, won: 0, lost: 0, push: 0, bj: 0, best: S.bankroll };
     save(); renderStats(); render();
-    b.classList.remove("armed"); b.textContent = "Solde remis à 1 000";
+    b.classList.remove("armed"); b.textContent = "Statistiques remises à zéro";
+  };
+  // balance from the account, applied between hands
+  window.CasinoWallet = n => {
+    if (S.busy || S.phase === "play" || S.phase === "dealer") return;
+    S.bankroll = n; if (S.bet > n) S.bet = 0;
+    save(); render();
   };
 
   // wiring

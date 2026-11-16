@@ -546,8 +546,15 @@ button:disabled { opacity: .35; cursor: default; }
     if (bankroll < 5) html += `<button class="btn primary" id="refill" style="grid-column:span 3">Recharger 1 000</button>`;
     $("stats").innerHTML = html;
     const r = $("refill");
-    if (r) r.onclick = () => { bankroll = START; save(); renderBank(); renderBets(); renderStats(); say("Solde rechargé", "win"); };
+    if (r) r.onclick = async () => {
+      r.disabled = true;
+      try { bankroll = window.CasinoAccount ? await window.CasinoAccount.refillChips() : START; save(); renderBank(); renderBets(); say("Solde rechargé", "win"); }
+      catch (e) { say(e.message, "lose"); }
+      renderStats();
+    };
   }
+  // balance from the account, applied when the ball is not rolling
+  window.CasinoWallet = n => { if (spinning) return; bankroll = n; if (total() > n) bets = {}; save(); renderBank(); renderBets(); };
   $("menuBtn").onclick = () => { renderStats(); $("menu").hidden = false; };
   $("closeMenu").onclick = () => { $("menu").hidden = true; };
   $("menu").onclick = e => { if (e.target.id === "menu") $("menu").hidden = true; };
