@@ -9,7 +9,7 @@
   };
   const EMAIL_DOMAIN = "joueurs.casino-app.fr";
   const SESSION = "casino.session", QUEUE = "casino.queue", HISTORY = "casino.history";
-  const GAMES = { blackjack: "Blackjack", roulette: "Roulette", holdem: "Hold'em", videopoker: "Vidéo poker", online: "Poker en ligne" };
+  const GAMES = { blackjack: "Blackjack", roulette: "Roulette", holdem: "Hold'em", videopoker: "Vidéo poker", online: "Poker en ligne", slots: "Machine à sous" };
 
   const read = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k) || "null"); return v ?? d; } catch (e) { return d; } };
   const write = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
@@ -382,14 +382,14 @@
   const STATIC = Object.fromEntries(SHOP.map(x => [x.id, x]));
   // monthly season ranks, lowest first (mirrors supabase/casier.sql)
   const TIERS = [
-    { id: "bronze", name: "Bronze", min: 20, crowns: 100, base: "Joueur du dimanche" },
-    { id: "fer", name: "Fer", min: 100, crowns: 200, base: "Main de fer" },
-    { id: "argent", name: "Argent", min: 250, crowns: 350, base: "Joueur d'argent" },
-    { id: "or", name: "Or", min: 400, crowns: 550, base: "Main en or" },
-    { id: "platine", name: "Platine", min: 600, crowns: 800, base: "Mise de platine" },
-    { id: "diamant", name: "Diamant", min: 1000, crowns: 1200, base: "Cœur de diamant" },
-    { id: "alexandrite", name: "Alexandrite", min: 2000, crowns: 2000, base: "Alexandrite" },
-    { id: "top-100", name: "Top 100", min: 2000, crowns: 3000, base: "Top 100", note: "100 meilleurs, dès 2 000 points" }
+    { id: "bronze", name: "Bronze", min: 50, crowns: 100, base: "Joueur du dimanche" },
+    { id: "fer", name: "Fer", min: 250, crowns: 200, base: "Main de fer" },
+    { id: "argent", name: "Argent", min: 600, crowns: 350, base: "Joueur d'argent" },
+    { id: "or", name: "Or", min: 1000, crowns: 550, base: "Main en or" },
+    { id: "platine", name: "Platine", min: 1600, crowns: 800, base: "Mise de platine" },
+    { id: "diamant", name: "Diamant", min: 2500, crowns: 1200, base: "Cœur de diamant" },
+    { id: "alexandrite", name: "Alexandrite", min: 4000, crowns: 2000, base: "Alexandrite" },
+    { id: "top-100", name: "Top 100", min: 4000, crowns: 3000, base: "Top 100", note: "100 meilleurs, dès 4 000 points" }
   ];
   const TIER = Object.fromEntries(TIERS.map(t => [t.id, t]));
   const CHAMPION = { id: "champion", name: "Champion", crowns: 5000, base: "Champion de la saison", note: "1ᵉʳ de la saison, dès le rang Argent" };
@@ -598,6 +598,7 @@
   const ICONS = {
     blackjack: '<rect x="3" y="6" width="11" height="15" rx="2"/><path d="M9.5 5.2l7.8-1.6a2 2 0 0 1 2.4 1.5l2.2 10.6a2 2 0 0 1-1.5 2.4L14 19.6"/>',
     roulette: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/><path d="M12 3v6M12 15v6M3 12h6M15 12h6"/>',
+    slots: '<rect x="2.5" y="5" width="16" height="15" rx="2.5"/><path d="M7.5 5v15M13.5 5v15"/><path d="M4.4 11h1.5l-1 3M10.4 11h1.5l-1 3M16.4 11h1.5l-1 3"/><path d="M18.5 9h1.5a1 1 0 0 0 1-1V5.5"/><circle cx="21" cy="4.5" r="1.3"/>',
     poker: '<path d="M12 3c-2.6 3.6-7 6-7 10a3.5 3.5 0 0 0 6.1 2.3L10 20.5h4l-1.1-5.2A3.5 3.5 0 0 0 19 13c0-4-4.4-6.4-7-10z"/>',
     shop: '<path d="M5 8h14l-1.2 11.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 8z"/><path d="M9 10V7a3 3 0 0 1 6 0v3"/>',
     history: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.2 2"/>',
@@ -608,7 +609,7 @@
     rank: '<path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4zM7 6H4a3 3 0 0 0 3 4.2M17 6h3a3 3 0 0 1-3 4.2"/>'
   };
   const TABS = [
-    ["#jeux", "games", "Jeux", /(^$|index\.html$|roulette\.html$|poker\.html$|online\.html$)/],
+    ["#jeux", "games", "Jeux", /(^$|index\.html$|roulette\.html$|poker\.html$|online\.html$|slots\.html$)/],
     ["defis.html", "challenge", "Défis", /defis\.html$/],
     ["rangs.html", "ranks", "Rangs", /rangs\.html$/],
     ["boutique.html", "shop", "Boutique", /boutique\.html$/],
@@ -742,7 +743,8 @@ body::before { content: ""; position: fixed; inset: 0; pointer-events: none; bac
     { href: "./", page: "blackjack", name: "Blackjack", text: "Bats le croupier sans dépasser 21.", icon: "blackjack" },
     { href: "roulette.html", page: "roulette", name: "Roulette", text: "Mise sur un numéro, une couleur ou une douzaine.", icon: "roulette" },
     { href: "poker.html", page: "poker", name: "Poker", text: "Texas Hold'em contre 3 adversaires, et vidéo poker.", icon: "poker" },
-    { href: "online.html", page: "online", name: "Poker en ligne", text: "Une table entre amis, de 2 à 6 joueurs.", icon: "games" }
+    { href: "online.html", page: "online", name: "Poker en ligne", text: "Une table entre amis, de 2 à 6 joueurs.", icon: "games" },
+    { href: "slots.html", page: "slots", name: "Machine à sous", text: "Trois rouleaux, une ligne : vise le 7 7 7.", icon: "slots" }
   ];
   function lastGame() {
     const p = (location.pathname.split("/").pop() || "index.html").replace(".html", "");
@@ -1550,6 +1552,28 @@ body::before { content: ""; position: fixed; inset: 0; pointer-events: none; bac
           <li>De 12 à 16, reste si le croupier montre 2 à 6 : c'est lui qui risque de sauter.</li></ul>`]
       ]
     },
+    slots: {
+      title: "Machine à sous 777",
+      intro: "Trois rouleaux et une ligne de gain, celle du milieu. Aligne les bons symboles pour gagner.",
+      sections: [
+        ["Comment jouer", `<ol>
+          <li>Choisis ta mise avec <b>−</b> et <b>+</b> (de 5 à 500 jetons).</li>
+          <li>Touche <b>Lancer</b> : les rouleaux tournent puis s'arrêtent un par un.</li>
+          <li><b>Mise max</b> met la plus grosse mise que ton solde permet et lance aussitôt.</li></ol>`],
+        ["Les gains", `<p>Seule la ligne du milieu, marquée en rouge, compte. Les gains sont en nombre de fois ta mise, mise comprise.</p>
+          <table class="hpay"><tr><th>Sur la ligne</th><th>Paie</th></tr>
+          <tr><td><b>7 7 7</b> (jackpot)</td><td>×500</td></tr><tr><td>BAR BAR BAR</td><td>×50</td></tr>
+          <tr><td>🍒🍒🍒 trois cerises</td><td>×30</td></tr><tr><td>🔔🔔🔔 trois cloches</td><td>×20</td></tr>
+          <tr><td>🍉🍉🍉 trois pastèques</td><td>×12</td></tr><tr><td>🍇🍇🍇 trois raisins</td><td>×8</td></tr>
+          <tr><td>🍋🍋🍋 trois citrons</td><td>×6</td></tr><tr><td>7 et BAR mélangés (ex. 7 BAR 7)</td><td>×5</td></tr>
+          <tr><td>🍒🍒 deux cerises, n'importe où</td><td>×3</td></tr><tr><td>🍒 une cerise : mise rendue</td><td>×1</td></tr></table>
+          <p>Exemple : 10 jetons misés et trois cloches, tu reçois 200 jetons (190 de gain).</p>`],
+        ["Le hasard", `<ul>
+          <li>Chaque rouleau a 50 positions : les 7 sont les plus rares, les citrons les plus fréquents.</li>
+          <li>Chaque lancer est indépendant : une série de pertes ne rend pas le jackpot plus proche.</li>
+          <li>Sur le long terme, la machine rend environ 95 % des mises, comme une vraie machine de casino.</li></ul>`]
+      ]
+    },
     roulette: {
       title: "Roulette française",
       intro: "Devine où la bille va s'arrêter. 37 cases : de 1 à 36 en rouge ou noir, et le 0 vert.",
@@ -1658,7 +1682,7 @@ body::before { content: ""; position: fixed; inset: 0; pointer-events: none; bac
         ["Récompenses de la semaine", `<ul>
           <li>1ᵉʳ : 1 000 couronnes, plus le cadre Couronne et le titre Champion de la semaine, gardés tant que tu restes 1ᵉʳ.</li>
           <li>2ᵉ : 600, 3ᵉ : 400, 4ᵉ à 10ᵉ : 200, tous les autres classés : 50.</li></ul>`],
-        ["Rangs de saison", `<p>Bronze (20 pts), Fer (100), Argent (250), Or (400), Platine (600), Diamant (1 000), Alexandrite (2 000), Top 100 (les 100 meilleurs dès 2 000 points).</p>
+        ["Rangs de saison", `<p>Bronze (50 pts), Fer (250), Argent (600), Or (1 000), Platine (1 600), Diamant (2 500), Alexandrite (4 000), Top 100 (les 100 meilleurs dès 4 000 points).</p>
           <p>En fin de saison, tu reçois la bannière, le cadre, le titre et les couronnes de ton rang <b>et de tous les rangs en dessous</b>. Ces objets portent le numéro de la saison et ne reviennent jamais. Le 1ᵉʳ de la saison, dès le rang Argent, reçoit en plus l'ensemble Champion et 5 000 couronnes.</p>`],
         ["Amis et profils", `<ul>
           <li><b>Mon QR code</b> : fais-le scanner pour devenir amis dans les deux sens.</li>
@@ -1775,7 +1799,7 @@ body::before { content: ""; position: fixed; inset: 0; pointer-events: none; bac
     const t = helpTopic();
     let seen = true;
     try { seen = !!localStorage.getItem("casino.help." + t); } catch (e) {}
-    if (!seen && ["blackjack", "roulette", "holdem", "videopoker", "online"].includes(t)) {
+    if (!seen && ["blackjack", "roulette", "holdem", "videopoker", "online", "slots"].includes(t)) {
       setTimeout(() => { if (!document.querySelector(".psheet-scrim, .reward-scrim")) openHelp(t); }, document.documentElement.classList.contains("booting") ? 2200 : 700);
     }
   }
