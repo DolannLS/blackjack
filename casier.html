@@ -236,16 +236,14 @@ button:disabled { opacity: .5; cursor: default; }
     else btn.textContent = "Équiper";
   }
   function swatch(it) {
-    const p = P(), name = A.session ? A.session.username : "Toi";
-    if (it.kind === "banner") return `<div class="sw bn-${UI.esc(it.id)}">${UI.avatarHTML(name, p.frame, "md", p.avatar_url)}</div>`;
-    if (it.kind === "frame") return `<div class="sw frame-sw">${UI.avatarHTML(name, it.id, "md", p.avatar_url)}</div>`;
-    if (it.kind === "felt") return `<div class="sw felt-sw">${UI.feltHTML(it.id)}</div>`;
-    return `<div class="sw title-sw"><span class="ttl${it.price === null ? " gold" : ""}">${it.id === "sans-titre" ? "—" : UI.esc(it.name)}</span></div>`;
+    const p = P();
+    return UI.swatchHTML(it, { name: A.session ? A.session.username : "Toi", frame: p.frame, photo: p.avatar_url });
   }
+
   function rarityLine(it) {
     if (it.price === 0 || it.holders == null) return "";
     const r = UI.rarity(it.holders, players);
-    return r ? `<span class="rar rar-${r.key}">${r.label} · ${r.holders} joueur${r.holders > 1 ? "s" : ""} sur ${r.players}</span>` : "";
+    return r ? `<span class="rar count rar-${r.key}">${r.holders > 1 ? `Possédé par ${r.holders} joueurs sur ${r.players}` : "Tu es le seul à l'avoir"}</span>` : "";
   }
   function renderGrid() {
     if (!A.configured() || !A.session) { $("grid").innerHTML = `<div class="empty" style="grid-column:1/-1">Connecte-toi dans l'onglet Classement pour retrouver tes objets.</div>`; $("count").textContent = ""; return; }
@@ -255,9 +253,10 @@ button:disabled { opacity: .5; cursor: default; }
     const owned = list.filter(it => it.price !== 0).length;
     $("bank").textContent = fmt(owned);
     $("count").textContent = q ? `${shown.length} résultat${shown.length > 1 ? "s" : ""} pour « ${$("q").value.trim()} »` : `${shown.length} objet${shown.length > 1 ? "s" : ""}`;
-    $("grid").innerHTML = shown.map((it, i) => `<button class="item rise" style="--i:${Math.min(i, 14)}" data-id="${UI.esc(it.id)}" aria-pressed="${selected === it.id}">
+    $("grid").innerHTML = shown.map((it, i) => `<button class="item rise q${UI.quality(it.id)}" style="--i:${Math.min(i, 14)}" data-id="${UI.esc(it.id)}" aria-pressed="${selected === it.id}">
         ${kind === "all" ? `<span class="kindtag">${KIND[it.kind]}</span>` : ""}${swatch(it)}
         <span class="nm">${UI.esc(it.name)}</span>
+        ${UI.qualityTag(it.id) ? `<span class="meta">${UI.qualityTag(it.id)}</span>` : ""}
         ${equipped(it.id) ? `<span class="st on">Équipé</span>` : `<span class="src">${UI.esc(sourceText(it))}</span>`}
         ${rarityLine(it)}</button>`).join("") ||
       `<div class="empty" style="grid-column:1/-1">${q ? "Aucun objet ne porte ce nom." : "Rien ici pour l'instant. Achète des objets en boutique ou gagne-en au classement."}</div>`;

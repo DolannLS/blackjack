@@ -421,7 +421,7 @@
   function rarity(holders, players) {
     if (holders == null || !players) return null;
     const pct = holders / players * 100;
-    const label = pct <= 2 ? "Légendaire" : pct <= 8 ? "Épique" : pct <= 25 ? "Rare" : "Commun";
+    const label = !holders ? "Inédit" : pct <= 2 ? "Légendaire" : pct <= 8 ? "Épique" : pct <= 25 ? "Rare" : "Commun";
     return { holders, players, pct, label, key: label.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "") };
   }
   const PROFILE = "casino.profile";
@@ -577,8 +577,8 @@
   const escHTML = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const safeUrl = u => (typeof u === "string" && /^https:\/\/[^"'<>\s]+$/.test(u) ? u : "");
   function avatarHTML(name, frame, size = "", photo = "") {
-    const src = safeUrl(photo);
-    return `<span class="av ${size} fr-${escHTML(frame || "aucun")}${src ? " has-photo" : ""}">${src ? `<img src="${src}" alt="" loading="lazy" decoding="async">` : escHTML((name || "?")[0].toUpperCase())}</span>`;
+    const src = safeUrl(photo), f = frame || "aucun", q = f === "aucun" ? 1 : quality(f);
+    return `<span class="av ${size} fr-${escHTML(f)} fq${q}${src ? " has-photo" : ""}">${src ? `<img src="${src}" alt="" loading="lazy" decoding="async">` : escHTML((name || "?")[0].toUpperCase())}${q === 4 && f !== "couronne" ? `<i class="gem" aria-hidden="true"></i>` : ""}</span>`;
   }
   // the felt equipped by the player (kept offline in the cached profile)
   const feltId = () => { const f = profile && profile.felt; return f && STATIC[f] && STATIC[f].kind === "felt" ? f : "ft-vert"; };
@@ -594,13 +594,33 @@
     const t = itemInfo(id);
     return t && t.kind === "title" && t.id !== "sans-titre" ? t.name : "";
   }
+  // how much an item shines: 1 classique, 2 rare, 3 épique, 4 légendaire (from its price, or its season rank)
+  function quality(id) {
+    const it = itemInfo(id); if (!it) return 1;
+    if (it.season) return it.tier === "champion" || ["platine", "diamant", "alexandrite", "top-100"].includes(it.tier) ? 4 : ["argent", "or"].includes(it.tier) ? 3 : 2;
+    if (it.price === null) return 4;
+    if (!it.price) return 1;
+    return it.price <= 400 ? 1 : it.price <= 800 ? 2 : it.price <= 1300 ? 3 : 4;
+  }
+  const QUALITY = ["", "Classique", "Rare", "Épique", "Légendaire"];
+  // gloss, coloured edge, moving sheen and sparkles laid over a banner or a swatch
+  const fxHTML = q => q > 1 ? `<i class="fx q${q}" aria-hidden="true">${q === 4 ? "<b></b><b></b><b></b>" : ""}</i>` : "";
+  const qualityTag = id => { const q = quality(id); return q > 1 ? `<span class="qtag q${q}">${QUALITY[q]}</span>` : ""; };
+  const titleHTML = (id, text) => `<span class="pc-title tq${quality(id)}">${escHTML(text)}</span>`;
+  // the picture of an item in the shop and the locker
+  function swatchHTML(it, { name = "Toi", frame = "aucun", photo = "" } = {}) {
+    const q = quality(it.id), tag = "";
+    if (it.kind === "banner") return `<div class="sw bn-${escHTML(it.id)}">${fxHTML(q)}${avatarHTML(name, frame, "md", photo)}${tag}</div>`;
+    if (it.kind === "frame") return `<div class="sw frame-sw">${avatarHTML(name, it.id, "md", photo)}${tag}</div>`;
+    if (it.kind === "felt") return `<div class="sw felt-sw">${feltHTML(it.id)}${tag}</div>`;
+    return `<div class="sw title-sw"><div class="plate"><small>${escHTML(name)}</small>${it.id === "sans-titre" ? `<span class="pc-title tq1">—</span>` : titleHTML(it.id, it.name)}</div>${tag}</div>`;
+  }
   function cardHTML({ name, banner, frame, title, avatar = "", sub = "", right = "", cls = "" }) {
     const t = titleText(title);
-    const it = itemInfo(title);
-    const special = it && it.price === null ? " gold" : "";
     return `<div class="pcard bn-${escHTML(banner || "tapis")} ${cls}">
+      ${fxHTML(quality(banner || "tapis"))}
       ${avatarHTML(name, frame, "lg", avatar)}
-      <div class="pc-who"><b>${escHTML(name)}</b>${t ? `<span class="pc-title${special}">${escHTML(t)}</span>` : ""}${sub ? `<span class="pc-sub">${sub}</span>` : ""}</div>
+      <div class="pc-who"><b>${escHTML(name)}</b>${t ? titleHTML(title, t) : ""}${sub ? `<span class="pc-sub">${sub}</span>` : ""}</div>
       ${right ? `<div class="pc-right">${right}</div>` : ""}
     </div>`;
   }
@@ -647,7 +667,7 @@
     localHistory: () => read(HISTORY, []),
     onChange: f => { listeners.add(f); return () => listeners.delete(f); }
   };
-  window.CasinoUI = { cardHTML, avatarHTML, titleText, esc: escHTML, feltHTML, feltId, applyFelt };
+  window.CasinoUI = { cardHTML, avatarHTML, titleText, esc: escHTML, feltHTML, feltId, applyFelt, quality, QUALITY, fxHTML, swatchHTML, titleHTML, qualityTag };
   listeners.add(() => applyFelt());
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", applyFelt); else applyFelt();
   window.addEventListener("online", flush);
@@ -1393,6 +1413,65 @@ body::before { content: ""; position: fixed; inset: 0; pointer-events: none; bac
 .felt-preview .mini-felt { width: min(300px, 80%); }
 .guide-link { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 42px; padding: 8px 12px; border-radius: 12px; border: 1px solid var(--felt-line, rgba(216,178,106,.32)); background: rgba(216,178,106,.1); color: var(--brass, #d8b26a); font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
 .guide-link::before { content: "?"; display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: var(--brass, #d8b26a); color: #2a1f0c; font-size: 13px; flex: none; }
+
+/* ===== item finish: the pricier the item, the more it shines ===== */
+.pcard { box-shadow: inset 0 1px 0 rgba(255,255,255,.22), inset 0 0 0 1px rgba(255,255,255,.06), 0 10px 26px rgba(0,0,0,.38); }
+.pcard > .fx, .sw > .fx { position: absolute !important; inset: 0; z-index: 0 !important; pointer-events: none; border-radius: inherit; overflow: hidden; }
+.pcard > .av, .pcard > .pc-who, .pcard > .pc-right, .sw > .av { position: relative; z-index: 1; }
+.fx::before { content: ""; position: absolute; inset: 0; background: linear-gradient(168deg, rgba(255,255,255,.24), rgba(255,255,255,.04) 34%, transparent 46%); }
+.fx.q2 { box-shadow: inset 0 0 0 1px rgba(170,215,255,.38); }
+.fx.q3 { box-shadow: inset 0 0 0 1.5px rgba(205,175,255,.6), inset 0 0 22px rgba(170,120,255,.18); }
+.fx.q4 { box-shadow: inset 0 0 0 1.5px rgba(255,215,106,.85), inset 0 0 0 3px rgba(120,80,10,.35), inset 0 0 26px rgba(255,200,80,.28); }
+.fx.q3::after, .fx.q4::after { content: ""; position: absolute; top: -40%; bottom: -40%; width: 32%; left: -60%; transform: skewX(-20deg);
+  background: linear-gradient(100deg, transparent, rgba(255,255,255,.32), transparent); animation: fx-sheen 5s ease-in-out infinite; }
+.fx.q4::after { background: linear-gradient(100deg, transparent, rgba(255,238,175,.6), transparent); animation-duration: 3.4s; }
+@keyframes fx-sheen { 0%, 58% { left: -60%; } 100% { left: 135%; } }
+.fx b { position: absolute; width: 10px; height: 10px; background: #fff6d2; clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%);
+  filter: drop-shadow(0 0 3px #ffd76a); opacity: 0; animation: fx-twinkle 2.6s ease-in-out infinite; }
+.fx b:nth-child(1) { top: 16%; right: 10%; }
+.fx b:nth-child(2) { top: 60%; right: 26%; width: 7px; height: 7px; animation-delay: .9s; }
+.fx b:nth-child(3) { top: 28%; right: 42%; width: 8px; height: 8px; animation-delay: 1.7s; }
+@keyframes fx-twinkle { 0%, 100% { opacity: 0; transform: scale(.3) rotate(0); } 45% { opacity: 1; transform: scale(1.2) rotate(45deg); } }
+/* frames: a bevelled ring, a soft glow for épique, a gem on top for légendaire */
+.av { box-shadow: 0 0 0 1px rgba(0,0,0,.28), 0 3px 8px rgba(0,0,0,.35); }
+.av::before { -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 4.5px), #000 calc(100% - 4px)); mask: radial-gradient(farthest-side, transparent calc(100% - 4.5px), #000 calc(100% - 4px)); }
+.av.fq3, .av.fq4 { animation: fq-glow 2.8s ease-in-out infinite; }
+.av.fq4 { --glow: rgba(255,215,106,.75); }
+@keyframes fq-glow { 50% { filter: drop-shadow(0 0 6px var(--glow, rgba(210,180,255,.7))); } }
+.av .gem { position: absolute; top: -7px; left: 50%; width: 9px; height: 9px; transform: translateX(-50%) rotate(45deg); border-radius: 2px; z-index: 2;
+  background: linear-gradient(135deg, #ffffff, #bfe8ff 45%, #6aa8ff); box-shadow: 0 0 0 1.5px #8a6420, 0 0 8px rgba(160,210,255,.9); }
+.av.lg .gem { width: 11px; height: 11px; top: -9px; }
+/* titles */
+.pc-title.tq1 { color: rgba(242,238,227,.85); }
+.pc-title.tq3 { background: linear-gradient(90deg, #e6d8ff, #ffffff 50%, #cfe4ff); -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: none; filter: drop-shadow(0 1px 1px rgba(0,0,0,.7)); }
+.pc-title.tq3::before { content: "◆ "; font-size: .8em; }
+.pc-title.tq4, .pc-title.gold { background: linear-gradient(90deg, #b8862b, #fff3c4 25%, #e9c46a 50%, #fff8dc 75%, #b8862b); background-size: 200% 100%;
+  -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: none; filter: drop-shadow(0 1px 1px rgba(0,0,0,.75)); animation: tq-shine 3.2s linear infinite; }
+.pc-title.tq4::before { content: "✦ "; } .pc-title.tq4::after { content: " ✦"; }
+@keyframes tq-shine { to { background-position: -200% 0; } }
+/* shop and locker cards */
+.item { transition: transform .15s ease, box-shadow .25s, border-color .25s; }
+.item:active { transform: scale(.97); }
+.item .sw { box-shadow: inset 0 0 0 1px rgba(255,255,255,.08), 0 4px 10px rgba(0,0,0,.3); }
+.item.q2 { border-color: rgba(140,200,255,.32); }
+.item.q3 { border-color: rgba(195,155,255,.55); box-shadow: 0 0 16px rgba(170,110,255,.16); background: linear-gradient(160deg, rgba(170,120,255,.1), var(--glass, rgba(4,22,17,.55)) 55%); }
+.item.q4 { border-color: rgba(255,210,110,.75); box-shadow: 0 0 20px rgba(255,200,90,.22); background: linear-gradient(160deg, rgba(255,215,106,.14), var(--glass, rgba(4,22,17,.55)) 55%); }
+.item[aria-pressed="true"] { border-color: var(--brass, #d8b26a); box-shadow: 0 0 0 2px rgba(216,178,106,.45), 0 8px 22px rgba(0,0,0,.35); }
+.item .st { align-self: flex-start; padding: 3px 9px; border-radius: 999px; background: rgba(0,0,0,.32); }
+.item .meta { display: flex; align-items: center; justify-content: space-between; gap: 6px; flex-wrap: wrap; }
+.qtag { font-size: 9.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; padding: 3px 7px; border-radius: 6px; background: rgba(0,0,0,.4); white-space: nowrap; }
+.qtag.q2 { color: #a8d6ff; } .qtag.q3 { color: #d6bcff; } .qtag.q4 { color: #ffd76a; box-shadow: 0 0 0 1px rgba(255,215,106,.45); }
+.sw.title-sw { background: radial-gradient(ellipse at 50% 0%, #1d5a48, #07241c 70%) !important; }
+.sw .plate { display: flex; flex-direction: column; align-items: center; gap: 3px; max-width: 92%; padding: 6px 12px; border-radius: 10px; background: linear-gradient(180deg, rgba(0,0,0,.45), rgba(0,0,0,.25)); box-shadow: inset 0 0 0 1px rgba(216,178,106,.35); text-align: center; }
+.sw .plate small { font-size: 10.5px; font-weight: 700; color: #fff; opacity: .85; }
+.sw .plate .pc-title { font-size: 10.5px; line-height: 1.25; letter-spacing: .08em; }
+.item .sw { height: 74px !important; }
+.sw .plate .pc-title.tq4::after { content: none; }
+.rar.count::before { content: none; }
+.rar.count { font-weight: 600; opacity: .9; }
+.sw.frame-sw { background: radial-gradient(circle at 50% 45%, #1f6e57, #062a21 70%) !important; }
+.sw.frame-sw .av { width: 40px !important; height: 40px !important; font-size: 17px !important; }
+@media (prefers-reduced-motion: reduce) { .fx::after, .fx b, .av.fq3, .av.fq4, .pc-title.tq4 { animation: none !important; } }
 /* exclusive banner from the daily wheel */
 .bn-roue-fortune { background: radial-gradient(circle at 88% 50%, #ffd76a 0 7%, transparent 7.5%), repeating-conic-gradient(from 0deg at 88% 50%, #b3262f 0 15deg, #f2eee3 15deg 30deg, #1f7a4c 30deg 45deg, #f2eee3 45deg 60deg), #3a0a12; }
 .bn-roue-fortune::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(5,10,8,.85) 0, rgba(5,10,8,.6) 45%, transparent 75%); z-index: 0; }
@@ -1427,7 +1506,7 @@ body::before { content: ""; position: fixed; inset: 0; pointer-events: none; bac
 /* rarity */
 .rar { display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; font-weight: 700; letter-spacing: .02em; }
 .rar::before { content: ""; width: 8px; height: 8px; border-radius: 2px; transform: rotate(45deg); background: currentColor; }
-.rar-commun { color: #b9c2bf; } .rar-rare { color: #6cc4ff; } .rar-epique { color: #c07ae8; } .rar-legendaire { color: #ffcf5a; }
+.rar-commun { color: #b9c2bf; } .rar-rare { color: #6cc4ff; } .rar-epique { color: #c07ae8; } .rar-legendaire { color: #ffcf5a; } .rar-inedit { color: #8fe3c0; }
 
 /* header search */
 .search-btn { width: 38px; height: 38px; flex: none; border-radius: 50%; background: var(--glass); border: 1px solid var(--felt-line); display: grid; place-items: center; color: var(--ink); cursor: pointer; }

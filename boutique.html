@@ -229,13 +229,9 @@ button:disabled { opacity: .5; cursor: default; }
   }
 
   function swatch(it) {
-    const p = P(), name = A.session ? A.session.username : "Toi";
-    const photo = A.profile && A.profile.avatar_url;
-    if (it.kind === "banner") return `<div class="sw bn-${it.id}">${UI.avatarHTML(name, p.frame, "md", photo)}</div>`;
-    if (it.kind === "frame") return `<div class="sw frame-sw">${UI.avatarHTML(name, it.id, "md", photo)}</div>`;
-    if (it.kind === "felt") return `<div class="sw felt-sw">${UI.feltHTML(it.id)}</div>`;
-    return `<div class="sw title-sw"><span class="ttl${it.price === null ? " gold" : ""}">${it.id === "sans-titre" ? "—" : UI.esc(it.name)}</span></div>`;
+    return UI.swatchHTML(it, { name: A.session ? A.session.username : "Toi", frame: P().frame, photo: A.profile && A.profile.avatar_url });
   }
+
   function status(it) {
     if (A.session && equipped(it.id)) return `<span class="st on">Équipé</span>`;
     if (A.session && owned(it.id) && it.price !== 0) return `<span class="st owned">Possédé</span>`;
@@ -249,13 +245,13 @@ button:disabled { opacity: .5; cursor: default; }
   function rarityLine(it) {
     if (!stats || it.price === 0) return "";
     const r = UI.rarity(stats.holders[it.id] || 0, stats.players);
-    return r ? `<span class="rar rar-${r.key}" title="${r.holders} joueur${r.holders > 1 ? "s" : ""} sur ${r.players}">${r.label} · ${r.holders} joueur${r.holders > 1 ? "s" : ""}</span>` : "";
+    return r ? `<span class="rar count rar-${r.key}" title="${r.holders} joueur${r.holders > 1 ? "s" : ""} sur ${r.players}">${r.holders ? `Possédé par ${r.holders} joueur${r.holders > 1 ? "s" : ""}` : "Personne ne l'a encore"}</span>` : "";
   }
   function renderGrid() {
     if (!week) { $("grid").innerHTML = `<div class="empty" style="grid-column:1/-1">${A.configured() && A.session ? "Chargement de la sélection de la semaine…" : "Connecte-toi dans l'onglet Classement pour voir la sélection de la semaine."}</div>`; return; }
     const items = week.items.map(id => A.ITEM[id]).filter(it => it && it.kind === kind);
-    $("grid").innerHTML = items.map((it, i) => `<button class="item rise" style="--i:${i}" data-id="${it.id}" aria-pressed="${selected === it.id}">
-      ${swatch(it)}<span class="nm">${UI.esc(it.name)}</span>${status(it)}${rarityLine(it)}</button>`).join("") ||
+    $("grid").innerHTML = items.map((it, i) => `<button class="item rise q${UI.quality(it.id)}" style="--i:${i}" data-id="${it.id}" aria-pressed="${selected === it.id}">
+      ${swatch(it)}<span class="nm">${UI.esc(it.name)}</span><span class="meta">${status(it)}${UI.qualityTag(it.id)}</span>${rarityLine(it)}</button>`).join("") ||
       `<div class="empty" style="grid-column:1/-1">Rien dans cette catégorie cette semaine.</div>`;
   }
   async function loadShop() {
