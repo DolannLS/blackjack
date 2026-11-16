@@ -125,6 +125,11 @@ button:disabled { opacity: .5; cursor: default; }
 .shophead b { font-family: var(--f-display); font-weight: 400; font-size: 20px; }
 .shophead span { font-size: 13px; color: var(--brass); font-weight: 600; }
 .item .rar { padding-inline: 2px; }
+.item.star { grid-column: 1 / -1; }
+.item.star .sw { height: 120px !important; }
+.item.star .nm { font-size: 17px; }
+.star-tag { position: absolute; top: 14px; right: 14px; z-index: 4; font-size: 10.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; padding: 4px 9px; border-radius: 8px;
+  background: linear-gradient(90deg, #8a6420, #e9c46a 50%, #8a6420); color: #2a1f0c; box-shadow: 0 2px 8px rgba(0,0,0,.4); }
 .tierprev { display: grid; grid-template-columns: 1fr; gap: 6px; }
 .tierprev .pcard { min-height: 56px; padding: 10px 12px; }
 .tierprev .pcard .av.lg { width: 40px; height: 40px; font-size: 17px; }
@@ -249,8 +254,11 @@ button:disabled { opacity: .5; cursor: default; }
   }
   function renderGrid() {
     if (!week) { $("grid").innerHTML = `<div class="empty" style="grid-column:1/-1">${A.configured() && A.session ? "Chargement de la sélection de la semaine…" : "Connecte-toi dans l'onglet Classement pour voir la sélection de la semaine."}</div>`; return; }
-    const items = week.items.map(id => A.ITEM[id]).filter(it => it && it.kind === kind);
-    $("grid").innerHTML = items.map((it, i) => `<button class="item rise q${UI.quality(it.id)}" style="--i:${i}" data-id="${it.id}" aria-pressed="${selected === it.id}">
+    // the most prestigious first; the finest of the week is shown large, as the star of the shop
+    const items = week.items.map(id => A.ITEM[id]).filter(it => it && it.kind === kind)
+      .sort((x, y) => UI.quality(y.id) - UI.quality(x.id) || (y.price || 0) - (x.price || 0));
+    const star = items[0] && UI.quality(items[0].id) === 4 ? items[0].id : null;
+    $("grid").innerHTML = items.map((it, i) => `<button class="item rise q${UI.quality(it.id)}${it.id === star ? " star" : ""}" style="--i:${i}" data-id="${it.id}" aria-pressed="${selected === it.id}">${it.id === star ? `<span class="star-tag">★ La pièce de la semaine</span>` : ""}
       ${swatch(it)}<span class="nm">${UI.esc(it.name)}</span><span class="meta">${status(it)}${UI.qualityTag(it.id)}</span>${rarityLine(it)}</button>`).join("") ||
       `<div class="empty" style="grid-column:1/-1">Rien dans cette catégorie cette semaine.</div>`;
   }
