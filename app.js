@@ -377,6 +377,7 @@
     { id: "ft-damier", kind: "felt", name: "Damier royal", price: 700 },
     { id: "ft-cuir", kind: "felt", name: "Cuir capitonné", price: 1000 },
     { id: "ft-chene", kind: "felt", name: "Table en chêne", price: 600 },
+    { id: "roue-fortune", kind: "banner", name: "Roue de la fortune", price: null, how: "super lot de la roue du jour" },
     { id: "champion", kind: "title", name: "Champion de la semaine", price: null, how: "1ᵉʳ de la semaine, tant que tu le restes" }
   ];
   const STATIC = Object.fromEntries(SHOP.map(x => [x.id, x]));
@@ -467,6 +468,23 @@
     });
   // locker, weekly shop, rarity, search
   const shopWeek = () => api("/rest/v1/rpc/shop_week", { method: "POST", body: {} });
+  // daily wheel: the server draws the prize; chips go to this phone's balance, crowns and items to the account
+  const wheelStatus = () => api("/rest/v1/rpc/wheel_status", { method: "POST", body: {} });
+  async function spinWheel() {
+    let r;
+    try { r = await api("/rest/v1/rpc/spin_wheel", { method: "POST", body: {} }); }
+    catch (e) { throw new Error(e.raw === "deja_tourne" ? "Tu as déjà tourné la roue aujourd'hui. Reviens demain !" : /spin_wheel|function/.test(e.raw || "") ? "La roue arrive avec la mise à jour du serveur." : e.message); }
+    if (r.chips) {
+      const w = read("bj.table.v1", {}) || {};
+      w.bankroll = (typeof w.bankroll === "number" ? w.bankroll : 1000) + r.chips;
+      write("bj.table.v1", w);
+    }
+    write("wheel.day", wheelDay());
+    if (profile) keepProfile({ ...profile, crowns: r.total_crowns, owned: r.item ? [...new Set([...(profile.owned || []), r.item])] : profile.owned });
+    return r;
+  }
+  // the current day in Paris, as the server counts it
+  const wheelDay = () => new Intl.DateTimeFormat("fr-CA", { timeZone: "Europe/Paris" }).format(new Date());
   const itemStats = () => api("/rest/v1/rpc/item_stats", { method: "POST", body: {} });
   const locker = () => api("/rest/v1/rpc/locker", { method: "POST", body: {} });
   const searchPlayers = q => api("/rest/v1/rpc/search_players", { method: "POST", body: { q } });
@@ -582,7 +600,7 @@
     signUp, signIn, logout, record, flush, pending, history, leaderboard: leaderboardBy, addFriend, removeFriend,
     myInvite, resetInvite, inviteInfo, acceptInvite, inviteUrl, parseInvite, pendingInvite, NAME_RE,
     SHOP, ITEM, itemInfo, PRIZES, TIERS, TIER, CHAMPION, seasonNumber, seasonSet, rarity, loadProfile, buy, equip, markRewardsSeen,
-    shopWeek, itemStats, locker, searchPlayers, uploadAvatar, removeAvatar,
+    shopWeek, itemStats, locker, searchPlayers, uploadAvatar, removeAvatar, wheelStatus, spinWheel, wheelDay,
     seasonBoard, publicProfile, liveFeed, botsTick, renameAccount, changePassword, deleteAccount,
     localHistory: () => read(HISTORY, []),
     onChange: f => { listeners.add(f); return () => listeners.delete(f); }
@@ -789,6 +807,9 @@ body::before { content: ""; position: fixed; inset: 0; pointer-events: none; bac
       `<a href="${href === "#jeux" ? lastGame() : href}"${href === "#jeux" ? ' data-games="1"' : ""}${re.test(page) ? ' aria-current="page"' : ""}><svg viewBox="0 0 24 24" aria-hidden="true">${ICONS[icon]}</svg>${label}</a>`).join("");
     nav.querySelector("[data-games]").addEventListener("click", e => { e.preventDefault(); openGames(); });
     app.appendChild(nav);
+    const defis = nav.querySelector('a[href="defis.html"]');
+    const markWheel = () => defis && defis.classList.toggle("wheel-ready", !!session && read("wheel.day", "") !== wheelDay());
+    markWheel(); listeners.add(markWheel);
     mountTableReturn(app);
     animateBank();
   }
@@ -1328,6 +1349,13 @@ body::before { content: ""; position: fixed; inset: 0; pointer-events: none; bac
 .mini-felt i:nth-child(1) { left: 36%; } .mini-felt i:nth-child(2) { left: 50%; } .mini-felt i:nth-child(3) { left: 64%; }
 .felt-preview { display: grid; place-items: center; min-height: 84px; padding: 10px; border-radius: 18px; background: rgba(0,0,0,.2); border: 1px solid var(--felt-line); }
 .felt-preview .mini-felt { width: min(300px, 80%); }
+/* exclusive banner from the daily wheel */
+.bn-roue-fortune { background: radial-gradient(circle at 88% 50%, #ffd76a 0 7%, transparent 7.5%), repeating-conic-gradient(from 0deg at 88% 50%, #b3262f 0 15deg, #f2eee3 15deg 30deg, #1f7a4c 30deg 45deg, #f2eee3 45deg 60deg), #3a0a12; }
+.bn-roue-fortune::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(5,10,8,.85) 0, rgba(5,10,8,.6) 45%, transparent 75%); z-index: 0; }
+.bn-roue-fortune > * { position: relative; z-index: 1; }
+/* a dot on the Défis tab while the daily wheel is waiting */
+.tabbar a.wheel-ready::after { content: ""; position: absolute; top: 4px; right: calc(50% - 16px); width: 9px; height: 9px; border-radius: 50%; background: #e8414f; box-shadow: 0 0 0 2px rgba(3,18,14,.9); animation: wheel-dot 1.4s infinite; }
+@keyframes wheel-dot { 50% { opacity: .35; } }
 /* season number sits above the banner art but under the player info */
 [class*="bn-s"] > * { position: relative; z-index: 1; }
 .sw[class*="bn-s"]::before { font-size: 2.4em; }
@@ -1697,7 +1725,8 @@ body::before { content: ""; position: fixed; inset: 0; pointer-events: none; bac
           <li>150 offertes à la création du compte.</li>
           <li>Chaque lundi, selon ta place au classement de la semaine.</li>
           <li>Chaque fin de mois, selon ton rang de saison.</li>
-          <li>Chaque jour : 3 défis (bonus de 50 si tu fais les 3) et la connexion quotidienne (5, 5, 5, 20, 20, 20 puis 50 couronnes le 7ᵉ jour d'affilée).</li></ul>`],
+          <li>Chaque jour : 3 défis (bonus de 50 si tu fais les 3) et la connexion quotidienne (5, 5, 5, 20, 20, 20 puis 50 couronnes le 7ᵉ jour d'affilée).</li>
+          <li>Chaque jour aussi : un tour gratuit de la <b>roue du jour</b> dans l'onglet Défis (couronnes, jetons, ou la bannière exclusive Roue de la fortune).</li></ul>`],
         ["La boutique", `<ul>
           <li>Une sélection différente chaque lundi : 8 bannières, 5 cadres, 7 titres et 3 tapis de poker.</li>
           <li>Touche un objet pour l'essayer en aperçu, puis Acheter. Il rejoint ton casier.</li>

@@ -93,6 +93,24 @@ button:disabled { opacity: .5; cursor: default; }
 .step .c { color: var(--gold); font-weight: 700; font-variant-numeric: tabular-nums; display: inline-flex; gap: 3px; align-items: center; }
 .week .note { font-size: 12.5px; color: var(--muted); margin: 0; }
 .week a { color: var(--brass); font-size: 14px; font-weight: 600; }
+/* daily wheel */
+.wheel-wrap { position: relative; width: min(76vw, 300px, 40dvh); aspect-ratio: 1; margin: 4px auto 0; }
+.wheel { width: 100%; height: 100%; display: block; filter: drop-shadow(0 10px 18px rgba(0,0,0,.5)); transition: transform 5.2s cubic-bezier(.12,.75,.12,1); }
+.wheel text { font-family: var(--f-ui, sans-serif); font-weight: 800; fill: #fff; text-anchor: middle; dominant-baseline: middle; }
+.wheel text.u { font-weight: 700; font-size: 5.6px; letter-spacing: .03em; opacity: .9; }
+.wheel-pin { position: absolute; left: 50%; top: -6px; z-index: 2; width: 0; height: 0; transform: translateX(-50%); border: 13px solid transparent; border-top: 24px solid #ffd76a; border-bottom: 0; filter: drop-shadow(0 3px 3px rgba(0,0,0,.5)); }
+.wheel-hub { position: absolute; left: 50%; top: 50%; width: 27%; aspect-ratio: 1; transform: translate(-50%, -50%); border-radius: 50%; z-index: 2;
+  background: radial-gradient(circle at 35% 30%, #fff3c4, #d8b26a 55%, #8a6420); color: #2a1f0c; font-weight: 800; font-size: clamp(12px, 3.6vw, 16px); box-shadow: 0 0 0 4px #4a2412, 0 6px 14px rgba(0,0,0,.5); }
+.wheel-hub:disabled { opacity: 1; filter: saturate(.4) brightness(.8); }
+.wheel-hub:not(:disabled) { animation: hub 1.6s ease-in-out infinite; }
+@keyframes hub { 50% { box-shadow: 0 0 0 4px #4a2412, 0 0 22px rgba(255,215,106,.85); } }
+.msg-line { text-align: center; font-size: 14.5px; color: var(--muted); min-height: 20px; }
+.msg-line b { color: var(--ink); }
+.msg-line.win b { color: var(--brass); font-size: 17px; }
+.odds summary { cursor: pointer; font-size: 13.5px; color: var(--brass); font-weight: 600; text-align: center; }
+.odds table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 13.5px; }
+.odds td { padding: 5px 4px; border-bottom: 1px solid rgba(255,255,255,.08); }
+.odds td:last-child { text-align: right; font-variant-numeric: tabular-nums; color: var(--muted); }
 
 .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .item { position: relative; display: flex; flex-direction: column; gap: 8px; padding: 8px; border-radius: 16px; background: var(--glass); border: 1.5px solid transparent; text-align: left; min-width: 0; }
@@ -152,6 +170,16 @@ button:disabled { opacity: .5; cursor: default; }
     <nav class="switch"></nav>
   </header>
   <div class="scroll">
+    <section class="week wheel-card" aria-labelledby="wheelTitle">
+      <div class="week-head"><h2 id="wheelTitle">Roue du jour</h2><span class="countdown" id="wheelEnd"></span></div>
+      <div class="wheel-wrap">
+        <div class="wheel-pin" aria-hidden="true"></div>
+        <svg class="wheel" id="wheel" viewBox="-110 -110 220 220" role="img" aria-label="Roue des récompenses"></svg>
+        <button class="wheel-hub" id="wheelBtn">Tourner</button>
+      </div>
+      <div class="msg-line" id="wheelMsg" role="status" aria-live="polite">Un tour gratuit par jour. Couronnes, jetons, ou la bannière exclusive Roue de la fortune.</div>
+      <details class="odds"><summary>Voir les chances de chaque lot</summary><table id="wheelOdds"></table></details>
+    </section>
     <section class="week daily" id="daily" aria-labelledby="dailyTitle">
       <div class="week-head"><h2 id="dailyTitle">Défis du jour</h2><span class="countdown" id="dailyEnd"></span></div>
       <div id="dailyList"><div class="myweek">Chargement des défis du jour…</div></div>
@@ -167,6 +195,7 @@ button:disabled { opacity: .5; cursor: default; }
         <li>Joue normalement : la progression se met à jour toute seule et les couronnes sont versées dès qu'un défi est réussi.</li>
         <li>Réussis les 3 pour un bonus de 50 couronnes.</li>
         <li>Connexion : ouvre l'app chaque jour. Jours 1 à 3 : 5 couronnes, jours 4 à 6 : 20, jour 7 : 50. Un jour manqué, ou la fin du 7ᵉ jour, et la série repart au jour 1.</li>
+        <li>Roue du jour : un tour gratuit par jour. Les couronnes et la bannière vont sur ton compte, les jetons sur ton solde de jeu. Si tu as déjà la bannière, elle est remplacée par 300 couronnes.</li>
         <li>Les couronnes se dépensent dans l'onglet Boutique.</li>
       </ul>
     </section>
@@ -195,6 +224,83 @@ button:disabled { opacity: .5; cursor: default; }
     const ms = new Date(st.resets_at) - Date.now(), h = Math.max(0, Math.floor(ms / 3600000)), m = Math.max(0, Math.floor(ms / 60000) % 60);
     $("dailyEnd").textContent = `Nouveaux défis dans ${h} h ${String(m).padStart(2, "0")}`;
   }
+  // ---------- daily wheel ----------
+  // 12 equal slices; the server picks the prize with its own odds, the wheel then stops on a slice showing it
+  const SLICES = ["c10", "j200", "c25", "perdu", "c50", "j500", "c100", "j1000", "c250", "objet", "c1000", "c10"];
+  const LOOK = {
+    perdu: ["Perdu", "", "#4b5058"], c10: ["10", "COURONNES", "#b3262f"], c25: ["25", "COURONNES", "#17191d"], c50: ["50", "COURONNES", "#b3262f"],
+    c100: ["100", "COURONNES", "#17191d"], c250: ["250", "COURONNES", "#7a1f9a"], c1000: ["1 000", "JACKPOT", "#c9961c"],
+    j200: ["200", "JETONS", "#1f7a4c"], j500: ["500", "JETONS", "#1f7a4c"], j1000: ["1 000", "JETONS", "#0f5a8a"], objet: ["★", "BANNIÈRE", "#c9961c"]
+  };
+  const STEP = 360 / SLICES.length;
+  let angle = 0, spinning = false, status = null, justWon = false;
+  function drawWheel() {
+    const r = 100, pt = a => [Math.sin(a * Math.PI / 180) * r, -Math.cos(a * Math.PI / 180) * r];
+    let g = `<circle r="108" fill="#4a2412"/><circle r="104" fill="#8a5a2b"/>`;
+    SLICES.forEach((id, i) => {
+      const a0 = i * STEP - STEP / 2, a1 = a0 + STEP, [x0, y0] = pt(a0), [x1, y1] = pt(a1), [lab, unit, col] = LOOK[id];
+      g += `<path d="M0 0L${x0.toFixed(2)} ${y0.toFixed(2)}A${r} ${r} 0 0 1 ${x1.toFixed(2)} ${y1.toFixed(2)}Z" fill="${col}" stroke="#d8b26a" stroke-width=".8"/>`;
+      g += `<g transform="rotate(${i * STEP})"><text y="${unit ? -62 : -70}" font-size="${lab.length > 3 ? 12 : 15}">${lab}</text>${unit ? `<text class="u" y="-85">${unit}</text>` : ""}</g>`;
+    });
+    for (let i = 0; i < SLICES.length; i++) { const [x, y] = pt(i * STEP - STEP / 2).map(v => v * 1.04); g += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="2.2" fill="#ffe9a6"/>`; }
+    $("wheel").innerHTML = g;
+  }
+  function paintWheel() {
+    const btn = $("wheelBtn"), msg = $("wheelMsg");
+    if (!A.configured() || !A.session) { btn.disabled = true; msg.textContent = "Connecte-toi dans l'onglet Classement pour tourner la roue chaque jour."; return; }
+    if (!status) { btn.disabled = true; return; }
+    const today = status.today && status.today.prize ? status.today : null;
+    btn.disabled = spinning || !!today;
+    btn.textContent = today ? "Demain" : "Tourner";
+    if (today && !spinning && !justWon) msg.innerHTML = `Lot du jour : <b>${UI.esc(prizeText(today))}</b>. Reviens demain pour un nouveau tour.`;
+    if (status.prizes) {
+      const tot = status.prizes.reduce((a, p) => a + p.weight, 0);
+      $("wheelOdds").innerHTML = status.prizes.map(p => `<tr><td>${UI.esc(p.label)}</td><td>${(p.weight / tot * 100).toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %</td></tr>`).join("");
+    }
+    const ms = new Date(status.next_at) - Date.now(), h = Math.max(0, Math.floor(ms / 3600000)), m = Math.max(0, Math.floor(ms / 60000) % 60);
+    $("wheelEnd").textContent = today ? `Nouveau tour dans ${h} h ${String(m).padStart(2, "0")}` : "Disponible";
+  }
+  const prizeText = p => p.prize === "perdu" ? "rien cette fois" : [p.crowns ? `${fmt(p.crowns)} couronnes` : "", p.chips ? `${fmt(p.chips)} jetons` : "", p.item ? "la bannière Roue de la fortune" : ""].filter(Boolean).join(" + ") || "rien cette fois";
+  async function loadWheel() {
+    if (!A.configured() || !A.session) return paintWheel();
+    try { status = await A.wheelStatus(); }
+    catch (e) { $("wheelMsg").textContent = /wheel_status|function/.test(e.raw || "") ? "La roue arrive avec la mise à jour du serveur." : e.code === "network" ? "Il faut internet pour tourner la roue." : e.message; return; }
+    if (status.today && status.today.prize) {
+      try { localStorage.setItem("wheel.day", JSON.stringify(A.wheelDay())); } catch (e) {}
+      document.querySelectorAll(".tabbar a.wheel-ready").forEach(a => a.classList.remove("wheel-ready"));
+      // show the wheel stopped on today's prize
+      const i = SLICES.indexOf(status.today.prize);
+      angle = -Math.max(0, i) * STEP; $("wheel").style.transition = "none"; $("wheel").style.transform = `rotate(${angle}deg)`;
+    }
+    paintWheel();
+  }
+  $("wheelBtn").onclick = async () => {
+    if (spinning) return;
+    spinning = true; paintWheel();
+    $("wheelMsg").textContent = "La roue tourne…";
+    let r;
+    try { r = await A.spinWheel(); }
+    catch (e) { spinning = false; $("wheelMsg").textContent = e.message; paintWheel(); return; }
+    const spots = SLICES.map((id, i) => id === r.prize ? i : -1).filter(i => i >= 0);
+    const i = spots[Math.floor(Math.random() * spots.length)];
+    const jitter = (Math.random() - .5) * STEP * .6;
+    // several full turns, then the chosen slice under the pin
+    const target = -(i * STEP) + jitter;
+    angle = angle - (angle % 360) - 360 * 6 + target;
+    const wh = $("wheel"); wh.style.transition = ""; void wh.offsetWidth; wh.style.transform = `rotate(${angle}deg)`;
+    await new Promise(res => setTimeout(res, matchMedia("(prefers-reduced-motion: reduce)").matches ? 300 : 5400));
+    spinning = false; justWon = true;
+    document.querySelectorAll(".tabbar a.wheel-ready").forEach(a => a.classList.remove("wheel-ready"));
+    status = { ...status, today: { prize: r.prize, crowns: r.crowns, chips: r.chips, item: r.item } };
+    const m = $("wheelMsg");
+    m.className = "msg-line" + (r.prize === "perdu" ? "" : " win");
+    m.innerHTML = r.prize === "perdu" ? "Perdu… La chance tournera demain !" : `Bravo ! Tu gagnes <b>${UI.esc(prizeText({ ...r }))}</b>${r.chips ? " (ajoutés à ton solde de jeu)" : ""}.`;
+    if (r.prize !== "perdu" && UI.toast) UI.toast(r.prize === "c1000" ? "JACKPOT ! 1 000 couronnes" : r.item ? "Bannière exclusive gagnée !" : "Lot de la roue gagné !");
+    showCrowns(); paintWheel();
+  };
+  drawWheel(); loadWheel();
+  setInterval(paintWheel, 60000);
+
   paintDaily(A.daily());
   A.onDaily(st => { paintDaily(st); showCrowns(); });
   A.onChange(showCrowns);
