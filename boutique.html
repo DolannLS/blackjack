@@ -126,6 +126,14 @@ button:disabled { opacity: .5; cursor: default; }
 .shophead b { font-family: var(--f-display); font-weight: 400; font-size: 20px; }
 .shophead span { font-size: 13px; color: var(--brass); font-weight: 600; }
 .item .rar { padding-inline: 2px; }
+.xchg { display: flex; flex-direction: column; gap: 8px; padding: 12px; border-radius: 16px; background: linear-gradient(150deg, rgba(216,178,106,.16), var(--glass) 60%); border: 1px solid var(--felt-line); margin-bottom: 12px; }
+.xchg-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.xchg-head b { font-size: 15.5px; } .xchg-head span { font-size: 12.5px; color: var(--muted); }
+.xchg-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.xchg-row button { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 2px; border-radius: 12px; background: rgba(0,0,0,.28); border: 1px solid var(--felt-line); color: var(--ink); }
+.xchg-row button b { font-size: 15px; font-variant-numeric: tabular-nums; } .xchg-row button span { font-size: 10.5px; color: var(--gold, #e9c46a); }
+.xchg-row button:disabled { opacity: .4; }
+.xchg-msg { font-size: 13px; color: var(--muted); min-height: 0; } .xchg-msg.ok { color: var(--win); }
 .item.star { grid-column: 1 / -1; }
 .item.star .sw { height: 120px !important; }
 .item.star .nm { font-size: 17px; }
@@ -175,6 +183,16 @@ button:disabled { opacity: .5; cursor: default; }
   </div>
 
   <div class="scroll">
+    <section class="xchg" aria-labelledby="xchgTitle">
+      <div class="xchg-head"><b id="xchgTitle">Plus de jetons pour jouer</b><span>100 couronnes = 1 000 jetons</span></div>
+      <div class="xchg-row" id="xchgRow">
+        <button data-packs="1"><b>1 000</b><span>100 couronnes</span></button>
+        <button data-packs="3"><b>3 000</b><span>300 couronnes</span></button>
+        <button data-packs="5"><b>5 000</b><span>500 couronnes</span></button>
+        <button data-packs="10"><b>10 000</b><span>1 000 couronnes</span></button>
+      </div>
+      <div class="xchg-msg" id="xchgMsg" role="status"></div>
+    </section>
     <div class="shophead"><b>Sélection de la semaine</b><span id="shopEnd"></span></div>
     <div class="grid" id="grid"></div>
 
@@ -289,6 +307,26 @@ button:disabled { opacity: .5; cursor: default; }
     $("bank").textContent = A.session && A.profile ? fmt(A.profile.crowns) : "—";
     renderCard(animate); renderAction(); renderGrid();
   }
+
+  // crowns for chips
+  function paintXchg() {
+    const crowns = A.profile ? A.profile.crowns : 0;
+    document.querySelectorAll("#xchgRow button").forEach(b => b.disabled = !A.session || crowns < +b.dataset.packs * 100);
+    if (!A.session) $("xchgMsg").textContent = "Connecte-toi pour échanger tes couronnes.";
+  }
+  $("xchgRow").addEventListener("click", async e => {
+    const b = e.target.closest("button"); if (!b || b.disabled) return;
+    const packs = +b.dataset.packs, m = $("xchgMsg");
+    document.querySelectorAll("#xchgRow button").forEach(x => x.disabled = true);
+    m.className = "xchg-msg"; m.textContent = "Échange en cours…";
+    try {
+      const r = await A.buyChips(packs);
+      m.className = "xchg-msg ok"; m.textContent = `+${fmt(packs * 1000)} jetons ajoutés à ton solde de jeu (${fmt(r.chips)} jetons).`;
+      render(false);
+    } catch (err) { m.className = "xchg-msg"; m.textContent = err.message; }
+    paintXchg();
+  });
+  A.onChange(paintXchg); paintXchg();
 
   $("grid").addEventListener("click", e => {
     const b = e.target.closest(".item"); if (!b) return;

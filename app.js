@@ -503,28 +503,59 @@
     if (flushing) return;
     setChips(+chips + pendingNet());
   }
-  // one free refill a day, only when the balance is (almost) empty
+  // a free refill of 1 000 every 4 hours, 3 a day at most, only when the balance is (almost) empty
+  const REFILL_GAP = 4 * 3600e3, REFILLS_A_DAY = 3;
+  const waitText = min => { const h = Math.floor(min / 60), m = min % 60; return h ? `${h} h ${String(m).padStart(2, "0")}` : `${m} min`; };
   async function refillChips() {
-    const localOnce = () => {
-      const day = wheelDay();
-      if (read("refill.day", "") === day) throw new Error("Recharge gratuite déjà utilisée aujourd'hui. Elle revient à minuit.");
-      write("refill.day", day);
+    const localRefill = () => {
+      const day = wheelDay(), st = read("refill.local", {}) || {};
+      const used = st.day === day ? st.count || 0 : 0;
+      if (used >= REFILLS_A_DAY) throw new Error("Tes 3 recharges gratuites du jour sont utilisées. Elles reviennent à minuit.");
+      const left = (st.at || 0) + REFILL_GAP - Date.now();
+      if (left > 0) throw new Error(`Prochaine recharge gratuite dans ${waitText(Math.ceil(left / 60000))}.`);
+      write("refill.local", { day, count: used + 1, at: Date.now() });
       return 1000;
     };
-    if (!configured() || !session) return localOnce();
+    if (!configured() || !session) return localRefill();
     await flush();
     if (pending().length) throw new Error(navigator.onLine === false ? "Il faut internet pour recharger." : "Tes dernières parties sont en cours d'envoi, réessaie dans un instant.");
     try {
       const n = await api("/rest/v1/rpc/refill_chips", { method: "POST", body: {} });
-      if (profile) keepProfile({ ...profile, chips: n, refilled_today: true });
+      if (profile) keepProfile({ ...profile, chips: n });
       return +n;
     } catch (e) {
-      if (/refill_chips|function/.test(e.raw || "")) return localOnce(); // server not updated yet
-      throw new Error(e.raw === "deja_recharge" ? "Tu as déjà utilisé ta recharge gratuite aujourd'hui. Elle revient à minuit. Tente aussi ta chance à la roue du jour (onglet Défis)."
+      if (/refill_chips|function/.test(e.raw || "")) return localRefill(); // server not updated yet
+      const soon = /^trop_tot:(\d+)/.exec(e.raw || "");
+      throw new Error(soon ? `Prochaine recharge gratuite dans ${waitText(+soon[1])}. En attendant : la roue du jour, ou échange des couronnes contre des jetons dans la Boutique.`
+        : e.raw === "deja_recharge" ? "Tes 3 recharges gratuites du jour sont utilisées. Elles reviennent à minuit. Tu peux aussi échanger des couronnes contre des jetons dans la Boutique."
         : e.raw === "pas_a_sec" ? "Ton solde n'est pas vide sur ton compte : recharge la page."
         : e.code === "network" ? "Il faut internet pour recharger." : e.message);
     }
   }
+  // 3. crowns for chips: 100 crowns = 1 000 chips
+  async function buyChips(packs) {
+    await flush();
+    try {
+      const r = await api("/rest/v1/rpc/buy_chips", { method: "POST", body: { packs } });
+      if (profile) keepProfile({ ...profile, crowns: r.crowns, chips: r.chips });
+      setChips(+r.chips + pendingNet());
+      return r;
+    } catch (e) {
+      throw new Error(e.raw === "solde" ? "Pas assez de couronnes pour cet échange." : e.raw === "solde_inconnu" ? "Ton solde se met à jour, réessaie dans un instant."
+        : /buy_chips|function/.test(e.raw || "") ? "L'échange arrive avec la mise à jour du serveur." : e.code === "network" ? "Il faut internet pour échanger." : e.message);
+    }
+  }
+  // without an account, the daily 500 chips are given on this phone
+  function localDailyChips() {
+    if (session) return;
+    const day = wheelDay();
+    if (read("chips.bonus.day", "") === day) return;
+    write("chips.bonus.day", day);
+    setChips(localChips() + 500);
+    setTimeout(() => toast("+500 jetons offerts aujourd'hui"), 1500);
+  }
+  setTimeout(localDailyChips, 900);
+
   const SHOP_ERR = {
     solde: "Pas assez de couronnes pour l'instant.", exclusif: "Cet objet se gagne uniquement en récompense.",
     possede: "Tu l'as déjà.", non_possede: "Cet objet n'est pas dans ton casier.", introuvable: "Objet introuvable.",
@@ -705,7 +736,7 @@
     signUp, signIn, logout, record, flush, pending, history, leaderboard: leaderboardBy, addFriend, removeFriend,
     myInvite, resetInvite, inviteInfo, acceptInvite, inviteUrl, parseInvite, pendingInvite, NAME_RE,
     SHOP, ITEM, itemInfo, PRIZES, TIERS, TIER, CHAMPION, seasonNumber, seasonSet, rarity, loadProfile, buy, equip, markRewardsSeen,
-    shopWeek, itemStats, locker, searchPlayers, uploadAvatar, removeAvatar, wheelStatus, spinWheel, wheelDay, refillChips,
+    shopWeek, itemStats, locker, searchPlayers, uploadAvatar, removeAvatar, wheelStatus, spinWheel, wheelDay, refillChips, buyChips,
     seasonBoard, publicProfile, liveFeed, botsTick, renameAccount, changePassword, deleteAccount,
     localHistory: () => read(HISTORY, []),
     onChange: f => { listeners.add(f); return () => listeners.delete(f); }
@@ -2001,7 +2032,9 @@ body::before { content: ""; position: fixed; inset: 0; pointer-events: none; bac
         ["Le solde de jetons", `<ul>
           <li>C'est l'argent pour jouer au blackjack, à la roulette, au poker contre les bots, au vidéo poker et à la machine à sous. Tu commences à 1 000.</li>
           <li>Il est gardé <b>sur ton compte</b> : le même sur tous tes appareils. Sans compte, il reste sur ce téléphone.</li>
-          <li>Quand il te reste moins de 5 jetons : <b>une recharge gratuite de 1 000 par jour</b>. Elle revient à minuit (heure de Paris).</li>
+          <li><b>+500 jetons offerts chaque jour</b> à ta première connexion.</li>
+          <li>Quand il te reste moins de 5 jetons : <b>une recharge gratuite de 1 000 toutes les 4 heures</b>, 3 fois par jour au plus.</li>
+          <li>Tu peux aussi <b>échanger des couronnes contre des jetons</b> dans la Boutique : 100 couronnes = 1 000 jetons.</li>
           <li>La roue du jour (onglet Défis) peut aussi te donner des jetons.</li>
           <li>Le poker en ligne utilise ses propres jetons de table (1 000 par joueur), séparés de ton solde.</li></ul>`],
         ["Le classement", `<dl>
@@ -2047,6 +2080,7 @@ body::before { content: ""; position: fixed; inset: 0; pointer-events: none; bac
           <li>Chaque lundi, selon ta place au classement de la semaine.</li>
           <li>Chaque fin de mois, selon ton rang de saison.</li>
           <li>Chaque jour : 3 défis (bonus de 50 si tu fais les 3) et la connexion quotidienne (5, 5, 5, 20, 20, 20 puis 50 couronnes le 7ᵉ jour d'affilée).</li>
+          <li>Tes couronnes peuvent aussi s'échanger contre des jetons dans la Boutique : 100 couronnes = 1 000 jetons.</li>
           <li>Chaque jour aussi : un tour gratuit de la <b>roue du jour</b> dans l'onglet Défis (couronnes, jetons, ou la bannière exclusive Roue de la fortune).</li></ul>`],
         ["La boutique", `<ul>
           <li>Une sélection différente chaque lundi : 10 bannières, 7 cadres, 9 titres et 4 tapis de poker.</li>
@@ -2128,6 +2162,7 @@ body::before { content: ""; position: fixed; inset: 0; pointer-events: none; bac
 .fb-st.st-résolu { color: var(--win, #7fd99a); } .fb-st.st-en-cours { color: var(--brass); }
 .gift-box h2 { margin: 0; font-family: var(--f-display, Georgia, serif); font-weight: 400; font-size: 25px; }
 .gift-box p { margin: 0; color: var(--muted); line-height: 1.45; font-size: 14.5px; }
+.login-chips { margin: 0; font-weight: 700; color: var(--win, #7fd99a); }
 .gift-boost { font-size: 13.5px; font-weight: 700; color: var(--win, #7fd99a); }
 .gift-news { text-align: left; padding: 10px 12px; border-radius: 12px; background: rgba(0,0,0,.22); }
 .gift-news b { font-size: 13.5px; }
@@ -2284,6 +2319,7 @@ html.rot-l .tabbar, html.rot-r .tabbar { padding-bottom: 4px !important; }
       <h2>Connexion du jour</h2>
       <p>${st.streak === 1 ? "Premier jour de ta série." : `${st.streak} jours d'affilée !`}</p>
       <div class="reward-crowns">+${st.login_gain} ${CROWN}</div>
+      ${st.login_chips ? `<p class="login-chips">+${fmtN(st.login_chips)} jetons pour jouer aujourd'hui</p>` : ""}
       ${streakHTML(st.streak, true)}
       <p>${next} Un jour manqué remet la série à zéro.</p>
       <button class="btn primary" type="button">Récupérer</button>
@@ -2303,6 +2339,7 @@ html.rot-l .tabbar, html.rot-r .tabbar { padding-bottom: 4px !important; }
         daily = st;
         write("casino.daily", st);
         if (profile && typeof st.crowns === "number") keepProfile({ ...profile, crowns: st.crowns });
+        if (st.login_chips > 0) setChips(st.chips != null ? +st.chips + pendingNet() : localChips() + st.login_chips);
         if (st.login_gain > 0) showLogin(st);
         (st.newly || []).forEach((n, i) => setTimeout(() => toast(`Défi réussi : ${n.label}`, n.crowns), 400 + i * 700));
         dailyListeners.forEach(f => { try { f(st); } catch (e) {} });
@@ -2321,6 +2358,10 @@ html.rot-l .tabbar, html.rot-r .tabbar { padding-bottom: 4px !important; }
   // ---------- what's new, technical support, ideas and bugs ----------
   // Each update stays in the list for a week, then disappears on its own.
   const CHANGELOG = [
+    { date: "2026-11-17", title: "Plus de jetons pour rejouer", items: [
+      "+500 jetons offerts chaque jour à ta première connexion.",
+      "Recharge gratuite de 1 000 jetons toutes les 4 heures (3 fois par jour) quand ton solde est vide.",
+      "Échange tes couronnes contre des jetons dans la Boutique : 100 couronnes = 1 000 jetons."] },
     { date: "2026-11-17", title: "Thèmes, Infos et mises à jour en douceur", items: [
       "Trois thèmes pour l'app : Classique, Sombre et Bleu nuit (Mon compte, ou en bas de l'aide ?).",
       "Nouveau bouton Infos : les nouveautés de la semaine, le support technique et la boîte à idées.",
@@ -2341,7 +2382,8 @@ html.rot-l .tabbar, html.rot-r .tabbar { padding-bottom: 4px !important; }
   ];
   const DAY = 864e5;
   const recentNews = () => CHANGELOG.filter(n => Date.now() - new Date(n.date + "T12:00:00").getTime() < 7 * DAY);
-  const unseenNews = () => { const r = recentNews(); return r.length && r[0].date > read("casino.news.seen", ""); };
+  const newsKey = n => n.date + "|" + n.title;
+  const unseenNews = () => { const r = recentNews(); return r.length && newsKey(r[0]) !== read("casino.news.seen", ""); };
   const FEEDBACK_KINDS = { support: "Support technique", bug: "Signaler un bug", idee: "Proposer une idée", autre: "Autre" };
   const FEEDBACK_STATUS = { nouveau: "Envoyé", "en cours": "En cours", "résolu": "Résolu", "refusé": "Non retenu" };
   async function sendFeedback(kind, message, contact) {
@@ -2360,7 +2402,7 @@ html.rot-l .tabbar, html.rot-r .tabbar { padding-bottom: 4px !important; }
       const paint = t => {
         tab = t;
         const news = recentNews();
-        if (t === "news" && news.length) { write("casino.news.seen", news[0].date); document.querySelectorAll(".info-btn").forEach(b => b.classList.remove("has-news")); }
+        if (t === "news" && news.length) { write("casino.news.seen", newsKey(news[0])); document.querySelectorAll(".info-btn").forEach(b => b.classList.remove("has-news")); }
         const fmtDay = d => new Date(d + "T12:00:00").toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
         let body;
         if (t === "news") {
@@ -2447,7 +2489,7 @@ html.rot-l .tabbar, html.rot-r .tabbar { padding-bottom: 4px !important; }
 
   // ---------- updates without breaking a game ----------
   // When a new version is online, a game page finishes the current hand first, then asks to restart.
-  const APP_VERSION = "28";
+  const APP_VERSION = "29";
   let updateReady = false, updateWarned = false;
   const inGame = () => { try { return typeof window.CasinoBusy === "function" && !!window.CasinoBusy(); } catch (e) { return false; } };
   async function checkUpdate() {
