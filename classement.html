@@ -25,7 +25,7 @@
   --brass-ink: #2a1f0c;
   --ink: #f2eee3;
   --muted: rgba(242, 238, 227, .62);
-  --glass: rgba(4, 22, 17, .55);
+  --glass: rgba(var(--glass-rgb, 4, 22, 17), .55);
   --win: #7fd99a;
   --lose: #ff8a7a;
   --gold: #e9c46a;
@@ -43,7 +43,7 @@
 html, body { height: 100%; }
 body {
   margin: 0;
-  background: radial-gradient(120% 80% at 50% 20%, var(--felt) 0%, #0b3d30 45%, var(--felt-deep) 100%) fixed, var(--felt-deep);
+  background: radial-gradient(120% 80% at 50% 20%, var(--felt) 0%, var(--felt-mid, #0b3d30) 45%, var(--felt-deep) 100%) fixed, var(--felt-deep);
   color: var(--ink); font-family: var(--f-ui); overflow: hidden;
   -webkit-tap-highlight-color: transparent;
 }
@@ -80,7 +80,7 @@ p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.5; max-width
 .btn.quiet { height: 40px; font-size: 14px; color: var(--muted); }
 
 .plate-old { display: none;
-  background: linear-gradient(135deg, rgba(216,178,106,.22), rgba(4,22,17,.55)); border: 1px solid var(--brass); }
+  background: linear-gradient(135deg, rgba(216,178,106,.22), rgba(var(--glass-rgb, 4, 22, 17),.55)); border: 1px solid var(--brass); }
 .plate .who b { display: block; font-size: 18px; }
 .plate .who span { font-size: 13px; color: var(--muted); }
 .plate .net { text-align: right; font-variant-numeric: tabular-nums; }
@@ -104,6 +104,8 @@ p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.5; max-width
 .findbtn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
 .mebtns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: -4px; }
 .mebtns .btn { height: 42px; font-size: 14.5px; gap: 8px; }
+.tools .btn, .mebtns .btn { white-space: nowrap; }
+@media (max-width: 360px) { .tools .btn, .mebtns .btn { font-size: 13.5px; gap: 6px; padding-inline: 8px; } .tools .btn svg, .mebtns svg { width: 16px !important; height: 16px !important; } }
 .mebtns svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .line { cursor: pointer; }
 .line .pts { font-size: 12px; color: rgba(255,255,255,.7); font-weight: 600; display: block; text-align: right; }
@@ -144,7 +146,7 @@ p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.5; max-width
 .foot { display: flex; justify-content: center; }
 
 /* invitations */
-.invite { display: flex; flex-direction: column; gap: 10px; padding: 16px; border-radius: 18px; background: linear-gradient(135deg, rgba(216,178,106,.25), rgba(4,22,17,.6)); border: 1px solid var(--brass); }
+.invite { display: flex; flex-direction: column; gap: 10px; padding: 16px; border-radius: 18px; background: linear-gradient(135deg, rgba(216,178,106,.25), rgba(var(--glass-rgb, 4, 22, 17),.6)); border: 1px solid var(--brass); }
 .invite h2 { margin: 0; font-family: var(--f-display); font-weight: 400; font-size: 24px; text-wrap: balance; }
 .invite ol { margin: 0; padding-left: 20px; color: var(--ink); font-size: 15px; line-height: 1.55; }
 .invite .share-ico { display: inline-block; width: 16px; height: 16px; vertical-align: -2px; }
@@ -154,7 +156,7 @@ p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.5; max-width
 .scrim { position: fixed; inset: 0; background: rgba(0,0,0,.6); z-index: 30; display: flex; align-items: flex-end; justify-content: center; }
 .sheet {
   width: 100%; max-width: 560px; box-sizing: border-box; max-height: 92%; overflow-y: auto;
-  background: #0a3328; border-top: 1px solid var(--felt-line); border-radius: 22px 22px 0 0;
+  background: var(--sheet-bg, #0a3328); border-top: 1px solid var(--felt-line); border-radius: 22px 22px 0 0;
   padding-left: max(20px, env(safe-area-inset-left, 0px)); padding-right: max(20px, env(safe-area-inset-right, 0px));
   padding-top: 18px; padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
   display: flex; flex-direction: column; gap: 14px; align-items: stretch; animation: up .28s ease;
@@ -308,7 +310,7 @@ p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.5; max-width
   const $ = id => document.getElementById(id);
   const fmt = n => Number(n).toLocaleString("fr-FR", { maximumFractionDigits: 0 });
   const signed = n => (n > 0 ? "+" : n < 0 ? "−" : "") + fmt(Math.abs(n));
-  const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   try { const w = JSON.parse(localStorage.getItem("bj.table.v1") || "null"); if (w && typeof w.bankroll === "number") $("bank").textContent = fmt(w.bankroll); } catch (e) {}
 
   let mode = "up", scope = "friends";

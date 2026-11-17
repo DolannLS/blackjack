@@ -11,7 +11,7 @@
   const SESSION = "casino.session", QUEUE = "casino.queue", HISTORY = "casino.history";
   const GAMES = { blackjack: "Blackjack", roulette: "Roulette", holdem: "Hold'em", videopoker: "Vidéo poker", online: "Poker en ligne", slots: "Machine à sous" };
 
-  const read = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k) || "null"); return v ?? d; } catch (e) { return d; } };
+  const read = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k) || "null"); return v == null ? d : v; } catch (e) { return d; } };
   const write = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
   const uuid = () => (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2));
   const configured = () => !!(CFG.url && CFG.key);
@@ -617,7 +617,7 @@
   }
 
   // ---------- shared player card ----------
-  const escHTML = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const escHTML = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const safeUrl = u => (typeof u === "string" && /^https:\/\/[^"'<>\s]+$/.test(u) ? u : "");
   function avatarHTML(name, frame, size = "", photo = "") {
     const src = safeUrl(photo), f = frame || "aucun", q = f === "aucun" ? 1 : quality(f);
@@ -770,7 +770,7 @@ body::before { content: ""; position: fixed; inset: 0; pointer-events: none; bac
 /* bottom tab bar */
 .tray .chips, #chips { padding: 8px 2px 2px 6px; margin: -8px -2px -2px -6px; }
 .msg-wrap { margin-block: 2px; }
-.tabbar { flex: none; position: relative; margin-top: 8px; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 0; padding: 6px 2px 2px; border-radius: 18px 18px 0 0; background: rgba(3, 18, 14, .62); border-top: 1px solid var(--felt-line); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); margin-inline: -6px; margin-bottom: -6px; }
+.tabbar { flex: none; position: relative; margin-top: 8px; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 0; padding: 6px 2px 2px; border-radius: 18px 18px 0 0; background: rgba(var(--deep-rgb, 3, 18, 14), .62); border-top: 1px solid var(--felt-line); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); margin-inline: -6px; margin-bottom: -6px; }
 .tabbar a { position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 5px 0 4px; border-radius: 12px; color: var(--muted); text-decoration: none; font-size: 10px; font-weight: 600; letter-spacing: 0; white-space: nowrap; min-width: 0; }
 .tabbar a svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; transition: transform .25s cubic-bezier(.3,1.6,.5,1); }
 .tabbar a[aria-current] { color: var(--brass); }
@@ -1024,7 +1024,7 @@ body::before { content: ""; position: fixed; inset: 0; pointer-events: none; bac
 .bn-saison-champion { background: repeating-conic-gradient(from 0deg at 85% 50%, rgba(255,215,106,.28) 0 4deg, transparent 4deg 14deg), radial-gradient(circle at 85% 50%, #ffd76a 0 6%, transparent 30%), linear-gradient(135deg, #1d0b2e, #4a1660 60%, #7a2a52); }
 
 .psheet-scrim { position: fixed; inset: 0; z-index: 40; background: rgba(0,0,0,.55); display: flex; align-items: flex-end; justify-content: center; animation: fade .2s both; }
-.psheet { width: 100%; max-width: 560px; max-height: 92%; overflow-y: auto; -webkit-overflow-scrolling: touch; box-sizing: border-box; background: #0a3328; border-top: 1px solid var(--felt-line); border-radius: 22px 22px 0 0; padding: 14px max(18px, env(safe-area-inset-right, 0px)) calc(20px + env(safe-area-inset-bottom, 0px)) max(18px, env(safe-area-inset-left, 0px)); display: flex; flex-direction: column; gap: 14px; animation: sheet-up .32s cubic-bezier(.2,.8,.25,1) both; color: var(--ink); font-family: var(--f-ui); }
+.psheet { width: 100%; max-width: 560px; max-height: 92%; overflow-y: auto; -webkit-overflow-scrolling: touch; box-sizing: border-box; background: var(--sheet-bg, #0a3328); border-top: 1px solid var(--felt-line); border-radius: 22px 22px 0 0; padding: 14px max(18px, env(safe-area-inset-right, 0px)) calc(20px + env(safe-area-inset-bottom, 0px)) max(18px, env(safe-area-inset-left, 0px)); display: flex; flex-direction: column; gap: 14px; animation: sheet-up .32s cubic-bezier(.2,.8,.25,1) both; color: var(--ink); font-family: var(--f-ui); }
 .psheet > * { flex: none; }
 @keyframes sheet-up { from { transform: translateY(100%); } }
 .psheet .grab { width: 40px; height: 5px; border-radius: 3px; background: rgba(255,255,255,.25); align-self: center; }
@@ -1194,11 +1194,30 @@ body::before { content: ""; position: fixed; inset: 0; pointer-events: none; bac
     });
   }
 
+  // ---------- app theme ----------
+  const THEME_LIST = [
+    ["vert", "Classique", "Le tapis vert du casino", "radial-gradient(circle at 50% 30%, #13604b, #0b3d30 55%, #062a21)"],
+    ["sombre", "Sombre", "Noir profond, reposant le soir", "radial-gradient(circle at 50% 30%, #2c3038, #131519 55%, #08090c)"],
+    ["nuit", "Bleu nuit", "Le bleu des salons de Monaco", "radial-gradient(circle at 50% 30%, #2453a6, #102b60 55%, #061533)"]
+  ];
+  const currentTheme = () => document.documentElement.dataset.theme || "vert";
+  function themeHTML() {
+    return `<div class="theme-pick" role="radiogroup" aria-label="Thème de l'application">${THEME_LIST.map(([id, name, text, bg]) =>
+      `<button class="theme-opt" role="radio" data-theme-set="${id}" aria-checked="${currentTheme() === id}"><span class="tp-sw" style="background:${bg}"><i></i></span><b>${name}</b><small>${text}</small></button>`).join("")}</div>`;
+  }
+  // any theme picker on the page switches the theme at once
+  document.addEventListener("click", e => {
+    const b = e.target.closest("[data-theme-set]"); if (!b) return;
+    if (window.casinoSetTheme) window.casinoSetTheme(b.dataset.themeSet);
+    document.querySelectorAll("[data-theme-set]").forEach(x => x.setAttribute("aria-checked", String(x.dataset.themeSet === currentTheme())));
+  });
+
   function openAccount() {
     if (!session) { location.href = "classement.html"; return; }
     openSheet((sheet, close) => {
       sheet.innerHTML = `<div class="grab" aria-hidden="true"></div>
         <div class="ph"><h2>Mon compte</h2><button class="x" data-close aria-label="Fermer">×</button></div>
+        <div class="ps-box"><b class="ps-lab">Thème de l'application</b>${themeHTML()}</div>
         <form class="ps-box" data-f="name" novalidate>
           <div class="ps-field"><label for="acName">Pseudo</label><input id="acName" maxlength="16" autocapitalize="off" spellcheck="false" autocomplete="username" value="${escHTML(session.username)}"></div>
           <button class="btn primary" type="submit">Changer de pseudo</button>
@@ -1448,7 +1467,7 @@ body::before { content: ""; position: fixed; inset: 0; pointer-events: none; bac
   box-shadow: 0 0 0 4px #4a2412, 0 0 0 5px #8a5a2b, 0 0 0 6px rgba(216,178,106,.5), 0 6px 14px rgba(0,0,0,.45), inset 0 0 18px rgba(0,0,0,.35); }
 .mini-felt::after { content: ""; position: absolute; inset: 12%; border-radius: 50%; border: 1px solid rgba(216,178,106,.3); }
 .mini-felt i { position: absolute; top: 50%; width: 13%; aspect-ratio: 5 / 7; border-radius: 2px; background: #f7f3ea; box-shadow: 0 1px 3px rgba(0,0,0,.4); transform: translate(-50%, -50%);
-  font: 700 4.6cqw/1 var(--f-ui, sans-serif); font-style: normal; color: #1d1d1f; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .1em; }
+  font: 700 9px/1 var(--f-ui, sans-serif); font: 700 4.6cqw/1 var(--f-ui, sans-serif); font-style: normal; color: #1d1d1f; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .1em; }
 .mini-felt i b { font-size: 1.15em; }
 .mini-felt i.r { color: #c8283b; }
 .mini-felt i:nth-child(1) { left: 36%; } .mini-felt i:nth-child(2) { left: 50%; } .mini-felt i:nth-child(3) { left: 64%; }
@@ -1497,22 +1516,24 @@ body::before { content: ""; position: fixed; inset: 0; pointer-events: none; bac
 .item:active { transform: scale(.97); }
 .item .sw { box-shadow: inset 0 0 0 1px rgba(255,255,255,.08), 0 4px 10px rgba(0,0,0,.3); }
 .item.q2 { border-color: rgba(140,200,255,.32); }
-.item.q3 { border-color: rgba(195,155,255,.55); box-shadow: 0 0 16px rgba(170,110,255,.16); background: linear-gradient(160deg, rgba(170,120,255,.1), var(--glass, rgba(4,22,17,.55)) 55%); }
-.item.q4 { border-color: rgba(255,210,110,.75); box-shadow: 0 0 20px rgba(255,200,90,.22); background: linear-gradient(160deg, rgba(255,215,106,.14), var(--glass, rgba(4,22,17,.55)) 55%); }
+.item.q3 { border-color: rgba(195,155,255,.55); box-shadow: 0 0 16px rgba(170,110,255,.16); background: linear-gradient(160deg, rgba(170,120,255,.1), var(--glass, rgba(var(--glass-rgb, 4, 22, 17),.55)) 55%); }
+.item.q4 { border-color: rgba(255,210,110,.75); box-shadow: 0 0 20px rgba(255,200,90,.22); background: linear-gradient(160deg, rgba(255,215,106,.14), var(--glass, rgba(var(--glass-rgb, 4, 22, 17),.55)) 55%); }
 .item[aria-pressed="true"] { border-color: var(--brass, #d8b26a); box-shadow: 0 0 0 2px rgba(216,178,106,.45), 0 8px 22px rgba(0,0,0,.35); }
 .item .st { align-self: flex-start; padding: 3px 9px; border-radius: 999px; background: rgba(0,0,0,.32); }
 .item .meta { display: flex; align-items: center; justify-content: space-between; gap: 6px; flex-wrap: wrap; }
 .qtag { font-size: 9.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; padding: 3px 7px; border-radius: 6px; background: rgba(0,0,0,.4); white-space: nowrap; }
 .qtag.q2 { color: #a8d6ff; } .qtag.q3 { color: #d6bcff; } .qtag.q4 { color: #ffd76a; box-shadow: 0 0 0 1px rgba(255,215,106,.45); }
-.sw.title-sw { background: radial-gradient(ellipse at 50% 0%, #1d5a48, #07241c 70%) !important; }
+.sw.title-sw { background: radial-gradient(ellipse at 50% 0%, var(--felt-hi, #1d5a48), var(--felt-deep, #07241c) 70%) !important; }
 .sw .plate { display: flex; flex-direction: column; align-items: center; gap: 3px; max-width: 92%; padding: 6px 12px; border-radius: 10px; background: linear-gradient(180deg, rgba(0,0,0,.45), rgba(0,0,0,.25)); box-shadow: inset 0 0 0 1px rgba(216,178,106,.35); text-align: center; }
 .sw .plate small { font-size: 10.5px; font-weight: 700; color: #fff; opacity: .85; }
 .sw .plate .pc-title { font-size: 10.5px; line-height: 1.25; letter-spacing: .08em; }
 .item .sw { height: 74px !important; }
 .sw .plate .pc-title.tq4::after { content: none; }
+/* long titles stay on one line on player cards */
+.pcard .pc-title { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
 .rar.count::before { content: none; }
 .rar.count { font-weight: 600; opacity: .9; }
-.sw.frame-sw { background: radial-gradient(circle at 50% 45%, #1f6e57, #062a21 70%) !important; }
+.sw.frame-sw { background: radial-gradient(circle at 50% 45%, var(--felt-hi, #1f6e57), var(--felt-deep, #062a21) 70%) !important; }
 .sw.frame-sw .av { width: 40px !important; height: 40px !important; font-size: 17px !important; }
 @media (prefers-reduced-motion: reduce) { .fx::after, .fx b, .av.fq3, .av.fq4, .pc-title.tq4 { animation: none !important; } }
 /* ===== collection Prestige: illustrated and animated items ===== */
@@ -1622,7 +1643,7 @@ body::before { content: ""; position: fixed; inset: 0; pointer-events: none; bac
 .bn-roue-fortune::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(5,10,8,.85) 0, rgba(5,10,8,.6) 45%, transparent 75%); z-index: 0; }
 .bn-roue-fortune > * { position: relative; z-index: 1; }
 /* a dot on the Défis tab while the daily wheel is waiting */
-.tabbar a.wheel-ready::after { content: ""; position: absolute; top: 4px; right: calc(50% - 16px); width: 9px; height: 9px; border-radius: 50%; background: #e8414f; box-shadow: 0 0 0 2px rgba(3,18,14,.9); animation: wheel-dot 1.4s infinite; }
+.tabbar a.wheel-ready::after { content: ""; position: absolute; top: 4px; right: calc(50% - 16px); width: 9px; height: 9px; border-radius: 50%; background: #e8414f; box-shadow: 0 0 0 2px rgba(var(--deep-rgb, 3, 18, 14),.9); animation: wheel-dot 1.4s infinite; }
 @keyframes wheel-dot { 50% { opacity: .35; } }
 /* season number sits above the banner art but under the player info */
 [class*="bn-s"] > * { position: relative; z-index: 1; }
@@ -2024,7 +2045,7 @@ body::before { content: ""; position: fixed; inset: 0; pointer-events: none; bac
         ["La boutique", `<ul>
           <li>Une sélection différente chaque lundi : 10 bannières, 7 cadres, 9 titres et 4 tapis de poker.</li>
           <li>Touche un objet pour l'essayer en aperçu, puis Acheter. Il rejoint ton casier.</li>
-          <li>La rareté indique combien de joueurs l'ont : Commun, Rare, Épique, Légendaire.</li></ul>`],
+          <li>Chaque objet a un niveau de prestige selon son prix : Classique, Rare, Épique ou Légendaire. Plus il est élevé, plus l'objet brille. Sous chaque objet, tu vois combien de joueurs l'ont déjà.</li></ul>`],
         ["Le casier", `<ul>
           <li>Tous tes objets : achats, récompenses de semaine et de saison, objets gratuits.</li>
           <li>Cherche un objet par son nom, touche-le pour l'essayer, puis Équiper.</li>
@@ -2078,6 +2099,15 @@ body::before { content: ""; position: fixed; inset: 0; pointer-events: none; bac
 .hpay td:nth-child(3) { color: var(--muted); white-space: nowrap; }
 .hrank td:first-child { font-weight: 600; white-space: nowrap; padding-right: 10px; }
 .help-foot { display: flex; justify-content: center; }
+.theme-pick { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.theme-opt { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 6px 10px; border-radius: 14px; border: 1.5px solid var(--felt-line); background: rgba(0,0,0,.2); color: var(--ink); font: inherit; text-align: center; cursor: pointer; min-width: 0; }
+.theme-opt[aria-checked="true"] { border-color: var(--brass); background: rgba(216,178,106,.12); box-shadow: 0 0 0 2px rgba(216,178,106,.3); }
+.theme-opt .tp-sw { position: relative; width: 100%; height: 44px; border-radius: 10px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.12); overflow: hidden; }
+.theme-opt .tp-sw i { position: absolute; left: 50%; top: 50%; width: 18px; height: 25px; margin: -12.5px 0 0 -9px; border-radius: 3px; background: #fbf8f1; box-shadow: 0 2px 5px rgba(0,0,0,.4); }
+.theme-opt b { font-size: 13.5px; }
+.theme-opt small { font-size: 11px; color: var(--muted); line-height: 1.25; }
+.ps-lab { font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+@media (max-width: 360px) { .theme-opt small { display: none; } }
 @media (max-width: 480px) { .bar .acct-chip > span:last-child { display: none; } .bar .acct-chip { padding: 0 4px; max-width: none; } }
 @media (max-width: 380px) { .hc { width: 21px; height: 29px; font-size: 10px; } .help-body dl { grid-template-columns: 1fr; gap: 2px; } .help-body dd { margin-bottom: 6px; } }`;
   document.head.appendChild(css4);
@@ -2101,6 +2131,7 @@ body::before { content: ""; position: fixed; inset: 0; pointer-events: none; bac
           ${tabs ? `<div class="help-tabs" role="group" aria-label="Jeu">${tabs.map(k => `<button data-t="${k}" aria-pressed="${k === t}">${HELP[k].title}</button>`).join("")}</div>` : ""}
           <p class="help-intro">${h.intro}</p>
           ${h.sections.map(([name, body], i) => `<details class="help-sec rise" style="--i:${i}"${i < 2 ? " open" : ""}><summary>${name}</summary><div class="help-body">${body}</div></details>`).join("")}
+          <details class="help-sec"><summary>Apparence : thème de l'application</summary><div class="help-body">${themeHTML()}</div></details>
           <div class="help-foot"><button class="btn primary" data-close>J'ai compris</button></div>`;
         sheet.scrollTop = 0;
       };

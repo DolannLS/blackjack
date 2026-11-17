@@ -25,7 +25,7 @@
   --brass-ink: #2a1f0c;
   --ink: #f2eee3;
   --muted: rgba(242, 238, 227, .62);
-  --glass: rgba(4, 22, 17, .55);
+  --glass: rgba(var(--glass-rgb, 4, 22, 17), .55);
   --win: #7fd99a;
   --lose: #ff8a7a;
   --r-red: #b3262f;
@@ -47,7 +47,7 @@
 html, body { height: 100%; }
 body {
   margin: 0;
-  background: radial-gradient(120% 80% at 50% 30%, var(--felt) 0%, #0b3d30 45%, var(--felt-deep) 100%) fixed, var(--felt-deep);
+  background: radial-gradient(120% 80% at 50% 30%, var(--felt) 0%, var(--felt-mid, #0b3d30) 45%, var(--felt-deep) 100%) fixed, var(--felt-deep);
   color: var(--ink);
   font-family: var(--f-ui);
   overflow: hidden;
@@ -196,7 +196,7 @@ button:disabled { opacity: .35; cursor: default; }
 .scrim { position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 20; display: flex; align-items: flex-end; justify-content: center; }
 .sheet {
   width: 100%; max-width: 560px; box-sizing: border-box;
-  background: #0a3328; border-top: 1px solid var(--felt-line); border-radius: 22px 22px 0 0;
+  background: var(--sheet-bg, #0a3328); border-top: 1px solid var(--felt-line); border-radius: 22px 22px 0 0;
   padding-left: max(20px, env(safe-area-inset-left, 0px));
   padding-right: max(20px, env(safe-area-inset-right, 0px));
   padding-top: 18px; padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
@@ -461,7 +461,7 @@ button:disabled { opacity: .35; cursor: default; }
     if (k === "777") stats.jackpots++;
     stats.best = Math.max(stats.best, back - bet);
     save();
-    window.CasinoAccount?.record("slots", bet, back, k ? PAY.find(p => p.key === k).label : result.map(id => BY[id].name).join(" "));
+    window.CasinoAccount && window.CasinoAccount.record("slots", bet, back, k ? PAY.find(p => p.key === k).label : result.map(id => BY[id].name).join(" "));
     renderBank();
     if (back) {
       const hits = k === "c1" || k === "c2" ? result.map(id => id === "cerise") : [true, true, true];

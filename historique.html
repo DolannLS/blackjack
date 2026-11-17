@@ -25,7 +25,7 @@
   --brass-ink: #2a1f0c;
   --ink: #f2eee3;
   --muted: rgba(242, 238, 227, .62);
-  --glass: rgba(4, 22, 17, .55);
+  --glass: rgba(var(--glass-rgb, 4, 22, 17), .55);
   --win: #7fd99a;
   --lose: #ff8a7a;
   --g-blackjack: #e8e2d2;
@@ -45,7 +45,7 @@
 html, body { height: 100%; }
 body {
   margin: 0;
-  background: radial-gradient(120% 80% at 50% 20%, var(--felt) 0%, #0b3d30 45%, var(--felt-deep) 100%) fixed, var(--felt-deep);
+  background: radial-gradient(120% 80% at 50% 20%, var(--felt) 0%, var(--felt-mid, #0b3d30) 45%, var(--felt-deep) 100%) fixed, var(--felt-deep);
   color: var(--ink); font-family: var(--f-ui); overflow: hidden;
   -webkit-tap-highlight-color: transparent;
 }
@@ -125,7 +125,7 @@ h1 { margin: 0; font-family: var(--f-display); font-weight: 400; font-size: 30px
   const $ = id => document.getElementById(id);
   const fmt = n => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 });
   const signed = n => (n > 0 ? "+" : n < 0 ? "−" : "") + fmt(Math.abs(n));
-  const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   try { const w = JSON.parse(localStorage.getItem("bj.table.v1") || "null"); if (w && typeof w.bankroll === "number") $("bank").textContent = fmt(w.bankroll); } catch (e) {}
 
   let rows = [], filter = "all", pendingIds = new Set();

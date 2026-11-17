@@ -25,7 +25,7 @@
   --brass-ink: #2a1f0c;
   --ink: #f2eee3;
   --muted: rgba(242, 238, 227, .62);
-  --glass: rgba(4, 22, 17, .55);
+  --glass: rgba(var(--glass-rgb, 4, 22, 17), .55);
   --win: #7fd99a;
   --lose: #ff8a7a;
   --r-red: #b3262f;
@@ -47,7 +47,7 @@
 html, body { height: 100%; }
 body {
   margin: 0;
-  background: radial-gradient(120% 80% at 50% 30%, var(--felt) 0%, #0b3d30 45%, var(--felt-deep) 100%) fixed, var(--felt-deep);
+  background: radial-gradient(120% 80% at 50% 30%, var(--felt) 0%, var(--felt-mid, #0b3d30) 45%, var(--felt-deep) 100%) fixed, var(--felt-deep);
   color: var(--ink);
   font-family: var(--f-ui);
   overflow: hidden;
@@ -196,7 +196,7 @@ button:disabled { opacity: .35; cursor: default; }
 .scrim { position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 20; display: flex; align-items: flex-end; justify-content: center; }
 .sheet {
   width: 100%; max-width: 560px; box-sizing: border-box;
-  background: #0a3328; border-top: 1px solid var(--felt-line); border-radius: 22px 22px 0 0;
+  background: var(--sheet-bg, #0a3328); border-top: 1px solid var(--felt-line); border-radius: 22px 22px 0 0;
   padding-left: max(20px, env(safe-area-inset-left, 0px));
   padding-right: max(20px, env(safe-area-inset-right, 0px));
   padding-top: 18px; padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
@@ -214,6 +214,15 @@ button:disabled { opacity: .35; cursor: default; }
   .history { display: none; }
   .chip { width: 44px; height: 44px; font-size: 13px; }
   .btn { height: 44px; }
+}
+/* very small phones (iPhone SE 1st gen, old Android): smaller wheel and board so nothing overlaps */
+@media (max-height: 620px) {
+  .wheel-wrap { width: min(60vw, 22vh, 300px); width: min(60vw, 22dvh, 300px); }
+  .result { font-size: calc(min(60vw, 22vh, 300px) * .14); }
+  .board { grid-template-rows: repeat(3, 26px) repeat(2, 26px); }
+  .msg-wrap { min-height: 28px; }
+  .msg { padding: 4px 12px; font-size: 14px; }
+  .stage { gap: 4px; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; }
@@ -520,7 +529,7 @@ button:disabled { opacity: .35; cursor: default; }
     }
     bankroll += back;
     const net = back - stake;
-    window.CasinoAccount?.record("roulette", stake, back, `${n} ${COLOR_FR[colorOf(n)]}`);
+    window.CasinoAccount && window.CasinoAccount.record("roulette", stake, back, `${n} ${COLOR_FR[colorOf(n)]}`);
     history.unshift(n); history = history.slice(0, 30);
     stats.spins++; if (net > 0) stats.won++; stats.best = Math.max(stats.best, net);
     bets = {};

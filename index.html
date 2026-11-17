@@ -26,7 +26,7 @@
   --brass-ink: #2a1f0c;
   --ink: #f2eee3;
   --muted: rgba(242, 238, 227, .62);
-  --glass: rgba(4, 22, 17, .55);
+  --glass: rgba(var(--glass-rgb, 4, 22, 17), .55);
   --card: #fbf8f1;
   --card-ink: #1b1e24;
   --suit-red: #c22f3a;
@@ -44,7 +44,7 @@
 html, body { height: 100%; }
 body {
   margin: 0;
-  background: radial-gradient(120% 80% at 50% 38%, var(--felt) 0%, #0b3d30 45%, var(--felt-deep) 100%) fixed, var(--felt-deep);
+  background: radial-gradient(120% 80% at 50% 38%, var(--felt) 0%, var(--felt-mid, #0b3d30) 45%, var(--felt-deep) 100%) fixed, var(--felt-deep);
   color: var(--ink);
   font-family: var(--f-ui);
   overflow: hidden;
@@ -173,7 +173,7 @@ button:disabled { opacity: .35; cursor: default; }
 
 .msg-wrap { display: flex; justify-content: center; min-height: 36px; align-items: center; }
 .msg {
-  padding: 7px 16px; border-radius: 18px; background: var(--glass); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  padding: 7px 16px; border-radius: 18px; background: var(--glass); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
   font-weight: 600; font-size: 15px; border: 1px solid var(--felt-line); text-align: center;
 }
 .msg:empty { visibility: hidden; }
@@ -247,7 +247,7 @@ button:disabled { opacity: .35; cursor: default; }
 .scrim { position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 20; display: flex; align-items: flex-end; justify-content: center; }
 .sheet {
   width: 100%; max-width: 560px; box-sizing: border-box;
-  background: #0a3328; border-top: 1px solid var(--felt-line);
+  background: var(--sheet-bg, #0a3328); border-top: 1px solid var(--felt-line);
   border-radius: 22px 22px 0 0;
   padding-left: max(20px, env(safe-area-inset-left, 0px));
   padding-right: max(20px, env(safe-area-inset-right, 0px));
@@ -701,7 +701,7 @@ button:disabled { opacity: .35; cursor: default; }
     S.stats.best = Math.max(S.stats.best, S.bankroll);
     S.phase = "done"; S.busy = false; S.active = -1;
     const staked = S.hands.reduce((a, h) => a + h.bet, 0);
-    window.CasinoAccount?.record("blackjack", staked, staked + net,
+    window.CasinoAccount && window.CasinoAccount.record("blackjack", staked, staked + net,
       S.hands.map(h => `${TAGS[h.result]} ${value(h.cards).t}`).join(" · ") + ` · croupier ${d}`);
     const one = S.hands.length === 1 ? S.hands[0] : null;
     if (anyBJ && net > 0) say(`Blackjack ! +${fmt(net)}`, "bj");

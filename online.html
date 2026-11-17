@@ -25,7 +25,7 @@
   --brass-ink: #2a1f0c;
   --ink: #f2eee3;
   --muted: rgba(242, 238, 227, .62);
-  --glass: rgba(4, 22, 17, .55);
+  --glass: rgba(var(--glass-rgb, 4, 22, 17), .55);
   --card: #fbf8f1;
   --card-ink: #1b1e24;
   --suit-red: #c22f3a;
@@ -47,7 +47,7 @@
 html, body { height: 100%; }
 body {
   margin: 0;
-  background: radial-gradient(120% 80% at 50% 40%, var(--felt) 0%, #0b3d30 45%, var(--felt-deep) 100%) fixed, var(--felt-deep);
+  background: radial-gradient(120% 80% at 50% 40%, var(--felt) 0%, var(--felt-mid, #0b3d30) 45%, var(--felt-deep) 100%) fixed, var(--felt-deep);
   color: var(--ink);
   font-family: var(--f-ui);
   overflow: hidden;
@@ -234,7 +234,7 @@ button:disabled { opacity: .35; cursor: default; }
 .scrim { position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 20; display: flex; align-items: flex-end; justify-content: center; }
 .sheet {
   width: 100%; max-width: 560px; box-sizing: border-box; max-height: 90%; overflow-y: auto;
-  background: #0a3328; border-top: 1px solid var(--felt-line); border-radius: 22px 22px 0 0;
+  background: var(--sheet-bg, #0a3328); border-top: 1px solid var(--felt-line); border-radius: 22px 22px 0 0;
   padding-left: max(20px, env(safe-area-inset-left, 0px));
   padding-right: max(20px, env(safe-area-inset-right, 0px));
   padding-top: 18px; padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
@@ -333,7 +333,7 @@ button:disabled { opacity: .35; cursor: default; }
 .pseat .ps-cards .card { --cw: 26px; }
 .pseat .ps-cards .card + .card { margin-left: -9px; transform: rotate(7deg); }
 .pseat .ps-cards .card:first-child { transform: rotate(-7deg); }
-.pseat .ps-box { width: 100%; box-sizing: border-box; padding: 9px 6px 5px; border-radius: 12px; background: rgba(4,22,17,.88); border: 1.5px solid rgba(216,178,106,.25); text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,.4); }
+.pseat .ps-box { width: 100%; box-sizing: border-box; padding: 9px 6px 5px; border-radius: 12px; background: rgba(var(--glass-rgb, 4, 22, 17),.88); border: 1.5px solid rgba(216,178,106,.25); text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,.4); }
 .pseat .ps-box b { display: block; font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .pseat .ps-box span { display: block; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
 .pseat .ps-act { font-size: 11.5px; font-weight: 700; color: var(--brass); min-height: 14px; max-width: 110px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -351,9 +351,9 @@ button:disabled { opacity: .35; cursor: default; }
 .pseat[data-at="left"] .betchip { left: calc(100% + 4px); transform: none; top: 50%; }
 .pseat[data-at="right"] .betchip { left: auto; right: calc(100% + 4px); transform: none; top: 50%; }
 .pseat .betchip:empty { display: none; }
-.pwait { position: absolute; left: 50%; top: 18%; transform: translate(-50%, -50%); z-index: 2; text-align: center; padding: 8px 14px; border-radius: 12px; background: rgba(4,22,17,.85); font-size: 13.5px; color: var(--muted); white-space: nowrap; }
+.pwait { position: absolute; left: 50%; top: 18%; transform: translate(-50%, -50%); z-index: 2; text-align: center; padding: 8px 14px; border-radius: 12px; background: rgba(var(--glass-rgb, 4, 22, 17),.85); font-size: 13.5px; color: var(--muted); white-space: nowrap; }
 .pwait b { color: var(--ink); }
-.reconn { position: absolute; inset: 0; z-index: 8; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 20px; text-align: center; border-radius: 28px; background: rgba(3,18,14,.82); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); font-size: 13.5px; color: var(--muted); }
+.reconn { position: absolute; inset: 0; z-index: 8; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 20px; text-align: center; border-radius: 28px; background: rgba(var(--deep-rgb, 3, 18, 14),.82); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); font-size: 13.5px; color: var(--muted); }
 .reconn[hidden] { display: none; }
 .ask { position: fixed; inset: 0; z-index: 60; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgba(0,0,0,.6); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); animation: ask-fade .18s ease both; }
 .ask[hidden] { display: none; }
@@ -869,7 +869,7 @@ button:disabled { opacity: .35; cursor: default; }
           stack: Math.max(0, Math.floor(o.stack) || 0), rebuys: o.rebuys || 0,
           connected: i === 0 || !!o.isBot, away: i === 0 || o.isBot ? 0 : Date.now(), last: ""
         }));
-        this.button = snap.button ?? -1; this.hand = snap.hand || 0; this.botCount = snap.botCount || 0;
+        this.button = snap.button == null ? -1 : snap.button; this.hand = snap.hand || 0; this.botCount = snap.botCount || 0;
         this.phase = this.hand ? "done" : "lobby";
         this.say(snap.cut ? "Main interrompue : les mises ont été rendues." : "Table rouverte. Les joueurs reviennent…");
       }
@@ -1291,7 +1291,7 @@ button:disabled { opacity: .35; cursor: default; }
     const key = `${v.code}-${v.hand}`, done = readJSON("online.recorded") || [];
     if (done.includes(key)) return;
     writeJSON("online.recorded", [key, ...done].slice(0, 50));
-    window.CasinoAccount?.record("online", me.contrib, me.win, me.handName || (me.folded ? "Couché" : "Tout le monde se couche"));
+    window.CasinoAccount && window.CasinoAccount.record("online", me.contrib, me.win, me.handName || (me.folded ? "Couché" : "Tout le monde se couche"));
   }
 
   function renderControls() {
