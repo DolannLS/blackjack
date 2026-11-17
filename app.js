@@ -2198,6 +2198,11 @@ body::before { content: ""; position: fixed; inset: 0; pointer-events: none; bac
 .gift-box h2 { margin: 0; font-family: var(--f-display, Georgia, serif); font-weight: 400; font-size: 25px; }
 .gift-box p { margin: 0; color: var(--muted); line-height: 1.45; font-size: 14.5px; }
 button.refill-wait { font-variant-numeric: tabular-nums; font-size: 14.5px; opacity: .85 !important; }
+.confirm-box h2 { margin: 0; font-family: var(--f-display, Georgia, serif); font-weight: 400; font-size: 23px; }
+.confirm-box p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.45; }
+.confirm-box p b { color: var(--ink); }
+.confirm-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.confirm-btns .btn { min-height: 48px; }
 .login-chips { margin: 0; font-weight: 700; color: var(--win, #7fd99a); }
 .gift-boost { font-size: 13.5px; font-weight: 700; color: var(--win, #7fd99a); }
 .gift-news { text-align: left; padding: 10px 12px; border-radius: 12px; background: rgba(0,0,0,.22); }
@@ -2525,7 +2530,7 @@ html.rot-l .tabbar, html.rot-r .tabbar { padding-bottom: 4px !important; }
 
   // ---------- updates without breaking a game ----------
   // When a new version is online, a game page finishes the current hand first, then asks to restart.
-  const APP_VERSION = "30";
+  const APP_VERSION = "31";
   let updateReady = false, updateWarned = false;
   const inGame = () => { try { return typeof window.CasinoBusy === "function" && !!window.CasinoBusy(); } catch (e) { return false; } };
   async function checkUpdate() {
@@ -2579,7 +2584,23 @@ html.rot-l .tabbar, html.rot-r .tabbar { padding-bottom: 4px !important; }
   setTimeout(checkUpdate, 4000);
   setInterval(checkUpdate, 120000);
   document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") checkUpdate(); });
-  Object.assign(window.CasinoUI, { openInfo });
+  // a confirmation window: resolves true only if the player confirms (a mis-tap never spends anything)
+  function confirmBox({ title, text, ok = "Confirmer", cancel = "Annuler" }) {
+    return new Promise(resolve => {
+      const box = document.createElement("div");
+      box.className = "reward-scrim confirm-scrim";
+      box.innerHTML = `<div class="reward-box confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="cfTitle" aria-describedby="cfText">
+        <h2 id="cfTitle">${title}</h2><p id="cfText">${text}</p>
+        <div class="confirm-btns"><button class="btn" data-v="0">${cancel}</button><button class="btn primary" data-v="1">${ok}</button></div></div>`;
+      const done = v => { box.remove(); document.removeEventListener("keydown", onKey); resolve(v); };
+      const onKey = e => { if (e.key === "Escape") done(false); };
+      box.addEventListener("click", e => { const b = e.target.closest("[data-v]"); if (b) done(b.dataset.v === "1"); else if (e.target === box) done(false); });
+      document.addEventListener("keydown", onKey);
+      document.body.appendChild(box);
+      box.querySelector('[data-v="0"]').focus();
+    });
+  }
+  Object.assign(window.CasinoUI, { openInfo, confirm: confirmBox });
 
   const boot = () => { mountNav(); mountSearch(); mountHelp(); mountInfo(); };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot); else boot();

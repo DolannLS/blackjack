@@ -317,6 +317,11 @@ button:disabled { opacity: .5; cursor: default; }
   $("xchgRow").addEventListener("click", async e => {
     const b = e.target.closest("button"); if (!b || b.disabled) return;
     const packs = +b.dataset.packs, m = $("xchgMsg");
+    const left = (A.profile ? A.profile.crowns : 0) - packs * 100;
+    const yes = await UI.confirm({ title: "Échanger des couronnes ?",
+      text: `Tu vas dépenser <b>${fmt(packs * 100)} couronnes</b> pour recevoir <b>${fmt(packs * 1000)} jetons</b>. Il te restera ${fmt(left)} couronnes. L'échange ne peut pas être annulé.`,
+      ok: `Échanger ${fmt(packs * 100)}`, cancel: "Annuler" });
+    if (!yes) { m.className = "xchg-msg"; m.textContent = ""; return; }
     document.querySelectorAll("#xchgRow button").forEach(x => x.disabled = true);
     m.className = "xchg-msg"; m.textContent = "Échange en cours…";
     try {
