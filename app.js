@@ -1107,6 +1107,7 @@ body::before { content: ""; position: fixed; inset: 0; pointer-events: none; bac
     try {
       const p = await loadProfile();
       if (p && ((p.rewards && p.rewards.length) || (p.season_rewards && p.season_rewards.length))) showRewards(p.rewards, p.season_rewards);
+      else if (p && p.gifts && p.gifts.length) showGift(p.gifts[0]);
     } catch (e) {}
   }
 
@@ -1638,6 +1639,11 @@ body::before { content: ""; position: fixed; inset: 0; pointer-events: none; bac
 @keyframes pv-electric { 0%, 100% { text-shadow: 0 0 4px #5fb4ff, 0 0 10px #2f7bff; } 50% { text-shadow: 0 0 6px #9fd4ff, 0 0 18px #2f7bff, 0 0 28px #2f7bff; } }
 @keyframes pv-lavapulse { 0%, 100% { filter: brightness(.9); } 50% { filter: brightness(1.25); } }
 @media (prefers-reduced-motion: reduce) { [class*="bn-"]::before, [class*="fr-"]::before, [class*="fr-"]::after, .pc-title[class*="tt-"] { animation: none !important; } }
+/* performance: decorations stay still on modest phones; off-screen shop cards are not drawn */
+.lowfx .fx::after, .lowfx .fx b, .lowfx .av.fq3, .lowfx .av.fq4, .lowfx .pc-title, .lowfx .mini-felt, .lowfx .ptable .oval,
+.lowfx [class*="bn-"]::before, .lowfx [class*="fr-"]::before, .lowfx [class*="fr-"]::after, .lowfx .tabbar a.wheel-ready::after { animation: none !important; }
+.lowfx .fx b { display: none; }
+.item { content-visibility: auto; contain-intrinsic-size: auto 210px; }
 /* exclusive banner from the daily wheel */
 .bn-roue-fortune { background: radial-gradient(circle at 88% 50%, #ffd76a 0 7%, transparent 7.5%), repeating-conic-gradient(from 0deg at 88% 50%, #b3262f 0 15deg, #f2eee3 15deg 30deg, #1f7a4c 30deg 45deg, #f2eee3 45deg 60deg), #3a0a12; }
 .bn-roue-fortune::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(5,10,8,.85) 0, rgba(5,10,8,.6) 45%, transparent 75%); z-index: 0; }
@@ -2099,6 +2105,37 @@ body::before { content: ""; position: fixed; inset: 0; pointer-events: none; bac
 .hpay td:nth-child(3) { color: var(--muted); white-space: nowrap; }
 .hrank td:first-child { font-weight: 600; white-space: nowrap; padding-right: 10px; }
 .help-foot { display: flex; justify-content: center; }
+/* Infos sheet, gift message and update notice */
+.info-btn { position: relative; }
+.info-btn svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+.info-btn.has-news::after { content: ""; position: absolute; top: 4px; right: 4px; width: 9px; height: 9px; border-radius: 50%; background: #e8414f; box-shadow: 0 0 0 2px var(--felt-deep, #062a21); }
+.info-tabs { display: grid; grid-template-columns: repeat(3, 1fr); padding: 3px; border-radius: 12px; background: rgba(0,0,0,.25); border: 1px solid var(--felt-line); }
+.info-tabs button { height: 36px; border-radius: 9px; font-weight: 600; font-size: 13.5px; color: var(--muted); border: 0; background: none; font-family: inherit; cursor: pointer; }
+.info-tabs button[aria-selected="true"] { background: var(--brass); color: var(--brass-ink, #2a1f0c); }
+.news { padding: 12px 14px; border-radius: 14px; background: rgba(0,0,0,.22); border: 1px solid var(--felt-line); }
+.news-d { font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--brass); font-weight: 700; margin-bottom: 4px; }
+.news b { font-size: 15.5px; }
+.news ul, .gift-news ul { margin: 6px 0 0; padding-left: 18px; color: var(--muted); font-size: 13.5px; line-height: 1.5; display: flex; flex-direction: column; gap: 3px; }
+.fb-form textarea, .fb-form select { width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--felt-line); background: rgba(0,0,0,.25); color: var(--ink); font: inherit; font-size: 15px; resize: vertical; }
+.fb-form select { height: 44px; }
+.fb-note { margin: 0; font-size: 12px; color: var(--muted); }
+.fb-list { display: flex; flex-direction: column; gap: 8px; }
+.fb-item { padding: 10px 12px; border-radius: 12px; background: rgba(0,0,0,.2); }
+.fb-item p { margin: 6px 0 0; font-size: 13.5px; color: var(--muted); white-space: pre-wrap; word-break: break-word; }
+.fb-item .fb-reply { color: var(--ink); }
+.fb-top { display: flex; justify-content: space-between; gap: 8px; align-items: center; font-size: 13.5px; }
+.fb-st { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 8px; background: rgba(255,255,255,.08); }
+.fb-st.st-résolu { color: var(--win, #7fd99a); } .fb-st.st-en-cours { color: var(--brass); }
+.gift-box h2 { margin: 0; font-family: var(--f-display, Georgia, serif); font-weight: 400; font-size: 25px; }
+.gift-box p { margin: 0; color: var(--muted); line-height: 1.45; font-size: 14.5px; }
+.gift-boost { font-size: 13.5px; font-weight: 700; color: var(--win, #7fd99a); }
+.gift-news { text-align: left; padding: 10px 12px; border-radius: 12px; background: rgba(0,0,0,.22); }
+.gift-news b { font-size: 13.5px; }
+.upd-note { position: fixed; z-index: 45; left: 50%; transform: translateX(-50%); top: calc(env(safe-area-inset-top, 0px) + 10px); width: min(440px, calc(100% - 24px)); box-sizing: border-box;
+  display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; padding: 10px 12px; border-radius: 14px; background: var(--sheet-bg, #0a3328); border: 1px solid var(--brass); box-shadow: 0 10px 30px rgba(0,0,0,.5); color: var(--ink); font-size: 13px; animation: tr-in .3s both; }
+.upd-note b { grid-column: 1; } .upd-note span { grid-column: 1; color: var(--muted); } .upd-note .x { grid-row: 1 / 3; grid-column: 2; align-self: center; }
+@media (max-width: 360px) { .bar-right { gap: 5px !important; } .bar-right .search-btn { width: 34px; height: 34px; } }
+
 .theme-pick { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 .theme-opt { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 6px 10px; border-radius: 14px; border: 1.5px solid var(--felt-line); background: rgba(0,0,0,.2); color: var(--ink); font: inherit; text-align: center; cursor: pointer; min-width: 0; }
 .theme-opt[aria-checked="true"] { border-color: var(--brass); background: rgba(216,178,106,.12); box-shadow: 0 0 0 2px rgba(216,178,106,.3); }
@@ -2281,7 +2318,192 @@ html.rot-l .tabbar, html.rot-r .tabbar { padding-bottom: 4px !important; }
   });
   Object.assign(window.CasinoUI, { toast, streakHTML });
 
-  const boot = () => { mountNav(); mountSearch(); mountHelp(); };
+  // ---------- what's new, technical support, ideas and bugs ----------
+  // Each update stays in the list for a week, then disappears on its own.
+  const CHANGELOG = [
+    { date: "2026-11-17", title: "Thèmes, Infos et mises à jour en douceur", items: [
+      "Trois thèmes pour l'app : Classique, Sombre et Bleu nuit (Mon compte, ou en bas de l'aide ?).",
+      "Nouveau bouton Infos : les nouveautés de la semaine, le support technique et la boîte à idées.",
+      "Quand une mise à jour sort, ta partie n'est plus coupée : on te propose de redémarrer à la fin.",
+      "Chargement plus rapide et animations plus légères sur les anciens téléphones.",
+      "Affichage vérifié sur tous les écrans, du petit iPhone SE à l'ordinateur."] },
+    { date: "2026-11-16", title: "Collection Prestige et nouveau système de points", items: [
+      "42 objets Prestige illustrés et animés, et une boutique plus grande chaque semaine.",
+      "Les objets brillent selon leur prestige : Classique, Rare, Épique, Légendaire.",
+      "Points de saison par jour : 1 par partie (30 max), plus 1 par tranche de 50 jetons gagnés dans la journée.",
+      "Solde gardé sur ton compte et une recharge gratuite par jour.",
+      "Roue du jour dans l'onglet Défis, machine à sous 777, rangs plus durs à atteindre."] },
+    { date: "2026-11-15", title: "Tapis de poker et vrai sabot de blackjack", items: [
+      "Tapis de poker à personnaliser, pour le Hold'em contre les bots et le poker en ligne.",
+      "Blackjack : un sabot posé sur la table, les cartes en sortent en direct."] },
+    { date: "2026-11-14", title: "Blackjack plus réaliste", items: [
+      "Le sabot est gardé quand tu changes de page, et une main commencée reprend où elle s'était arrêtée."] }
+  ];
+  const DAY = 864e5;
+  const recentNews = () => CHANGELOG.filter(n => Date.now() - new Date(n.date + "T12:00:00").getTime() < 7 * DAY);
+  const unseenNews = () => { const r = recentNews(); return r.length && r[0].date > read("casino.news.seen", ""); };
+  const FEEDBACK_KINDS = { support: "Support technique", bug: "Signaler un bug", idee: "Proposer une idée", autre: "Autre" };
+  const FEEDBACK_STATUS = { nouveau: "Envoyé", "en cours": "En cours", "résolu": "Résolu", "refusé": "Non retenu" };
+  async function sendFeedback(kind, message, contact) {
+    try {
+      return await api("/rest/v1/rpc/send_feedback", { method: "POST", auth: !!session, body: { kind, message, contact: contact || null,
+        page: (document.body.dataset.page || "").slice(0, 60), device: navigator.userAgent.slice(0, 200) } });
+    } catch (e) {
+      throw new Error(e.raw === "trop_de_messages" ? "Tu as envoyé beaucoup de messages : réessaie dans une heure."
+        : /send_feedback|function/.test(e.raw || "") ? "Le support arrive avec la mise à jour du serveur."
+        : e.code === "network" ? "Il faut internet pour envoyer ton message." : e.message);
+    }
+  }
+  const myFeedback = () => api("/rest/v1/rpc/my_feedback", { method: "POST", body: {} });
+  function openInfo(tab) {
+    openSheet((sheet, close) => {
+      const paint = t => {
+        tab = t;
+        const news = recentNews();
+        if (t === "news" && news.length) { write("casino.news.seen", news[0].date); document.querySelectorAll(".info-btn").forEach(b => b.classList.remove("has-news")); }
+        const fmtDay = d => new Date(d + "T12:00:00").toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
+        let body;
+        if (t === "news") {
+          body = news.length ? news.map((n, i) => `<div class="news rise" style="--i:${i}"><div class="news-d">${fmtDay(n.date)}</div><b>${escHTML(n.title)}</b><ul>${n.items.map(x => `<li>${escHTML(x)}</li>`).join("")}</ul></div>`).join("")
+            : `<p class="loading">Pas de nouveauté cette semaine. Les mises à jour apparaissent ici pendant 7 jours.</p>`;
+        } else {
+          const isIdea = t === "idea";
+          body = `<form class="ps-box fb-form" novalidate>
+            <div class="ps-field"><label for="fbKind">Sujet</label><select id="fbKind">${(isIdea ? ["idee", "bug", "autre"] : ["support", "bug", "autre"]).map(k => `<option value="${k}">${FEEDBACK_KINDS[k]}</option>`).join("")}</select></div>
+            <div class="ps-field"><label for="fbMsg">${isIdea ? "Ton idée ou le bug que tu as vu" : "Explique ton problème"}</label><textarea id="fbMsg" rows="5" maxlength="2000" placeholder="${isIdea ? "Ex. : ajouter un jeu de dés, un classement entre collègues…" : "Ex. : je ne peux pas me connecter, la page reste blanche…"}"></textarea></div>
+            ${session ? "" : `<div class="ps-field"><label for="fbContact">Pour te répondre (facultatif)</label><input id="fbContact" maxlength="120" placeholder="Pseudo, e-mail ou numéro"></div>`}
+            <button class="btn primary" type="submit">Envoyer</button>
+            <div class="ps-msg" role="status"></div>
+            <p class="fb-note">Ton téléphone et la page où tu es sont joints automatiquement pour nous aider à comprendre.</p>
+          </form>
+          ${session ? `<div class="ps-box"><b class="ps-lab">Mes demandes</b><div class="fb-list"><p class="loading">Chargement…</p></div></div>` : ""}`;
+        }
+        sheet.innerHTML = `<div class="grab" aria-hidden="true"></div>
+          <div class="ph"><h2>Infos</h2><button class="x" data-close aria-label="Fermer">×</button></div>
+          <div class="info-tabs" role="tablist">${[["news", "Nouveautés"], ["support", "Support"], ["idea", "Idées et bugs"]].map(([k, l]) => `<button role="tab" data-info="${k}" aria-selected="${k === t}">${l}</button>`).join("")}</div>
+          ${body}`;
+        const form = sheet.querySelector(".fb-form");
+        if (form) {
+          form.addEventListener("submit", async e => {
+            e.preventDefault();
+            const msg = form.querySelector("#fbMsg").value.trim(), out = form.querySelector(".ps-msg"), btn = form.querySelector("button");
+            if (msg.length < 5) { out.className = "ps-msg"; out.textContent = "Écris quelques mots de plus."; return; }
+            btn.disabled = true; out.textContent = "";
+            try {
+              await sendFeedback(form.querySelector("#fbKind").value, msg, form.querySelector("#fbContact") && form.querySelector("#fbContact").value.trim());
+              form.querySelector("#fbMsg").value = "";
+              out.className = "ps-msg ok"; out.textContent = "Merci ! Ton message est bien arrivé.";
+              loadList();
+            } catch (err) { out.className = "ps-msg"; out.textContent = err.message; }
+            btn.disabled = false;
+          });
+          loadList();
+        }
+      };
+      async function loadList() {
+        const box = sheet.querySelector(".fb-list"); if (!box) return;
+        try {
+          const list = await myFeedback();
+          box.innerHTML = list && list.length ? list.map(f => `<div class="fb-item"><div class="fb-top"><b>${FEEDBACK_KINDS[f.kind] || f.kind}</b><span class="fb-st st-${escHTML(f.status).replace(/\s/g, "-")}">${FEEDBACK_STATUS[f.status] || f.status}</span></div>
+            <p>${escHTML(f.message)}</p>${f.reply ? `<p class="fb-reply"><b>Réponse :</b> ${escHTML(f.reply)}</p>` : ""}</div>`).join("") : `<p class="loading">Aucune demande pour l'instant.</p>`;
+        } catch (e) { box.innerHTML = `<p class="loading">${escHTML(e.code === "network" ? "Il faut internet pour voir tes demandes." : "Tes demandes s'afficheront après la mise à jour du serveur.")}</p>`; }
+      }
+      sheet.addEventListener("click", e => { const b = e.target.closest("[data-info]"); if (b && b.dataset.info !== tab) paint(b.dataset.info); });
+      paint(tab || "news");
+    });
+  }
+  function mountInfo() {
+    const right = document.querySelector(".app .bar .bar-right");
+    if (!right || right.querySelector(".info-btn")) return;
+    const b = document.createElement("button");
+    b.className = "search-btn info-btn" + (unseenNews() ? " has-news" : "");
+    b.type = "button";
+    b.setAttribute("aria-label", "Infos : nouveautés, support et idées");
+    b.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>';
+    b.onclick = () => openInfo(unseenNews() ? "news" : "news");
+    const help = right.querySelector(".help-btn");
+    if (help) help.after(b); else right.prepend(b);
+  }
+  // one-off messages from the casino (for example a gift), shown once
+  function showGift(g) {
+    if (!g || document.querySelector(".reward-scrim")) return;
+    const news = recentNews().slice(0, 2);
+    const box = document.createElement("div");
+    box.className = "reward-scrim";
+    box.innerHTML = `<div class="reward-box gift-box" role="dialog" aria-modal="true" aria-labelledby="giftTitle">
+      <h2 id="giftTitle">${escHTML(g.title)}</h2>
+      <p>${escHTML(g.message)}</p>
+      <div class="gift-gains">${g.crowns ? `<div class="rw-crowns">${CROWN}+${fmtN(g.crowns)}</div>` : ""}${+g.net_boost ? `<div class="gift-boost">+${fmtN(g.net_boost)} jetons ajoutés à ton total « Depuis toujours » au classement</div>` : ""}</div>
+      ${news.length ? `<div class="gift-news"><b>Les dernières nouveautés</b><ul>${news.flatMap(n => n.items.slice(0, 3)).map(x => `<li>${escHTML(x)}</li>`).join("")}</ul></div>` : ""}
+      <button class="btn primary">Merci !</button></div>`;
+    document.body.appendChild(box);
+    if (typeof confetti === "function") confetti();
+    box.querySelector("button").onclick = () => {
+      box.remove();
+      api("/rest/v1/rpc/mark_gift_seen", { method: "POST", body: { gift: g.id } }).catch(() => {});
+      if (profile) keepProfile({ ...profile, gifts: (profile.gifts || []).filter(x => x.id !== g.id) });
+    };
+  }
+
+  // ---------- updates without breaking a game ----------
+  // When a new version is online, a game page finishes the current hand first, then asks to restart.
+  const APP_VERSION = "28";
+  let updateReady = false, updateWarned = false;
+  const inGame = () => { try { return typeof window.CasinoBusy === "function" && !!window.CasinoBusy(); } catch (e) { return false; } };
+  async function checkUpdate() {
+    if (updateReady || navigator.onLine === false) return;
+    try {
+      const r = await fetch("version.json?t=" + Date.now(), { cache: "no-store" });
+      if (!r.ok) return;
+      const v = await r.json();
+      if (v && v.v && String(v.v) !== APP_VERSION) { updateReady = true; offerUpdate(); }
+    } catch (e) {}
+  }
+  function restartApp() {
+    const go = () => location.reload();
+    try {
+      if (navigator.serviceWorker && navigator.serviceWorker.getRegistration) {
+        navigator.serviceWorker.getRegistration().then(reg => {
+          if (!reg) return go();
+          navigator.serviceWorker.addEventListener("controllerchange", go);
+          reg.update().catch(() => {}).then(() => setTimeout(go, 2500));
+        }).catch(go);
+        return;
+      }
+    } catch (e) {}
+    go();
+  }
+  function offerUpdate() {
+    if (inGame()) {
+      if (!updateWarned) {
+        updateWarned = true;
+        const n = document.createElement("div");
+        n.className = "upd-note";
+        n.setAttribute("role", "status");
+        n.innerHTML = `<b>Mise à jour disponible</b><span>Termine ta partie tranquillement : on te proposera de redémarrer juste après.</span><button class="x" aria-label="Fermer">×</button>`;
+        n.querySelector("button").onclick = () => n.remove();
+        document.body.appendChild(n);
+      }
+      setTimeout(offerUpdate, 1500);
+      return;
+    }
+    document.querySelectorAll(".upd-note").forEach(x => x.remove());
+    if (document.querySelector(".upd-scrim")) return;
+    const box = document.createElement("div");
+    box.className = "reward-scrim upd-scrim";
+    box.innerHTML = `<div class="reward-box" role="alertdialog" aria-modal="true" aria-labelledby="updTitle">
+      <h2 id="updTitle">Mise à jour prête</h2>
+      <p>Une nouvelle version du casino est disponible. Redémarre l'app pour en profiter : ton solde et tes objets sont gardés.</p>
+      <button class="btn primary">Redémarrer maintenant</button></div>`;
+    document.body.appendChild(box);
+    box.querySelector("button").onclick = e => { e.target.disabled = true; e.target.textContent = "Redémarrage…"; restartApp(); };
+  }
+  setTimeout(checkUpdate, 4000);
+  setInterval(checkUpdate, 120000);
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") checkUpdate(); });
+  Object.assign(window.CasinoUI, { openInfo });
+
+  const boot = () => { mountNav(); mountSearch(); mountHelp(); mountInfo(); };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot); else boot();
   setTimeout(checkRewards, 1200);
   setTimeout(() => runDaily(true), 1900);

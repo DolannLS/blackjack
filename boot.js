@@ -24,6 +24,11 @@ html[data-theme="nuit"] #splash { background: radial-gradient(120% 70% at 50% 42
     document.documentElement.dataset.theme = t;
     document.querySelectorAll('meta[name="theme-color"]').forEach(m => m.setAttribute("content", THEMES[t]));
   }
+  // modest phones (few processor cores or little memory) keep the decorations still, so the games stay smooth
+  try {
+    const cores = navigator.hardwareConcurrency || 8, mem = navigator.deviceMemory || 8;
+    if (cores <= 4 || mem <= 2) document.documentElement.classList.add("lowfx");
+  } catch (e) {}
   // phones from before 2022 do not know the "dvh" screen unit: use "vh" instead
   try {
     if (window.CSS && CSS.supports && !CSS.supports("height", "1dvh")) {
@@ -103,11 +108,12 @@ body > * { transition: opacity .45s ease; }
   if (document.body) show(); else document.addEventListener("DOMContentLoaded", show);
 
   const t0 = performance.now();
-  const loaded = new Promise(r => (document.readyState === "complete" ? r() : addEventListener("load", r)));
+  // the page is usable as soon as its HTML is ready: no need to wait for every image or library
+  const ready = new Promise(r => (document.readyState !== "loading" ? r() : document.addEventListener("DOMContentLoaded", r)));
   const fonts = document.fonts ? document.fonts.ready : Promise.resolve();
-  const cap = new Promise(r => setTimeout(r, 3500));
-  Promise.race([Promise.all([loaded, fonts]), cap]).then(() => {
-    const wait = Math.max(0, (still ? 300 : 1300) - (performance.now() - t0));
+  const cap = new Promise(r => setTimeout(r, 1800));
+  Promise.race([Promise.all([ready, fonts]), cap]).then(() => {
+    const wait = Math.max(0, (still ? 200 : 800) - (performance.now() - t0));
     setTimeout(() => {
       root.classList.remove("booting");
       if (!splash) return;

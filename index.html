@@ -15,7 +15,8 @@
 <meta name="theme-color" content="#072a22">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Outfit:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Outfit:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Outfit:wght@400;500;600;700&display=swap"></noscript>
 <style>
 /* Layout: one-screen casino table — status bar, dealer rail, printed felt, player spots, chip tray docked at the bottom. Single dark look by choice. */
 :root {
@@ -736,6 +737,8 @@ button:disabled { opacity: .35; cursor: default; }
     save(); renderStats(); render();
     b.classList.remove("armed"); b.textContent = "Statistiques remises à zéro";
   };
+  // a hand in play: an app update waits for it to end
+  window.CasinoBusy = () => S.busy || S.phase === "play" || S.phase === "dealer";
   // balance from the account, applied between hands
   window.CasinoWallet = n => {
     if (S.busy || S.phase === "play" || S.phase === "dealer") return;

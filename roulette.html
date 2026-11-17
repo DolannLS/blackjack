@@ -14,7 +14,8 @@
 <meta name="theme-color" content="#072a22">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Outfit:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Outfit:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Outfit:wght@400;500;600;700&display=swap"></noscript>
 <style>
 /* Layout: one-screen roulette table — status bar, wheel, last numbers, horizontal betting layout, chip tray docked at the bottom. Same felt world as the blackjack table. */
 :root {
@@ -562,6 +563,7 @@ button:disabled { opacity: .35; cursor: default; }
       renderStats();
     };
   }
+  window.CasinoBusy = () => spinning;
   // balance from the account, applied when the ball is not rolling
   window.CasinoWallet = n => { if (spinning) return; bankroll = n; if (total() > n) bets = {}; save(); renderBank(); renderBets(); };
   $("menuBtn").onclick = () => { renderStats(); $("menu").hidden = false; };

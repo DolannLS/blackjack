@@ -14,7 +14,8 @@
 <meta name="theme-color" content="#072a22">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Outfit:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Outfit:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Outfit:wght@400;500;600;700&display=swap"></noscript>
 <style>
 /* Layout: one-screen poker room — status bar, mode toggle, then either the Hold'em table (three bot seats, board and pot, your seat, action bar) or the video poker machine (pay table, five cards, bet tray). Same felt world as the other tables. */
 :root {
@@ -512,7 +513,7 @@ button:disabled { opacity: .35; cursor: default; }
   </div>
 </div>
 
-<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js" async></script>
 <script>
 (() => {
   const SB = 10, BB = 20, BUYIN = 1000, MAX_SEATS = 6, TURN_MS = 40000;
@@ -686,6 +687,9 @@ button:disabled { opacity: .35; cursor: default; }
     if (resume) pending(`Réouverture de ta table ${code}…`);
     if (typeof Peer === "undefined") {
       if (resume && tries < 48) return again();
+      // the online library loads in the background: give it a few seconds
+      if (!resume && tries < 20) { NET.role = null; busy(true); lobbyError("Chargement du mode en ligne…"); setTimeout(() => { busy(false); createTable(null, tries + 1); }, 400); return; }
+      busy(false);
       NET.role = null; pending(""); $("table").hidden = true; $("lobby").hidden = false;
       lobbyError("Impossible de charger le module en ligne. Vérifie ta connexion internet."); return;
     }
@@ -718,7 +722,13 @@ button:disabled { opacity: .35; cursor: default; }
     const name = resume ? resume.name : askName(); if (!name) return;
     const code = resume ? resume.code : (codeArg || $("codeIn").value).trim().toUpperCase();
     if (code.length !== 5) { lobbyError("Le code fait 5 caractères."); return; }
-    if (typeof Peer === "undefined" && !resume) { lobbyError("Impossible de charger le module en ligne. Vérifie ta connexion internet."); return; }
+    if (typeof Peer === "undefined" && !resume) {
+      // the online library loads in the background: give it a few seconds
+      const n = (joinTable.waits || 0) + 1; joinTable.waits = n;
+      if (n <= 20) { busy(true); lobbyError("Chargement du mode en ligne…"); setTimeout(() => { busy(false); joinTable(code); }, 400); return; }
+      joinTable.waits = 0; lobbyError("Impossible de charger le module en ligne. Vérifie ta connexion internet."); return;
+    }
+    joinTable.waits = 0;
     busy(true); lobbyError("");
     NET.role = "guest"; NET.code = code; NET.myName = name; NET.resuming = !!resume;
     if (resume) { retry.since = Date.now(); pending(`Reconnexion à la table ${code}…`); }
@@ -805,6 +815,8 @@ button:disabled { opacity: .35; cursor: default; }
     if (NET.role === "host" && NET.peer && NET.peer.disconnected && !NET.peer.destroyed) try { NET.peer.reconnect(); } catch (e) {}
   });
 
+  // a hand in play at the online table: an app update waits for it (the seat is rejoined after the restart)
+  window.CasinoBusy = () => !!(NET.role && view && (view.phase === "play" || view.phase === "showdown"));
   // « Quitter » is the only way to give the seat up, so it is confirmed first
   function askQuit() {
     const others = NET.role === "host" && Host.ready && Host.seats.some((s, i) => i > 0 && !s.isBot && !s.quit);
