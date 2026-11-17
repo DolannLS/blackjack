@@ -521,8 +521,9 @@ button:disabled { opacity: .35; cursor: default; }
     const broke = betting && S.bankroll < 5 && S.bet === 0;
     $("chips").querySelectorAll(".chip").forEach(b => b.disabled = S.busy || +b.dataset.v > S.bankroll - S.bet);
     const deal = $("dealBtn"), clr = $("clearBtn");
+    delete deal.dataset.refill; deal.classList.remove("refill-wait");
     if (broke) {
-      deal.innerHTML = "Recharger 1 000"; deal.disabled = false; clr.disabled = true;
+      deal.innerHTML = "Recharger 1 000"; deal.dataset.refill = ""; deal.disabled = false; clr.disabled = true;
     } else if (S.bet > 0) {
       deal.innerHTML = "Distribuer"; deal.disabled = S.busy; clr.disabled = S.busy;
       clr.innerHTML = "Effacer";
@@ -709,7 +710,7 @@ button:disabled { opacity: .35; cursor: default; }
     else if (net > 0) say((d > 21 ? "Le croupier saute · " : "Gagné · ") + `+${fmt(net)}`, "win");
     else if (net < 0) say(one && value(one.cards).t > 21 ? `Vous sautez · −${fmt(-net)}` : dBJ ? `Blackjack du croupier · −${fmt(-net)}` : `Perdu · −${fmt(-net)}`, "lose");
     else say("Égalité, mise rendue");
-    if (S.bankroll < 5) setTimeout(() => say("Plus de jetons. Rechargez pour rejouer."), 1400);
+    if (S.bankroll < 5) setTimeout(() => say("Plus de jetons : recharge gratuite dès que le bouton est prêt, ou échange des couronnes en Boutique."), 1400);
     save();
     render();
   }
@@ -775,7 +776,7 @@ button:disabled { opacity: .35; cursor: default; }
 
   {
     const gone = DECKS * 52 - shoe.length;
-    say(S.bankroll < 5 ? "Plus de jetons. Rechargez pour rejouer." : gone <= 1 ? "Faites vos jeux · sabot neuf" : `Faites vos jeux · sabot entamé, ${gone} cartes sorties`);
+    say(S.bankroll < 5 ? "Plus de jetons : recharge gratuite dès que le bouton est prêt, ou échange des couronnes en Boutique." : gone <= 1 ? "Faites vos jeux · sabot neuf" : `Faites vos jeux · sabot entamé, ${gone} cartes sorties`);
   }
   // a hand left unfinished on another page picks up where it stopped
   if (savedHand && Array.isArray(savedHand.hands) && savedHand.hands.length) {

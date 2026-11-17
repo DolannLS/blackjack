@@ -521,17 +521,52 @@
     if (pending().length) throw new Error(navigator.onLine === false ? "Il faut internet pour recharger." : "Tes dernières parties sont en cours d'envoi, réessaie dans un instant.");
     try {
       const n = await api("/rest/v1/rpc/refill_chips", { method: "POST", body: {} });
-      if (profile) keepProfile({ ...profile, chips: n });
+      if (profile) keepProfile({ ...profile, chips: n, refill_next: new Date(Date.now() + REFILL_GAP).toISOString(),
+        refills_left: Math.max(0, (profile.refills_left == null ? REFILLS_A_DAY : profile.refills_left) - 1) });
       return +n;
     } catch (e) {
       if (/refill_chips|function/.test(e.raw || "")) return localRefill(); // server not updated yet
       const soon = /^trop_tot:(\d+)/.exec(e.raw || "");
+      if (soon && profile) keepProfile({ ...profile, refill_next: new Date(Date.now() + +soon[1] * 60000).toISOString() });
+      if (e.raw === "deja_recharge" && profile) keepProfile({ ...profile, refills_left: 0 });
       throw new Error(soon ? `Prochaine recharge gratuite dans ${waitText(+soon[1])}. En attendant : la roue du jour, ou échange des couronnes contre des jetons dans la Boutique.`
         : e.raw === "deja_recharge" ? "Tes 3 recharges gratuites du jour sont utilisées. Elles reviennent à minuit. Tu peux aussi échanger des couronnes contre des jetons dans la Boutique."
         : e.raw === "pas_a_sec" ? "Ton solde n'est pas vide sur ton compte : recharge la page."
         : e.code === "network" ? "Il faut internet pour recharger." : e.message);
     }
   }
+  // when the next free refill comes: on the account if the server knows it, otherwise on this phone
+  function refillState() {
+    let left, next;
+    if (session && profile && "refills_left" in profile) {
+      left = profile.refills_left == null ? REFILLS_A_DAY : +profile.refills_left;
+      next = profile.refill_next ? Date.parse(profile.refill_next) : 0;
+    } else {
+      const st = read("refill.local", {}) || {}, today = st.day === wheelDay();
+      left = REFILLS_A_DAY - (today ? st.count || 0 : 0);
+      next = today ? (st.at || 0) + REFILL_GAP : 0;
+    }
+    if (left <= 0) {
+      const d = daily && daily.resets_at ? Date.parse(daily.resets_at) : (() => { const m = new Date(); m.setHours(24, 0, 0, 0); return m.getTime(); })();
+      return { ready: false, until: d, limit: true };
+    }
+    return next > Date.now() ? { ready: false, until: next } : { ready: true };
+  }
+  const clock = ms => { const t = Math.max(0, Math.ceil(ms / 1000)), h = Math.floor(t / 3600), m = Math.floor(t / 60) % 60, sec = t % 60;
+    return (h ? h + ":" + String(m).padStart(2, "0") : String(m)) + ":" + String(sec).padStart(2, "0"); };
+  // every refill button of the games shows a live countdown until it can be used
+  function paintRefill() {
+    const st = refillState();
+    document.querySelectorAll("[data-refill]").forEach(b => {
+      const text = st.ready ? "Recharger 1 000" : st.limit ? `Nouvelles recharges dans ${clock(st.until - Date.now())}` : `Recharge dans ${clock(st.until - Date.now())}`;
+      if (b.textContent !== text) b.textContent = text;
+      if (b.disabled !== !st.ready) b.disabled = !st.ready;
+      b.classList.toggle("refill-wait", !st.ready);
+    });
+  }
+  setInterval(paintRefill, 1000);
+  new MutationObserver(list => { if (list.some(m => m.target.nodeType === 1 && (m.target.closest("[data-refill]") || m.target.querySelector && m.target.querySelector("[data-refill]")))) paintRefill(); })
+    .observe(document.documentElement, { childList: true, subtree: true });
   // 3. crowns for chips: 100 crowns = 1 000 chips
   async function buyChips(packs) {
     await flush();
@@ -2162,6 +2197,7 @@ body::before { content: ""; position: fixed; inset: 0; pointer-events: none; bac
 .fb-st.st-résolu { color: var(--win, #7fd99a); } .fb-st.st-en-cours { color: var(--brass); }
 .gift-box h2 { margin: 0; font-family: var(--f-display, Georgia, serif); font-weight: 400; font-size: 25px; }
 .gift-box p { margin: 0; color: var(--muted); line-height: 1.45; font-size: 14.5px; }
+button.refill-wait { font-variant-numeric: tabular-nums; font-size: 14.5px; opacity: .85 !important; }
 .login-chips { margin: 0; font-weight: 700; color: var(--win, #7fd99a); }
 .gift-boost { font-size: 13.5px; font-weight: 700; color: var(--win, #7fd99a); }
 .gift-news { text-align: left; padding: 10px 12px; border-radius: 12px; background: rgba(0,0,0,.22); }
@@ -2489,7 +2525,7 @@ html.rot-l .tabbar, html.rot-r .tabbar { padding-bottom: 4px !important; }
 
   // ---------- updates without breaking a game ----------
   // When a new version is online, a game page finishes the current hand first, then asks to restart.
-  const APP_VERSION = "29";
+  const APP_VERSION = "30";
   let updateReady = false, updateWarned = false;
   const inGame = () => { try { return typeof window.CasinoBusy === "function" && !!window.CasinoBusy(); } catch (e) { return false; } };
   async function checkUpdate() {
