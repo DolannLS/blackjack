@@ -503,8 +503,8 @@
     if (flushing) return;
     setChips(+chips + pendingNet());
   }
-  // a free refill of 1 000 every 4 hours, 3 a day at most, only when the balance is (almost) empty
-  const REFILL_GAP = 4 * 3600e3, REFILLS_A_DAY = 3;
+  // a free refill of 2 000 every 3 hours, 3 a day at most, only when the balance is (almost) empty
+  const REFILL_GAP = 3 * 3600e3, REFILLS_A_DAY = 3, REFILL_AMOUNT = 2000;
   const waitText = min => { const h = Math.floor(min / 60), m = min % 60; return h ? `${h} h ${String(m).padStart(2, "0")}` : `${m} min`; };
   async function refillChips() {
     const localRefill = () => {
@@ -514,7 +514,7 @@
       const left = (st.at || 0) + REFILL_GAP - Date.now();
       if (left > 0) throw new Error(`Prochaine recharge gratuite dans ${waitText(Math.ceil(left / 60000))}.`);
       write("refill.local", { day, count: used + 1, at: Date.now() });
-      return 1000;
+      return REFILL_AMOUNT;
     };
     if (!configured() || !session) return localRefill();
     await flush();
@@ -558,7 +558,7 @@
   function paintRefill() {
     const st = refillState();
     document.querySelectorAll("[data-refill]").forEach(b => {
-      const text = st.ready ? "Recharger 1 000" : st.limit ? `Nouvelles recharges dans ${clock(st.until - Date.now())}` : `Recharge dans ${clock(st.until - Date.now())}`;
+      const text = st.ready ? "Recharger 2 000" : st.limit ? `Nouvelles recharges dans ${clock(st.until - Date.now())}` : `Recharge dans ${clock(st.until - Date.now())}`;
       if (b.textContent !== text) b.textContent = text;
       if (b.disabled !== !st.ready) b.disabled = !st.ready;
       b.classList.toggle("refill-wait", !st.ready);
@@ -2068,7 +2068,7 @@ body::before { content: ""; position: fixed; inset: 0; pointer-events: none; bac
           <li>C'est l'argent pour jouer au blackjack, à la roulette, au poker contre les bots, au vidéo poker et à la machine à sous. Tu commences à 1 000.</li>
           <li>Il est gardé <b>sur ton compte</b> : le même sur tous tes appareils. Sans compte, il reste sur ce téléphone.</li>
           <li><b>+500 jetons offerts chaque jour</b> à ta première connexion.</li>
-          <li>Quand il te reste moins de 5 jetons : <b>une recharge gratuite de 1 000 toutes les 4 heures</b>, 3 fois par jour au plus.</li>
+          <li>Quand il te reste moins de 5 jetons : <b>une recharge gratuite de 2 000 toutes les 3 heures</b>, 3 fois par jour au plus.</li>
           <li>Tu peux aussi <b>échanger des couronnes contre des jetons</b> dans la Boutique : 100 couronnes = 1 000 jetons.</li>
           <li>La roue du jour (onglet Défis) peut aussi te donner des jetons.</li>
           <li>Le poker en ligne utilise ses propres jetons de table (1 000 par joueur), séparés de ton solde.</li></ul>`],
@@ -2401,7 +2401,7 @@ html.rot-l .tabbar, html.rot-r .tabbar { padding-bottom: 4px !important; }
   const CHANGELOG = [
     { date: "2026-11-17", title: "Plus de jetons pour rejouer", items: [
       "+500 jetons offerts chaque jour à ta première connexion.",
-      "Recharge gratuite de 1 000 jetons toutes les 4 heures (3 fois par jour) quand ton solde est vide.",
+      "Recharge gratuite de 2 000 jetons toutes les 3 heures (3 fois par jour) quand ton solde est vide.",
       "Échange tes couronnes contre des jetons dans la Boutique : 100 couronnes = 1 000 jetons."] },
     { date: "2026-11-17", title: "Thèmes, Infos et mises à jour en douceur", items: [
       "Trois thèmes pour l'app : Classique, Sombre et Bleu nuit (Mon compte, ou en bas de l'aide ?).",
@@ -2530,7 +2530,7 @@ html.rot-l .tabbar, html.rot-r .tabbar { padding-bottom: 4px !important; }
 
   // ---------- updates without breaking a game ----------
   // When a new version is online, a game page finishes the current hand first, then asks to restart.
-  const APP_VERSION = "31";
+  const APP_VERSION = "32";
   let updateReady = false, updateWarned = false;
   const inGame = () => { try { return typeof window.CasinoBusy === "function" && !!window.CasinoBusy(); } catch (e) { return false; } };
   async function checkUpdate() {

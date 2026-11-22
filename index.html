@@ -523,7 +523,7 @@ button:disabled { opacity: .35; cursor: default; }
     const deal = $("dealBtn"), clr = $("clearBtn");
     delete deal.dataset.refill; deal.classList.remove("refill-wait");
     if (broke) {
-      deal.innerHTML = "Recharger 1 000"; deal.dataset.refill = ""; deal.disabled = false; clr.disabled = true;
+      deal.innerHTML = "Recharger 2 000"; deal.dataset.refill = ""; deal.disabled = false; clr.disabled = true;
     } else if (S.bet > 0) {
       deal.innerHTML = "Distribuer"; deal.disabled = S.busy; clr.disabled = S.busy;
       clr.innerHTML = "Effacer";

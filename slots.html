@@ -509,7 +509,7 @@ button:disabled { opacity: .35; cursor: default; }
     const rate = stats.spins ? Math.round(stats.won / stats.spins * 100) : 0;
     const items = [["Lancers", stats.spins], ["Gagnants", rate + " %"], ["Jackpots", stats.jackpots], ["Plus gros gain", fmt(stats.best)], ["Solde", fmt(bankroll)]];
     let html = items.map(([k, v]) => `<div class="stat"><span class="label">${k}</span><b>${v}</b></div>`).join("");
-    if (bankroll < BETS[0]) html += `<button class="btn primary" id="refill" data-refill style="grid-column:span 3">Recharger 1 000</button>`;
+    if (bankroll < BETS[0]) html += `<button class="btn primary" id="refill" data-refill style="grid-column:span 3">Recharger 2 000</button>`;
     $("stats").innerHTML = html;
     const r = $("refill");
     if (r) r.onclick = async () => {

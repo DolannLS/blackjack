@@ -895,7 +895,7 @@ button:disabled { opacity: .35; cursor: default; }
       c.innerHTML = `<div class="row" style="--cols:1"><button class="btn" disabled>${me.folded ? "Fin de la main…" : "À eux de jouer…"}</button></div>`;
     } else {
       const broke = W < BB;
-      c.innerHTML = `<div class="row" style="--cols:1"><button class="btn primary" data-a="${broke ? "refill" : "deal"}"${broke ? " data-refill" : ""}>${broke ? "Recharger 1 000" : H.phase === "idle" ? "Distribuer" : "Main suivante"}</button></div>`;
+      c.innerHTML = `<div class="row" style="--cols:1"><button class="btn primary" data-a="${broke ? "refill" : "deal"}"${broke ? " data-refill" : ""}>${broke ? "Recharger 2 000" : H.phase === "idle" ? "Distribuer" : "Main suivante"}</button></div>`;
     }
   }
 
@@ -922,7 +922,7 @@ button:disabled { opacity: .35; cursor: default; }
     const btn = $("vpBtn");
     const broke = W < 5 && (VP.phase === "bet" || VP.phase === "done");
     if (broke) btn.dataset.refill = ""; else delete btn.dataset.refill;
-    btn.textContent = broke ? "Recharger 1 000" : VP.phase === "draw" ? "Tirer" : "Distribuer";
+    btn.textContent = broke ? "Recharger 2 000" : VP.phase === "draw" ? "Tirer" : "Distribuer";
     btn.disabled = VP.phase === "busy";
   }
 
@@ -996,7 +996,7 @@ button:disabled { opacity: .35; cursor: default; }
   function renderStats() {
     const items = [["Mains", stats.hands], ["Gagnées", stats.handsWon], ["Plus gros pot", fmt(stats.bestPot)], ["Vidéo poker", stats.vpHands], ["Meilleur gain", fmt(stats.vpBest)], ["Solde", fmt(W)]];
     let html = items.map(([k, v]) => `<div class="stat"><span class="label">${k}</span><b>${v}</b></div>`).join("");
-    if (W < 5 && !inHand()) html += `<button class="btn primary" id="refillBtn" data-refill style="grid-column:span 3">Recharger 1 000</button>`;
+    if (W < 5 && !inHand()) html += `<button class="btn primary" id="refillBtn" data-refill style="grid-column:span 3">Recharger 2 000</button>`;
     $("stats").innerHTML = html;
     const r = $("refillBtn"); if (r) r.onclick = refill;
   }
