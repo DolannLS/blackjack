@@ -1,4 +1,4 @@
--- Casino : recharge gratuite de 2 000 jetons (au lieu de 1 000), toutes les 3 heures (au lieu de 4), 3 fois par jour.
+-- Casino : recharge gratuite de 2 000 jetons (au lieu de 1 000), toutes les 2 heures (au lieu de 4 puis 3), 3 fois par jour.
 -- À coller dans Supabase → SQL Editor → New query, puis « Run » (après jetons.sql). Peut être relancé.
 
 create or replace function public.refill_chips() returns numeric
@@ -10,8 +10,8 @@ begin
   if coalesce(p.chips, 0) >= 5 then raise exception 'pas_a_sec'; end if;
   used := case when p.refill_day = today then p.refill_count else 0 end;
   if used >= 3 then raise exception 'deja_recharge'; end if;
-  if p.refill_at > now() - interval '3 hours' then
-    raise exception 'trop_tot:%', ceil(extract(epoch from (p.refill_at + interval '3 hours' - now())) / 60)::int;
+  if p.refill_at > now() - interval '2 hours' then
+    raise exception 'trop_tot:%', ceil(extract(epoch from (p.refill_at + interval '2 hours' - now())) / 60)::int;
   end if;
   update profiles set chips = 2000, refill_at = now(), refill_day = today, refill_count = used + 1, last_refill = today where id = auth.uid();
   return 2000;
@@ -29,7 +29,7 @@ begin
   select json_build_object(
     'username', p.username, 'crowns', p.crowns, 'banner', p.banner, 'frame', p.frame, 'title', p.title, 'felt', p.felt, 'chips', p.chips, 'refilled_today', coalesce(p.refill_day = paris_day(now()) and p.refill_count >= 3, false),
     'refills_left', case when p.refill_day = paris_day(now()) then greatest(0, 3 - p.refill_count) else 3 end,
-    'refill_next', case when p.refill_at > now() - interval '3 hours' then p.refill_at + interval '3 hours' end, 'avatar_url', p.avatar_url,
+    'refill_next', case when p.refill_at > now() - interval '2 hours' then p.refill_at + interval '2 hours' end, 'avatar_url', p.avatar_url,
     'season_number', season_number(season_start(now())),
     'owned', (select coalesce(json_agg(i.item_id), '[]'::json) from inventory i where i.user_id = p.id),
     'rewards', (select coalesce(json_agg(r order by r.week_start desc), '[]'::json)
