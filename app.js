@@ -567,6 +567,18 @@
   setInterval(paintRefill, 1000);
   new MutationObserver(list => { if (list.some(m => m.target.nodeType === 1 && (m.target.closest("[data-refill]") || m.target.querySelector && m.target.querySelector("[data-refill]")))) paintRefill(); })
     .observe(document.documentElement, { childList: true, subtree: true });
+  // blackjack: a fresh, shuffled shoe for 25 crowns
+  async function payNewShoe() {
+    if (!configured() || !session) throw new Error("Connecte-toi pour payer un sabot neuf avec tes couronnes.");
+    try {
+      const left = await api("/rest/v1/rpc/pay_new_shoe", { method: "POST", body: {} });
+      if (profile) keepProfile({ ...profile, crowns: left });
+      return left;
+    } catch (e) {
+      throw new Error(e.raw === "solde" ? "Il te faut 25 couronnes pour un sabot neuf." : /pay_new_shoe|function/.test(e.raw || "") ? "Le sabot neuf arrive avec la mise à jour du serveur."
+        : e.code === "network" ? "Il faut internet pour payer en couronnes." : e.message);
+    }
+  }
   // 3. crowns for chips: 100 crowns = 1 000 chips
   async function buyChips(packs) {
     await flush();
@@ -771,7 +783,7 @@
     signUp, signIn, logout, record, flush, pending, history, leaderboard: leaderboardBy, addFriend, removeFriend,
     myInvite, resetInvite, inviteInfo, acceptInvite, inviteUrl, parseInvite, pendingInvite, NAME_RE,
     SHOP, ITEM, itemInfo, PRIZES, TIERS, TIER, CHAMPION, seasonNumber, seasonSet, rarity, loadProfile, buy, equip, markRewardsSeen,
-    shopWeek, itemStats, locker, searchPlayers, uploadAvatar, removeAvatar, wheelStatus, spinWheel, wheelDay, refillChips, buyChips,
+    shopWeek, itemStats, locker, searchPlayers, uploadAvatar, removeAvatar, wheelStatus, spinWheel, wheelDay, refillChips, buyChips, payNewShoe,
     seasonBoard, publicProfile, liveFeed, botsTick, renameAccount, changePassword, deleteAccount,
     localHistory: () => read(HISTORY, []),
     onChange: f => { listeners.add(f); return () => listeners.delete(f); }
@@ -2399,6 +2411,9 @@ html.rot-l .tabbar, html.rot-r .tabbar { padding-bottom: 4px !important; }
   // ---------- what's new, technical support, ideas and bugs ----------
   // Each update stays in the list for a week, then disappears on its own.
   const CHANGELOG = [
+    { date: "2026-11-24", title: "Blackjack : sabot neuf à la demande", items: [
+      "Bouton « Sabot neuf » sous le sabot : repars d'un sabot plein de 312 cartes mélangées pour 25 couronnes.",
+      "Le sabot affiche maintenant les cartes restantes sur le total (ex. 240 / 312)."] },
     { date: "2026-11-24", title: "Classement : plancher à −10 000", items: [
       "Ton total « Depuis toujours » ne descend plus sous −10 000 : à partir de là, chaque gain te fait remonter.",
       "Ceux qui étaient plus bas ont été remontés à −10 000.",
@@ -2534,7 +2549,7 @@ html.rot-l .tabbar, html.rot-r .tabbar { padding-bottom: 4px !important; }
 
   // ---------- updates without breaking a game ----------
   // When a new version is online, a game page finishes the current hand first, then asks to restart.
-  const APP_VERSION = "34";
+  const APP_VERSION = "35";
   let updateReady = false, updateWarned = false;
   const inGame = () => { try { return typeof window.CasinoBusy === "function" && !!window.CasinoBusy(); } catch (e) { return false; } };
   async function checkUpdate() {

@@ -109,6 +109,8 @@ button:disabled { opacity: .35; cursor: default; }
 .sb-tag { padding: 1px 7px; border-radius: 8px; font-size: 10.5px; font-weight: 700; letter-spacing: .02em; background: var(--glass); border: 1px solid var(--felt-line); }
 .sb-tag.new { color: var(--win); border-color: currentColor; }
 .shoe-box.shuffle .sb-top { animation: shuffle .5s ease 2; }
+.sb-new { margin-top: 1px; padding: 3px 8px; border-radius: 9px; font-size: 10.5px; font-weight: 700; color: var(--brass); background: rgba(0,0,0,.3); border: 1px solid rgba(216,178,106,.45); white-space: nowrap; }
+.sb-new:disabled { opacity: .35; }
 @keyframes shuffle { 50% { transform: skewX(-24deg) translateY(-6px) rotate(-8deg); } }
 .toggle { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px; border-radius: 12px; background: var(--glass); font-size: 14.5px; }
 .toggle small { display: block; color: var(--muted); font-size: 12.5px; margin-top: 2px; }
@@ -308,7 +310,7 @@ button:disabled { opacity: .35; cursor: default; }
 
   <main class="table">
     <div class="tray-box" id="trayBox" aria-label="Défausse"></div>
-    <div class="shoe-box" id="shoeBox" role="img"></div>
+    <div class="shoe-box" id="shoeBox" role="group"></div>
     <section class="zone">
       <div class="zone-head"><span class="label">Croupier</span><span class="total" id="dTotal"></span></div>
       <div class="hand" id="dealer"></div>
@@ -462,7 +464,8 @@ button:disabled { opacity: .35; cursor: default; }
     const box = $("shoeBox");
     box.innerHTML = `<div class="sb" aria-hidden="true"><div class="sb-body"></div>
         <div class="sb-stack" style="--fill:${left / total}"></div><div class="sb-cut" style="--cut:${cut / total}"></div><div class="sb-top" id="shoeMouth"></div></div>
-      <span><b>${left}</b> cartes</span><span class="sb-tag${fresh ? " new" : ""}">${fresh ? "Sabot neuf" : "Entamé"}</span>`;
+      <span><b>${left}</b> / ${total} cartes</span><span class="sb-tag${fresh ? " new" : ""}">${fresh ? "Sabot neuf" : "Entamé"}</span>
+      <button class="sb-new" type="button" data-newshoe ${S.busy || S.phase === "play" || S.phase === "dealer" ? "disabled" : ""} aria-label="Sabot neuf de ${total} cartes pour 25 couronnes">↻ Neuf · 25 ♛</button>`;
     box.setAttribute("aria-label", `Sabot de ${DECKS} jeux : ${left} cartes restantes, ${fresh ? "sabot neuf" : "sabot entamé"}. Il est remélangé quand il reste ${cut} cartes (trait rouge).`);
     $("trayBox").innerHTML = `<div class="tray" aria-hidden="true"><i style="--fill:${gone <= 1 ? 0 : Math.max(.06, Math.min(1, gone / (total - cut)))}"></i></div><span><b>${gone}</b> sorties</span>`;
   }
@@ -738,6 +741,25 @@ button:disabled { opacity: .35; cursor: default; }
     save(); renderStats(); render();
     b.classList.remove("armed"); b.textContent = "Statistiques remises à zéro";
   };
+  // a fresh shoe on demand: 6 full decks shuffled again, for 25 crowns
+  $("shoeBox").addEventListener("click", async e => {
+    if (!e.target.closest("[data-newshoe]")) return;
+    if (S.busy || S.phase === "play" || S.phase === "dealer") { say("Termine la main avant de changer de sabot."); return; }
+    const total = DECKS * 52, A = window.CasinoAccount, UI = window.CasinoUI;
+    if (!A || !A.session) { say("Connecte-toi pour payer un sabot neuf avec tes couronnes.", "lose"); return; }
+    const ok = await UI.confirm({ title: "Sabot neuf ?", ok: "Payer 25 couronnes",
+      text: `Le croupier remplace le sabot entamé (${shoe.length} cartes restantes) par un sabot neuf de <b>${total} cartes</b> (${DECKS} jeux) mélangées. Ça coûte <b>25 couronnes</b>.` });
+    if (!ok) return;
+    S.busy = true; render();
+    try {
+      await A.payNewShoe();
+      newShoe(); save();
+      clearTable();
+      $("shoeBox").classList.add("shuffle"); setTimeout(() => $("shoeBox").classList.remove("shuffle"), 1100);
+      say(`Nouveau sabot de ${total} cartes mélangé`, "win");
+    } catch (err) { say(err.message, "lose"); }
+    S.busy = false; render();
+  });
   // a hand in play: an app update waits for it to end
   window.CasinoBusy = () => S.busy || S.phase === "play" || S.phase === "dealer";
   // balance from the account, applied between hands
