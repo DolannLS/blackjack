@@ -2074,7 +2074,7 @@ body::before { content: ""; position: fixed; inset: 0; pointer-events: none; bac
           <li>Le poker en ligne utilise ses propres jetons de table (1 000 par joueur), séparés de ton solde.</li></ul>`],
         ["Le classement", `<dl>
           <dt>Semaine</dt><dd>Tes gains nets du lundi au dimanche (ce que tu as gagné moins ce que tu as misé). Classé à partir de 10 parties. Chaque lundi, les mieux placés reçoivent des couronnes.</dd>
-          <dt>Depuis toujours</dt><dd>Tes gains nets depuis la création du compte.</dd></dl>
+          <dt>Depuis toujours</dt><dd>Tes gains nets depuis la création du compte. Ce total ne descend jamais sous −10 000 : à partir de là, chaque gain te fait remonter.</dd></dl>
           <p>Les recharges et les jetons de la roue ne comptent jamais dans le classement : seules tes parties comptent.</p>`],
         ["Les points de saison et les rangs", `<p>Une saison dure un mois. Chaque jour (heure de Paris) :</p>
           <ul><li><b>1 point par partie</b>, 30 au plus par jour ;</li>
@@ -2094,7 +2094,7 @@ body::before { content: ""; position: fixed; inset: 0; pointer-events: none; bac
         ["Les trois classements", `<dl>
           <dt>Semaine</dt><dd>Gains nets du lundi au dimanche. Classé à partir de 10 parties. Récompenses chaque lundi.</dd>
           <dt>Saison</dt><dd>Un mois. Chaque jour : 1 point par partie (30 au plus), plus 1 point par tranche de 50 jetons de gain net de la journée.</dd>
-          <dt>Depuis toujours</dt><dd>Total gagné moins total misé. Les recharges de solde ne comptent pas.</dd></dl>
+          <dt>Depuis toujours</dt><dd>Total gagné moins total misé, jamais sous −10 000. Les recharges de solde ne comptent pas.</dd></dl>
           <p>Tout est résumé dans <b>Comment ça marche</b>, depuis les pages Rangs et Classement.</p>`],
         ["Récompenses de la semaine", `<ul>
           <li>1ᵉʳ : 1 000 couronnes, plus le cadre Couronne et le titre Champion de la semaine, gardés tant que tu restes 1ᵉʳ.</li>
@@ -2399,6 +2399,10 @@ html.rot-l .tabbar, html.rot-r .tabbar { padding-bottom: 4px !important; }
   // ---------- what's new, technical support, ideas and bugs ----------
   // Each update stays in the list for a week, then disappears on its own.
   const CHANGELOG = [
+    { date: "2026-11-24", title: "Classement : plancher à −10 000", items: [
+      "Ton total « Depuis toujours » ne descend plus sous −10 000 : à partir de là, chaque gain te fait remonter.",
+      "Ceux qui étaient plus bas ont été remontés à −10 000.",
+      "La recharge gratuite donne 2 000 jetons toutes les 2 heures (3 fois par jour)."] },
     { date: "2026-11-17", title: "Plus de jetons pour rejouer", items: [
       "+500 jetons offerts chaque jour à ta première connexion.",
       "Recharge gratuite de 2 000 jetons toutes les 2 heures (3 fois par jour) quand ton solde est vide.",
@@ -2530,7 +2534,7 @@ html.rot-l .tabbar, html.rot-r .tabbar { padding-bottom: 4px !important; }
 
   // ---------- updates without breaking a game ----------
   // When a new version is online, a game page finishes the current hand first, then asks to restart.
-  const APP_VERSION = "33";
+  const APP_VERSION = "34";
   let updateReady = false, updateWarned = false;
   const inGame = () => { try { return typeof window.CasinoBusy === "function" && !!window.CasinoBusy(); } catch (e) { return false; } };
   async function checkUpdate() {
