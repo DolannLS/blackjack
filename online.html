@@ -309,6 +309,25 @@ button:disabled { opacity: .35; cursor: default; }
 .err { color: var(--lose); font-size: 14px; min-height: 18px; }
 .or { text-align: center; color: var(--muted); font-size: 13px; letter-spacing: .14em; text-transform: uppercase; }
 .tablebar { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.chat-btn { position: relative; width: 38px; padding: 0; display: grid; place-items: center; }
+.chat-btn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linejoin: round; }
+.chat-btn.has-msg::after { content: attr(data-n); position: absolute; top: -6px; right: -6px; min-width: 17px; height: 17px; padding: 0 4px; box-sizing: border-box; border-radius: 9px; background: #e8414f; color: #fff; font: 700 10.5px/17px var(--f-ui); text-align: center; }
+.game { position: relative; }
+.chat-panel { position: absolute; z-index: 20; left: 0; right: 0; top: 44px; bottom: 0; display: flex; flex-direction: column; gap: 8px; padding: 10px; border-radius: 18px; background: var(--sheet-bg, #0a3328); border: 1px solid var(--felt-line); box-shadow: 0 16px 40px rgba(0,0,0,.55); }
+.chat-panel[hidden] { display: none; }
+.chat-top { display: flex; justify-content: space-between; align-items: center; }
+.chat-log { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding: 6px; border-radius: 12px; background: rgba(0,0,0,.22); -webkit-overflow-scrolling: touch; }
+.chat-log .bub { max-width: 82%; align-self: flex-start; padding: 7px 10px; border-radius: 14px 14px 14px 4px; background: rgba(255,255,255,.08); }
+.chat-log .bub.me { align-self: flex-end; border-radius: 14px 14px 4px 14px; background: rgba(216,178,106,.3); }
+.chat-log .bub p { margin: 0; font-size: 14.5px; white-space: pre-wrap; word-break: break-word; }
+.bub-from { display: block; font-size: 11.5px; color: var(--brass); margin-bottom: 2px; }
+.chat-empty { margin: auto; color: var(--muted); font-size: 14px; }
+.chat-form { display: grid; grid-template-columns: auto 1fr auto; gap: 8px; }
+.chat-form input { min-width: 0; height: 42px; padding: 0 12px; border-radius: 12px; border: 1px solid var(--felt-line); background: rgba(0,0,0,.25); color: var(--ink); font: inherit; font-size: 15px; }
+.chat-form .small-btn { height: 42px; }
+.chat-mic { width: 42px; height: 42px; border-radius: 50%; border: 1px solid var(--felt-line); background: rgba(0,0,0,.25); color: var(--brass); display: grid; place-items: center; }
+.chat-mic svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; }
+.chat-toast { position: fixed; z-index: 60; left: 50%; transform: translateX(-50%); top: calc(env(safe-area-inset-top, 0px) + 12px); max-width: calc(100% - 32px); padding: 9px 14px; border-radius: 14px; background: var(--sheet-bg, #0a3328); border: 1px solid var(--brass); box-shadow: 0 8px 24px rgba(0,0,0,.5); font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; animation: tr-in .3s both; }
 .code { display: flex; align-items: baseline; gap: 8px; }
 .code b { font-size: 20px; letter-spacing: .22em; color: var(--brass); font-variant-numeric: tabular-nums; }
 .small-btn { height: 34px; padding: 0 12px; border-radius: 10px; background: var(--glass); border: 1px solid var(--felt-line); font-size: 14px; font-weight: 600; }
@@ -457,6 +476,7 @@ button:disabled { opacity: .35; cursor: default; }
     <div class="tablebar">
       <div class="code"><span class="label">Code</span><b id="codeOut">—</b></div>
       <div style="display:flex;gap:8px">
+        <button class="small-btn chat-btn" id="chatBtn" aria-label="Chat de la table"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/></svg></button>
         <button class="small-btn" id="inviteBtn">Inviter</button>
         <button class="small-btn" id="leaveBtn">Quitter</button>
       </div>
@@ -477,6 +497,15 @@ button:disabled { opacity: .35; cursor: default; }
       </div>
     </div>
     <div class="msg-wrap"><div class="msg" id="hMsg" role="status" aria-live="polite"></div></div>
+    <div class="chat-panel" id="chatPanel" hidden>
+      <div class="chat-top"><b>Chat de la table</b><button class="small-btn" id="chatClose" aria-label="Fermer le chat">×</button></div>
+      <div class="chat-log" id="chatLog" role="log" aria-live="polite"></div>
+      <form class="chat-form" id="chatForm" novalidate>
+        <button type="button" class="chat-mic" id="chatMic" aria-label="Enregistrer un vocal"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
+        <input id="chatIn" maxlength="300" placeholder="Message à la table…" aria-label="Message à la table" autocomplete="off">
+        <button class="small-btn" type="submit">Envoyer</button>
+      </form>
+    </div>
     <div class="me" id="me"></div>
     <div id="hControls"></div>
   </section>
@@ -797,8 +826,60 @@ button:disabled { opacity: .35; cursor: default; }
       forgetTable(); NET.resuming = false; leave(true); lobbyError("La table est complète (6 joueurs).");
     } else if (msg.t === "closed") {
       forgetTable(); NET.resuming = false; leave(true); lobbyError("L'hôte a fermé la table.");
+    } else if (msg.t === "chat" || msg.t === "voice") {
+      addChat(msg);
     }
   }
+
+  // ---------- table chat: text and short voice notes between the players seated ----------
+  const chatLog = [];
+  let chatUnread = 0;
+  function addChat(m) {
+    const entry = { from: m.from, text: m.text, secs: m.secs, mine: m.from === NET.myName, at: Date.now() };
+    if (m.t === "voice" && m.data) {
+      try {
+        const bin = atob(m.data), arr = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+        entry.url = URL.createObjectURL(new Blob([arr], { type: m.mime || "audio/webm" }));
+      } catch (e) { return; }
+    }
+    chatLog.push(entry); if (chatLog.length > 60) chatLog.shift();
+    if ($("chatPanel").hidden) { if (!entry.mine) chatUnread++; paintChatBtn(); if (!entry.mine) chatToast(entry); } else paintChat();
+  }
+  function paintChatBtn() { const b = $("chatBtn"); b.dataset.n = chatUnread > 9 ? "9+" : chatUnread || ""; b.classList.toggle("has-msg", chatUnread > 0); }
+  function chatToast(e) {
+    const t = document.createElement("div");
+    t.className = "chat-toast";
+    t.textContent = `${e.from} : ${e.url ? "🎤 message vocal" : e.text}`;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 3500);
+  }
+  function paintChat() {
+    const box = $("chatLog");
+    const UI = window.CasinoUI;
+    box.innerHTML = chatLog.length ? chatLog.map(e => `<div class="bub${e.mine ? " me" : ""}">${e.mine ? "" : `<b class="bub-from">${esc(e.from)}</b>`}${e.url && UI ? UI.voiceHTML(e.secs, "", e.url) : `<p>${esc(e.text || "")}</p>`}</div>`).join("")
+      : `<p class="chat-empty">Dis bonjour à la table !</p>`;
+    box.scrollTop = box.scrollHeight;
+  }
+  function sendChat(m) {
+    if (NET.role === "host" && Host.ready) Host.relayChat(Host.seats[0], m);
+    else if (NET.conn && NET.conn.open) try { NET.conn.send(m); } catch (e) {}
+  }
+  $("chatBtn").onclick = () => { const p = $("chatPanel"); p.hidden = !p.hidden; if (!p.hidden) { chatUnread = 0; paintChatBtn(); paintChat(); } };
+  $("chatClose").onclick = () => { $("chatPanel").hidden = true; };
+  $("chatForm").addEventListener("submit", e => {
+    e.preventDefault();
+    const i = $("chatIn"), text = i.value.trim(); if (!text) return;
+    sendChat({ t: "chat", text: text.slice(0, 300) }); i.value = "";
+  });
+  $("chatMic").onclick = async () => {
+    const UI = window.CasinoUI; if (!UI || !UI.recordVoice) return;
+    const v = await UI.recordVoice(20); if (!v) return;
+    const buf = new Uint8Array(await v.blob.arrayBuffer());
+    if (buf.length > 290000) { chatToast({ from: "Table", text: "Vocal trop long, 20 secondes au plus." }); return; }
+    let bin = ""; for (let i = 0; i < buf.length; i += 8192) bin += String.fromCharCode.apply(null, buf.subarray(i, i + 8192));
+    sendChat({ t: "voice", data: btoa(bin), mime: v.mime, secs: v.secs });
+  };
 
   // the guest checks that the table still answers; a phone back from the background reconnects at once
   setInterval(() => {
@@ -945,6 +1026,8 @@ button:disabled { opacity: .35; cursor: default; }
         if (this.phase === "done" && !this.nextAt) this.scheduleNext();
       } else if (msg.t === "ping") {
         try { conn.send({ t: "pong" }); } catch (e) {}
+      } else if (msg.t === "chat" || msg.t === "voice") {
+        if (from) this.relayChat(from, msg);
       } else if (msg.t === "act") {
         if (from) this.act(from, msg.a);
       } else if (msg.t === "quit") {
@@ -1219,6 +1302,19 @@ button:disabled { opacity: .35; cursor: default; }
           used: s.shown && s.eval ? s.eval.cards.map(c => c.id) : null
         }))
       };
+    },
+    // table chat: the host checks each message, then sends it to everyone seated
+    relayChat(seat, msg) {
+      const now = Date.now();
+      seat.chatTimes = (seat.chatTimes || []).filter(t => now - t < 10000);
+      if (seat.chatTimes.length >= 5) return;
+      seat.chatTimes.push(now);
+      const out = msg.t === "chat"
+        ? { t: "chat", from: seat.name, text: String(msg.text || "").slice(0, 300) }
+        : { t: "voice", from: seat.name, data: String(msg.data || "").slice(0, 400000), mime: String(msg.mime || "audio/webm").slice(0, 40), secs: Math.min(20, +msg.secs || 0) };
+      if (out.t === "chat" && !out.text.trim()) return;
+      this.seats.forEach((s, i) => { if (i > 0 && s.conn && s.connected) try { s.conn.send(out); } catch (e) {} });
+      addChat(out);
     },
     sync() {
       if (!this.ready) return;
